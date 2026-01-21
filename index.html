@@ -2736,6 +2736,88 @@
 }
 </style>
 
+
+<!-- ===== 3D ICONS + ORANGE / BLUE THEME (ADDED) ===== -->
+<style>
+:root {
+  --primary-color: #0d47a1;
+  --secondary-color: #1565c0;
+  --accent-color: #ff8f00;
+  --warning-color: #ff9800;
+  --success-color: #2e7d32;
+  --danger-color: #d32f2f;
+  --light-color: #ffffff;
+  --dark-color: #1f1f1f;
+  --text-color: #222;
+  --border-color: #e0e0e0;
+}
+
+/* 3D Icons */
+i, .icon, .fa, .fas, .fab {
+  transition: transform .25s ease, box-shadow .25s ease, filter .25s ease;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,.18));
+}
+i:hover, .fa:hover {
+  transform: translateY(-2px) scale(1.06);
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.25));
+}
+.social-link, .nav-social-inline, .m-qa {
+  box-shadow: inset 0 2px 3px rgba(255,255,255,.35),
+              inset 0 -3px 4px rgba(0,0,0,.25),
+              0 6px 14px rgba(0,0,0,.25);
+}
+.social-link:hover, .nav-social-inline:hover, .m-qa:hover {
+  transform: translateY(-3px) scale(1.08);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,.4),
+              inset 0 -2px 3px rgba(0,0,0,.25),
+              0 10px 22px rgba(0,0,0,.35);
+}
+</style>
+
+
+<!-- ===== HEADER VISIBILITY FIX (FINAL) ===== -->
+<style>
+header.glass {
+  background: linear-gradient(
+      135deg,
+      rgba(13,71,161,0.85),
+      rgba(21,101,192,0.75)
+    ),
+    rgba(255,255,255,0.65);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-bottom: 1px solid rgba(255,255,255,0.25);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+header.glass, header.glass * {
+  color: #ffffff !important;
+}
+header.glass i {
+  color: var(--accent-color) !important;
+}
+.m-topbar.glass {
+  background: linear-gradient(
+      135deg,
+      rgba(13,71,161,0.9),
+      rgba(21,101,192,0.85)
+    );
+  border-bottom: 1px solid rgba(255,255,255,0.25);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+.m-brand, .m-brand-name {
+  color: #ffffff !important;
+}
+body.dark header.glass,
+body.dark .m-topbar.glass {
+  background: linear-gradient(
+      135deg,
+      rgba(8,20,45,0.95),
+      rgba(12,32,70,0.95)
+    );
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+</style>
+
 </head>
 <body>
 
@@ -6532,6 +6614,571 @@ document.addEventListener("DOMContentLoaded", function(){
 
   document.addEventListener('DOMContentLoaded', setLinks);
 })();
+</script>
+
+
+<!-- ===== 3D BUTTONS + METALLIC LOGO + DARK MODE ===== -->
+<style>
+/* =========================
+   3D BUTTONS (BUY / CTA)
+========================= */
+.buy-btn, .btn-primary, .btn-secondary, .whatsapp-btn, .email-btn {
+  position: relative;
+  box-shadow:
+    inset 0 2px 3px rgba(255,255,255,0.45),
+    inset 0 -3px 5px rgba(0,0,0,0.25),
+    0 10px 22px rgba(0,0,0,0.28);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.buy-btn:hover, .btn-primary:hover, .btn-secondary:hover,
+.whatsapp-btn:hover, .email-btn:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,0.55),
+    inset 0 -2px 4px rgba(0,0,0,0.28),
+    0 16px 32px rgba(0,0,0,0.38);
+}
+.buy-btn:active, .btn-primary:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow:
+    inset 0 4px 6px rgba(0,0,0,0.35),
+    0 6px 12px rgba(0,0,0,0.3);
+}
+
+/* =========================
+   METALLIC / EMBOSS LOGO
+========================= */
+.logo-text, .m-brand-name {
+  background: linear-gradient(
+    135deg,
+    #f5f7fa 0%,
+    #e0e0e0 20%,
+    #ffffff 40%,
+    #cfcfcf 60%,
+    #ffffff 80%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.9),
+    0 2px 4px rgba(0,0,0,0.35);
+}
+
+/* =========================
+   DARK MODE THEME
+========================= */
+body.dark {
+  --light-color: #121212;
+  --dark-color: #ffffff;
+  --text-color: #eaeaea;
+  --border-color: #2c2c2c;
+  background-color: #121212;
+  color: var(--text-color);
+}
+body.dark header,
+body.dark footer {
+  background: linear-gradient(135deg, #0b1c3d, #102a56);
+}
+body.dark .product-card,
+body.dark .category-card,
+body.dark .modal-content,
+body.dark .cart-modal-content {
+  background-color: #1b1b1b;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.6);
+}
+body.dark .section-title,
+body.dark .product-name,
+body.dark .category-name {
+  color: #90caf9;
+}
+body.dark .buy-btn {
+  background: linear-gradient(135deg, #ff9800, #ff6f00);
+}
+
+/* Dark mode icons */
+body.dark i {
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.6));
+}
+
+/* =========================
+   DARK MODE TOGGLE BUTTON
+========================= */
+.dark-toggle {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #ff9800, #ff6f00);
+  color: #fff;
+  font-size: 1.2rem;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.4);
+  z-index: 6000;
+}
+.dark-toggle:hover {
+  transform: scale(1.08);
+}
+</style>
+
+<script>
+/* ===== Dark Mode Toggle ===== */
+(function(){
+  const btn = document.createElement('button');
+  btn.className = 'dark-toggle';
+  btn.innerHTML = '<i class="fas fa-moon"></i>';
+  document.body.appendChild(btn);
+
+  const saved = localStorage.getItem('darkMode');
+  if(saved === 'on'){
+    document.body.classList.add('dark');
+    btn.innerHTML = '<i class="fas fa-sun"></i>';
+  }
+
+  btn.onclick = () => {
+    document.body.classList.toggle('dark');
+    const isDark = document.body.classList.contains('dark');
+    localStorage.setItem('darkMode', isDark ? 'on' : 'off');
+    btn.innerHTML = isDark
+      ? '<i class="fas fa-sun"></i>'
+      : '<i class="fas fa-moon"></i>';
+  };
+})();
+</script>
+
+
+<!-- ===== NEON GLOW + AUTO DARK + METAL LOGO VARIANTS + MICRO ANIMATIONS ===== -->
+<style>
+/* =========================
+   NEON GLOW (Primary CTAs)
+========================= */
+.cta, .buy-btn, .btn-primary, .whatsapp-btn {
+  position: relative;
+  isolation: isolate;
+}
+.cta::after, .buy-btn::after, .btn-primary::after, .whatsapp-btn::after{
+  content:'';
+  position:absolute;
+  inset:-2px;
+  border-radius: inherit;
+  background: radial-gradient(60% 60% at 50% 50%,
+      rgba(255,152,0,.55),
+      rgba(255,152,0,.15) 55%,
+      rgba(255,152,0,0) 70%);
+  filter: blur(10px);
+  opacity:.0;
+  transition: opacity .25s ease;
+  z-index:-1;
+}
+.cta:hover::after,
+.buy-btn:hover::after,
+.btn-primary:hover::after,
+.whatsapp-btn:hover::after{
+  opacity:1;
+}
+
+/* =========================
+   MICRO-ANIMATIONS (Premium)
+========================= */
+@keyframes pressPop {
+  0%{ transform: translateY(0) scale(1); }
+  40%{ transform: translateY(1px) scale(.98); }
+  100%{ transform: translateY(0) scale(1); }
+}
+@keyframes sheen {
+  0%{ background-position: -120% 0; }
+  100%{ background-position: 220% 0; }
+}
+.buy-btn, .btn-primary, .btn-secondary, .whatsapp-btn, .email-btn{
+  overflow:hidden;
+}
+.buy-btn::before, .btn-primary::before, .btn-secondary::before{
+  content:'';
+  position:absolute;
+  top:0; left:-120%;
+  width:120%;
+  height:100%;
+  background: linear-gradient(120deg,
+    transparent 0%,
+    rgba(255,255,255,.35) 50%,
+    transparent 100%);
+  transform: skewX(-20deg);
+}
+.buy-btn:hover::before,
+.btn-primary:hover::before,
+.btn-secondary:hover::before{
+  animation: sheen .9s ease forwards;
+}
+.buy-btn:active,
+.btn-primary:active,
+.btn-secondary:active,
+.whatsapp-btn:active{
+  animation: pressPop .18s ease;
+}
+
+/* =========================
+   METALLIC LOGO VARIANTS
+========================= */
+/* Light Metal */
+.logo-text.metal-light, .m-brand-name.metal-light{
+  background: linear-gradient(135deg,#ffffff,#e6e6e6 30%,#ffffff 55%,#cfcfcf 75%,#ffffff);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  text-shadow: 0 1px 0 rgba(255,255,255,.9), 0 2px 4px rgba(0,0,0,.35);
+}
+/* Dark Metal */
+.logo-text.metal-dark, .m-brand-name.metal-dark{
+  background: linear-gradient(135deg,#e0e0e0,#9e9e9e 30%,#f5f5f5 55%,#7a7a7a 75%,#e0e0e0);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  text-shadow: 0 1px 0 rgba(255,255,255,.5), 0 3px 6px rgba(0,0,0,.6);
+}
+
+/* =========================
+   AUTO DARK MODE (System)
+========================= */
+/* default follows system */
+@media (prefers-color-scheme: dark){
+  body:not(.light-forced){
+    --light-color:#121212;
+    --dark-color:#ffffff;
+    --text-color:#eaeaea;
+    --border-color:#2c2c2c;
+    background:#121212; color:var(--text-color);
+  }
+}
+/* manual overrides already supported via .dark on body */
+</style>
+
+<script>
+/* ===== Auto Dark Mode with System Preference + Manual Override ===== */
+(function(){
+  const key='darkMode';
+  const saved = localStorage.getItem(key);
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  function apply(){
+    if(saved==='on'){ document.body.classList.add('dark'); document.body.classList.remove('light-forced'); }
+    else if(saved==='off'){ document.body.classList.remove('dark'); document.body.classList.add('light-forced'); }
+    else{
+      document.body.classList.toggle('dark', mq.matches);
+      document.body.classList.remove('light-forced');
+    }
+  }
+  mq.addEventListener?.('change', ()=>{ if(!localStorage.getItem(key)) apply(); });
+  apply();
+
+  /* Switch logo metal by theme */
+  function syncLogo(){
+    const logos=document.querySelectorAll('.logo-text, .m-brand-name');
+    logos.forEach(l=>{
+      l.classList.remove('metal-light','metal-dark');
+      l.classList.add(document.body.classList.contains('dark')?'metal-dark':'metal-light');
+    });
+  }
+  syncLogo();
+  const obs=new MutationObserver(syncLogo);
+  obs.observe(document.body,{attributes:true,attributeFilter:['class']});
+})();
+</script>
+
+
+<!-- ===== SMART NEON + CARD LIFT + GLASS TOP + ADS MODE ===== -->
+<style>
+/* =========================
+   SMART NEON (High Conversion Only)
+   Mark buttons with: data-convert="high"
+========================= */
+[data-convert="high"]{
+  position:relative; isolation:isolate;
+}
+[data-convert="high"]::after{
+  content:'';
+  position:absolute; inset:-3px; border-radius:inherit;
+  background: radial-gradient(60% 60% at 50% 50%,
+    rgba(255,152,0,.65),
+    rgba(255,152,0,.18) 55%,
+    rgba(255,152,0,0) 72%);
+  filter: blur(12px);
+  opacity:0; transition: opacity .25s ease;
+  z-index:-1;
+}
+[data-convert="high"]:hover::after{ opacity:1; }
+
+/* =========================
+   CARD LIFT (Products / Categories / Feature Cards)
+========================= */
+.card, .product-card, .category-card, .hero-card{
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.card:hover, .product-card:hover, .category-card:hover, .hero-card:hover{
+  transform: translateY(-6px);
+  box-shadow: 0 18px 36px rgba(0,0,0,.18);
+}
+
+/* =========================
+   GLASS / FROSTED TOP SECTIONS
+========================= */
+.glass{
+  background: rgba(255,255,255,.72);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  border: 1px solid rgba(255,255,255,.35);
+}
+body.dark .glass{
+  background: rgba(20,20,20,.65);
+  border-color: rgba(255,255,255,.08);
+}
+
+/* Apply glass to top areas */
+header, .top-nav, .m-topbar{
+  background-clip: padding-box;
+}
+header.glass, .top-nav.glass, .m-topbar.glass{}
+
+/* =========================
+   ADS MODE (Lightweight, Focused)
+   Activate via URL: ?ads=1
+========================= */
+body.ads-mode .categories-section,
+body.ads-mode footer,
+body.ads-mode .admin-access-panel{
+  display:none !important;
+}
+body.ads-mode .hero{
+  padding-top: 10px;
+}
+body.ads-mode .products-section{
+  padding-top: 10px;
+}
+body.ads-mode .buy-btn{
+  font-size:1.05rem;
+}
+</style>
+
+<script>
+/* ===== Runtime Enhancements ===== */
+(function(){
+  // Add glass class to top sections
+  document.querySelectorAll('header, .top-nav, .m-topbar').forEach(el=>el.classList.add('glass'));
+
+  // Auto-mark highest conversion buttons if not set
+  document.querySelectorAll('.buy-btn, .btn-primary, .whatsapp-btn').forEach(btn=>{
+    if(!btn.hasAttribute('data-convert')) btn.setAttribute('data-convert','high');
+  });
+
+  // Ads mode by query
+  const params = new URLSearchParams(location.search);
+  if(params.get('ads')==='1'){
+    document.body.classList.add('ads-mode');
+  }
+})();
+</script>
+
+
+<!-- ===== COLLAPSIBLE / EXPAND SERVICE FORM ===== -->
+<style>
+/* Wrapper */
+.service-card.collapsible {
+  transition: all .35s ease;
+}
+
+/* Header clickable */
+.form-toggle {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  cursor:pointer;
+  user-select:none;
+  padding:10px 12px;
+  border-radius:12px;
+  background: rgba(0,0,0,0.03);
+  margin-bottom:8px;
+}
+.form-toggle h3{
+  margin:0;
+  font-size:1rem;
+}
+.form-toggle i{
+  transition: transform .3s ease;
+}
+
+/* Body */
+.form-body {
+  overflow:hidden;
+  transition: max-height .45s ease, opacity .35s ease;
+  max-height: 0;
+  opacity:0;
+}
+
+/* Expanded */
+.service-card.expanded .form-body{
+  max-height: 900px;
+  opacity:1;
+}
+.service-card.expanded .form-toggle i{
+  transform: rotate(180deg);
+}
+
+/* Compact when collapsed */
+.service-card:not(.expanded){
+  box-shadow: 0 6px 16px rgba(0,0,0,.12);
+}
+</style>
+
+<script>
+/* ===== Expand / Collapse Logic ===== */
+document.addEventListener('DOMContentLoaded', ()=>{
+  const card = document.querySelector('.service-card');
+  if(!card) return;
+
+  card.classList.add('collapsible');
+
+  const header = document.createElement('div');
+  header.className = 'form-toggle';
+  header.innerHTML = `
+    <h3>ماذا تحتاج منك؟</h3>
+    <i class="fas fa-chevron-down"></i>
+  `;
+
+  const body = document.createElement('div');
+  body.className = 'form-body';
+
+  // move existing children into body
+  [...card.children].forEach(ch => body.appendChild(ch));
+  card.appendChild(header);
+  card.appendChild(body);
+
+  header.addEventListener('click', ()=>{
+    card.classList.toggle('expanded');
+  });
+
+  // start collapsed on mobile, expanded on desktop
+  if(window.innerWidth > 768){
+    card.classList.add('expanded');
+  }
+});
+</script>
+
+
+<!-- ===== AUTO OPEN SERVICE FORM ON BUTTON CLICK ===== -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const serviceCard = document.querySelector('.service-card');
+  if(!serviceCard) return;
+
+  // any button/link that should open the form
+  const triggers = document.querySelectorAll(
+    '[data-open-service], .open-service, .service-btn'
+  );
+
+  triggers.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      serviceCard.classList.add('expanded');
+      serviceCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  });
+});
+</script>
+
+
+<!-- ===== ANIMATION PRESETS (LIGHT / STRONG) ===== -->
+<style>
+:root{
+  --lift-y: -6px;
+  --lift-shadow: 0 18px 36px rgba(0,0,0,.18);
+  --btn-pop: 0.18s;
+}
+body.anim-strong{
+  --lift-y: -12px;
+  --lift-shadow: 0 28px 56px rgba(0,0,0,.28);
+  --btn-pop: 0.28s;
+}
+.product-card, .category-card, .hero-card{
+  transition: transform .35s ease, box-shadow .35s ease;
+}
+.product-card:hover, .category-card:hover, .hero-card:hover{
+  transform: translateY(var(--lift-y));
+  box-shadow: var(--lift-shadow);
+}
+.buy-btn, .btn-primary, .whatsapp-btn{
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.buy-btn:active, .btn-primary:active, .whatsapp-btn:active{
+  animation: btnPop var(--btn-pop) ease;
+}
+@keyframes btnPop{
+  0%{ transform: scale(1); }
+  40%{ transform: scale(.96); }
+  100%{ transform: scale(1); }
+}
+</style>
+
+
+<!-- ===== GSAP-STYLE TIMELINE (NO LIBRARY) ===== -->
+<style>
+/* Easing curves */
+:root{
+  --ease-out: cubic-bezier(.16,1,.3,1);
+  --ease-inout: cubic-bezier(.65,0,.35,1);
+}
+
+/* Stagger-ready elements */
+[data-anim="card"]{
+  opacity:0;
+  transform: translateY(18px) scale(.98);
+}
+[data-anim="btn"]{
+  transform: translateY(0) scale(1);
+}
+body.anim-ready [data-anim="card"]{
+  animation: cardIn .7s var(--ease-out) forwards;
+}
+body.anim-ready [data-anim="card"]:nth-child(2){ animation-delay:.08s }
+body.anim-ready [data-anim="card"]:nth-child(3){ animation-delay:.16s }
+body.anim-ready [data-anim="card"]:nth-child(4){ animation-delay:.24s }
+
+@keyframes cardIn{
+  to{
+    opacity:1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Button hover micro timeline */
+[data-anim="btn"]:hover{
+  animation: btnFloat .45s var(--ease-inout);
+}
+@keyframes btnFloat{
+  0%{ transform: translateY(0) scale(1); }
+  50%{ transform: translateY(-2px) scale(1.03); }
+  100%{ transform: translateY(0) scale(1); }
+}
+</style>
+
+<script>
+/* ===== GSAP-like timeline without library ===== */
+document.addEventListener('DOMContentLoaded', ()=>{
+  // mark cards automatically
+  document.querySelectorAll('.product-card, .category-card, .hero-card')
+    .forEach(el=>el.setAttribute('data-anim','card'));
+
+  // mark buttons
+  document.querySelectorAll('.buy-btn, .btn-primary, .whatsapp-btn')
+    .forEach(el=>el.setAttribute('data-anim','btn'));
+
+  // trigger timeline when in viewport
+  const io = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        document.body.classList.add('anim-ready');
+        io.disconnect();
+      }
+    });
+  },{threshold:.15});
+
+  io.observe(document.querySelector('main') || document.body);
+});
 </script>
 
 </body>
