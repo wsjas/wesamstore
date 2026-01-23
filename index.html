@@ -517,7 +517,10 @@
             cursor: pointer;
             font-size: 0.85rem;
             transition: all 0.3s;
-            display: none;
+            display: flex;
+        
+            align-items: center;
+            gap: 8px;
         }
 
         .admin-login-btn:hover {
@@ -682,6 +685,8 @@
         }
 
         .admin-tabs {
+            position: relative;
+            pointer-events: auto;
             display: flex;
             background-color: #f5f5f5;
             border-bottom: 1px solid #ddd;
@@ -1686,7 +1691,6 @@
         }
 
         /* Admin Access Panel */
-        .admin-access-panel {
             position: fixed;
             bottom: 20px;
             right: 20px;
@@ -1695,7 +1699,6 @@
             pointer-events: auto;
             display: block;}
 
-        .admin-access-btn {
             width: 50px;
             height: 50px;
             border-radius: 50%;
@@ -1708,7 +1711,6 @@
             transition: all 0.3s;
         }
 
-        .admin-access-modal {
             display: none;
             position: fixed;
             top: 0;
@@ -1721,7 +1723,6 @@
             align-items: center;
         }
 
-        .admin-access-content {
             background-color: white;
             padding: 30px;
             border-radius: 12px;
@@ -1875,12 +1876,10 @@
                 width: 100%;
             }
             
-            .admin-access-panel {
                 bottom: 15px;
                 right: 15px;
             }
             
-            .admin-access-btn {
                 width: 45px;
                 height: 45px;
                 font-size: 1rem;
@@ -1896,12 +1895,10 @@
                 max-height: 26vh;
             }
             
-            .admin-access-panel {
                 bottom: 10px;
                 right: 10px;
             }
             
-            .admin-access-btn {
                 width: 40px;
                 height: 40px;
                 font-size: 0.9rem;
@@ -2811,15 +2808,6 @@ header.glass i {
 .m-brand, .m-brand-name {
   color: #ffffff !important;
 }
-body.dark header.glass,
-body.dark .m-topbar.glass {
-  background: linear-gradient(
-      135deg,
-      rgba(8,20,45,0.95),
-      rgba(12,32,70,0.95)
-    );
-  border-bottom: 1px solid rgba(255,255,255,0.12);
-}
 </style>
 
 
@@ -2882,6 +2870,43 @@ body.dark .m-topbar.glass {
     var(--green-ok)
   );
 }
+</style>
+
+
+<style>
+/* ===== Account / Admin Buttons (No Floating Buttons) ===== */
+.user-account-btn{
+  border:none;
+  cursor:pointer;
+  padding:10px 14px;
+  border-radius:10px;
+  font-weight:700;
+  background:linear-gradient(135deg, #0A58CA, #084298);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.18);
+  transition: transform .2s ease;
+}
+.user-account-btn:hover{ transform: translateY(-2px); }
+.auth-tabs, .account-tabs{ display:flex; gap:10px; margin-bottom:14px; }
+.auth-tab, .account-tab{
+  flex:1; border:1px solid #e5e5e5; background:#fff;
+  padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:700;
+}
+.auth-tab.active, .account-tab.active{ border-color: var(--blue, #0A58CA); box-shadow:0 8px 18px rgba(0,0,0,0.08); }
+.account-header{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px; padding:12px; border-radius:14px;
+  background: rgba(10,88,202,0.06); margin-bottom:14px;
+}
+.account-badge{ display:flex; align-items:center; gap:10px; }
+.account-badge i{ font-size:1.8rem; color: var(--blue, #0A58CA); }
+.mini-list{ display:flex; flex-direction:column; gap:10px; }
+.mini-item{ background:#fff; border:1px solid #eee; border-radius:14px; padding:12px; box-shadow:0 10px 18px rgba(0,0,0,0.06); }
+.mini-item .row{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.mini-muted{ opacity:.75; font-size:.9rem; }
 </style>
 
 </head>
@@ -2993,6 +3018,8 @@ body.dark .m-topbar.glass {
       <button class="m-link-btn" id="mGoCategories"><i class="fas fa-list"></i> الأقسام</button>
       <button class="m-link-btn" id="mGoProducts"><i class="fas fa-box-open"></i> المنتجات</button>
       <button class="m-link-btn" id="mOpenService"><i class="fas fa-screwdriver-wrench"></i> طلب صيانة</button>
+      <button class="m-link-btn" id="mUserAccountBtn"><i class="fas fa-user"></i> حسابي</button>
+      <button class="m-link-btn" id="mAdminPanelBtn"><i class="fas fa-user-cog"></i> لوحة التحكم</button>
     </div>
   </div>
 </aside>
@@ -3055,8 +3082,11 @@ body.dark .m-topbar.glass {
                         <i class="fas fa-shopping-cart"></i>
                         <span class="cart-count" id="cartCount">0</span>
                     </div>
-                    <button class="admin-login-btn" id="adminLoginBtn" style="display: none;">
-                        <i class="fas fa-user-cog"></i> دخول المدير
+                    <button class="user-account-btn" id="userAccountBtn" type="button">
+                        <i class="fas fa-user"></i> حسابي
+                    </button>
+                    <button class="admin-login-btn" id="adminLoginBtn" type="button">
+                        <i class="fas fa-user-cog"></i> لوحة التحكم
                     </button>
                 </div>
             </div>
@@ -3085,10 +3115,99 @@ body.dark .m-topbar.glass {
                 </button>
 
                 <p id="loginError" style="color: #f44336; margin-top: 10px; display: none;">بيانات الدخول غير صحيحة</p>
+</div>
+        </div>
+    </div>
 
-                <p style="color: #666; margin-top: 15px; font-size: 0.9rem;">
-                    <i class="fas fa-keyboard"></i> استخدم Ctrl+F7 لإظهار زر المدير
-                </p>
+    <!-- User Auth Modal -->
+    <div id="userAuthModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user"></i> حسابي</h3>
+                <button class="close-modal" id="closeUserAuthModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" type="button" data-tab="login">تسجيل الدخول</button>
+                    <button class="auth-tab" type="button" data-tab="register">إنشاء حساب</button>
+                </div>
+
+                <div class="auth-pane" id="authLoginPane">
+                    <div class="form-group">
+                        <label for="userEmailLogin">البريد الإلكتروني</label>
+                        <input type="email" id="userEmailLogin" placeholder="example@email.com" autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="userPasswordLogin">كلمة المرور</label>
+                        <input type="password" id="userPasswordLogin" placeholder="••••••••" autocomplete="current-password">
+                    </div>
+                    <button class="login-btn" id="userLoginBtn" type="button">
+                        <span class="btn-text">تسجيل الدخول</span>
+                    </button>
+                    <p id="userAuthError" style="color:#f44336; margin-top:10px; display:none;"></p>
+                    <p style="color:#666; margin-top:12px; font-size:.9rem;">
+                        عند تسجيل الدخول سيتم حفظ مشترياتك وطلبات الصيانة داخل حسابك.
+                    </p>
+                </div>
+
+                <div class="auth-pane" id="authRegisterPane" style="display:none;">
+                    <div class="form-group">
+                        <label for="userNameRegister">الاسم</label>
+                        <input type="text" id="userNameRegister" placeholder="اسمك">
+                    </div>
+                    <div class="form-group">
+                        <label for="userPhoneRegister">رقم الهاتف</label>
+                        <input type="tel" id="userPhoneRegister" placeholder="07XXXXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmailRegister">البريد الإلكتروني</label>
+                        <input type="email" id="userEmailRegister" placeholder="example@email.com" autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="userPasswordRegister">كلمة المرور</label>
+                        <input type="password" id="userPasswordRegister" placeholder="على الأقل 6 أحرف" autocomplete="new-password">
+                    </div>
+                    <button class="login-btn" id="userRegisterBtn" type="button">
+                        <span class="btn-text">إنشاء الحساب</span>
+                    </button>
+                    <p id="userAuthErrorRegister" style="color:#f44336; margin-top:10px; display:none;"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Account Modal -->
+    <div id="userAccountModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-id-card"></i> حسابي</h3>
+                <button class="close-modal" id="closeUserAccountModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="account-header">
+                    <div class="account-badge">
+                        <i class="fas fa-user-circle"></i>
+                        <div>
+                            <div id="accountName" style="font-weight:700;">مستخدم</div>
+                            <div id="accountEmail" style="opacity:.8; font-size:.9rem;"></div>
+                        </div>
+                    </div>
+                    <button class="logout-btn" id="userLogoutBtn" type="button"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
+                </div>
+
+                <div class="account-tabs">
+                    <button class="account-tab active" type="button" data-tab="orders">مشترياتي</button>
+                    <button class="account-tab" type="button" data-tab="requests">طلبات الصيانة</button>
+                </div>
+
+                <div class="account-pane" id="accountOrdersPane">
+                    <div id="userOrdersList" class="mini-list"></div>
+                </div>
+
+                <div class="account-pane" id="accountRequestsPane" style="display:none;">
+                    <div id="userServiceRequestsList" class="mini-list"></div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -3196,14 +3315,14 @@ body.dark .m-topbar.glass {
             <button class="logout-btn" id="adminLogoutBtn">تسجيل الخروج</button>
         </div>
         <div class="admin-tabs">
-            <button class="admin-tab active" data-tab="addProduct">إضافة منتج جديد</button>
-            <button class="admin-tab" data-tab="manageProducts">إدارة المنتجات</button>
-            <button class="admin-tab" data-tab="productOrder">ترتيب المنتجات</button>
-            <button class="admin-tab" data-tab="categoryOrder">ترتيب التصنيفات</button>
-            <button class="admin-tab" data-tab="addCategory">إضافة تصنيف جديد</button>
-            <button class="admin-tab" data-tab="storeSettings">إعدادات المتجر</button>
-            <button class="admin-tab" data-tab="serviceRequests">طلبات الصيانة</button>
-            <button class="admin-tab" data-tab="pageContent">محتوى الصفحة</button>
+            <button class="admin-tab active" data-tab="addProduct" type="button" onclick="return switchAdminTab('addProduct')">إضافة منتج جديد</button>
+            <button class="admin-tab" data-tab="manageProducts" type="button" onclick="return switchAdminTab('manageProducts')">إدارة المنتجات</button>
+            <button class="admin-tab" data-tab="productOrder" type="button" onclick="return switchAdminTab('productOrder')">ترتيب المنتجات</button>
+            <button class="admin-tab" data-tab="categoryOrder" type="button" onclick="return switchAdminTab('categoryOrder')">ترتيب التصنيفات</button>
+            <button class="admin-tab" data-tab="addCategory" type="button" onclick="return switchAdminTab('addCategory')">إضافة تصنيف جديد</button>
+            <button class="admin-tab" data-tab="storeSettings" type="button" onclick="return switchAdminTab('storeSettings')">إعدادات المتجر</button>
+            <button class="admin-tab" data-tab="serviceRequests" type="button" onclick="return switchAdminTab('serviceRequests')">طلبات الصيانة</button>
+            <button class="admin-tab" data-tab="pageContent" type="button" onclick="return switchAdminTab('pageContent')">محتوى الصفحة</button>
         </div>
         <div class="admin-content">
             <!-- Add Product Section -->
@@ -3545,42 +3664,7 @@ body.dark .m-topbar.glass {
             </div>
         </div>
     </div>
-    
-    <!-- Admin Access Panel for Mobile -->
-    <div class="admin-access-panel">
-        <button class="admin-access-btn" id="openAdminAccess" title="الوصول إلى لوحة المدير">
-            <i class="fas fa-lock"></i>
-        </button>
-        
-        <div class="admin-access-modal" id="adminAccessModal">
-            <div class="admin-access-content">
-                <h3><i class="fas fa-user-cog"></i> الوصول إلى لوحة المدير</h3>
-                <p style="color: #666; margin-bottom: 20px; font-size: 0.9rem;">
-                    اختر الخيار المناسب للتحكم بلوحة المدير
-                </p>
-                
-                <div class="access-buttons">
-                    <button class="access-btn" id="accessShowBtn">
-                        <i class="fas fa-eye"></i>
-                        إظهار زر المدير
-                    </button>
-                    <button class="access-btn" id="accessHideBtn">
-                        <i class="fas fa-eye-slash"></i>
-                        إخفاء زر المدير
-                    </button>
-                    <button class="access-btn" id="accessDirectLoginBtn">
-                        <i class="fas fa-sign-in-alt"></i>
-                        دخول مباشر إلى لوحة التحكم
-                    </button>
-                </div>
-                
-                <button class="access-close-btn" id="closeAdminAccess">
-                    <i class="fas fa-times"></i> إغلاق النافذة
-                </button>
-            </div>
-        </div>
-    </div>
-    
+
     <div class="overlay" id="overlay"></div>
 
 <!-- Top Navigation (New) -->
@@ -3872,6 +3956,28 @@ body.dark .m-topbar.glass {
             refreshServiceRequestsBtn: document.getElementById('refreshServiceRequestsBtn'),
             serviceRequestsTableBody: document.getElementById('serviceRequestsTableBody'),
             adminLoginBtn: document.getElementById('adminLoginBtn'),
+            userAccountBtn: document.getElementById('userAccountBtn'),
+            mUserAccountBtn: document.getElementById('mUserAccountBtn'),
+            mAdminPanelBtn: document.getElementById('mAdminPanelBtn'),
+            userAuthModal: document.getElementById('userAuthModal'),
+            closeUserAuthModal: document.getElementById('closeUserAuthModal'),
+            userAccountModal: document.getElementById('userAccountModal'),
+            closeUserAccountModal: document.getElementById('closeUserAccountModal'),
+            userEmailLogin: document.getElementById('userEmailLogin'),
+            userPasswordLogin: document.getElementById('userPasswordLogin'),
+            userLoginBtn: document.getElementById('userLoginBtn'),
+            userAuthError: document.getElementById('userAuthError'),
+            userAuthErrorRegister: document.getElementById('userAuthErrorRegister'),
+            userNameRegister: document.getElementById('userNameRegister'),
+            userPhoneRegister: document.getElementById('userPhoneRegister'),
+            userEmailRegister: document.getElementById('userEmailRegister'),
+            userPasswordRegister: document.getElementById('userPasswordRegister'),
+            userRegisterBtn: document.getElementById('userRegisterBtn'),
+            userLogoutBtn: document.getElementById('userLogoutBtn'),
+            accountName: document.getElementById('accountName'),
+            accountEmail: document.getElementById('accountEmail'),
+            userOrdersList: document.getElementById('userOrdersList'),
+            userServiceRequestsList: document.getElementById('userServiceRequestsList'),
             loginModal: document.getElementById('loginModal'),
             closeLoginModal: document.getElementById('closeLoginModal'),
             adminEmail: document.getElementById('adminEmail'),
@@ -3948,7 +4054,9 @@ body.dark .m-topbar.glass {
             products: [],
             filteredProducts: [],
             isAdmin: false,
-            adminButtonVisible: false,
+            adminButtonVisible: true,
+            currentUser: null,
+            currentUserProfile: null,
             isFirebaseConnected: false,
             shippingMethod: 'pickup',
             currentGalleryProduct: null,
@@ -5735,7 +5843,15 @@ async function refreshServiceRequests() {
         // ========== إدارة لوحة التحكم ==========
 
         function switchTab(tabId) {
-            elements.adminTabs.forEach(tab => {
+            
+// ضمان توفر التبويبات/الأقسام حتى لو تغير DOM
+if (!elements || !elements.adminTabs || typeof elements.adminTabs.forEach !== 'function') {
+    try { elements.adminTabs = document.querySelectorAll('.admin-tab'); } catch(e){}
+}
+if (!elements || !elements.adminSections || typeof elements.adminSections.forEach !== 'function') {
+    try { elements.adminSections = document.querySelectorAll('.admin-section'); } catch(e){}
+}
+elements.adminTabs.forEach(tab => {
                 if (tab.dataset.tab === tabId) {
                     tab.classList.add('active');
                 } else {
@@ -5755,6 +5871,45 @@ async function refreshServiceRequests() {
         refreshServiceRequests();
     }
 }
+
+
+// === Admin Tabs: binding robust (prevents overlays/forms from breaking clicks) ===
+window.switchAdminTab = function(tabId){
+    try{
+        tabId = (tabId || '').trim();
+        if(!tabId) return false;
+
+        // Prefer existing function if available
+        if (typeof switchTab === 'function') {
+            switchTab(tabId);
+        } else {
+            // Fallback (manual)
+            document.querySelectorAll('.admin-tab').forEach(btn=>{
+                const id = btn.getAttribute('data-tab');
+                btn.classList.toggle('active', id === tabId);
+            });
+            document.querySelectorAll('.admin-section').forEach(sec=>{
+                sec.classList.toggle('active', sec.id === (tabId + 'Section'));
+            });
+            if (tabId === 'serviceRequests' && typeof refreshServiceRequests === 'function') {
+                refreshServiceRequests();
+            }
+        }
+    }catch(e){
+        console.error('switchAdminTab error:', e);
+    }
+    return false;
+};
+
+// Capture clicks early to avoid other handlers/overlays preventing them
+document.addEventListener('click', function(e){
+    const btn = e.target && e.target.closest ? e.target.closest('.admin-tab') : null;
+    if(!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const tabId = btn.getAttribute('data-tab') || (btn.dataset ? btn.dataset.tab : '');
+    window.switchAdminTab(tabId);
+}, true);
 
 function updateProductsTable() {
             elements.productsTableBody.innerHTML = '';
@@ -5986,6 +6141,9 @@ function updateProductsTable() {
                 case 'auth/wrong-password': return 'كلمة المرور غير صحيحة';
                 case 'auth/too-many-requests': return 'محاولات كثيرة، حاول لاحقاً';
                 case 'auth/network-request-failed': return 'مشكلة اتصال بالإنترنت';
+                case 'auth/unauthorized-domain': return 'الدومين غير مصرح به في Firebase (أضف الدومين من Authentication > Settings > Authorized domains)';
+                case 'auth/operation-not-allowed': return 'تسجيل Email/Password غير مفعّل في Firebase (فعّله من Authentication > Sign-in method)';
+                case 'auth/too-many-requests': return 'محاولات كثيرة جداً، حاول لاحقاً';
                 case 'auth/user-disabled': return 'تم تعطيل هذا الحساب';
                 default:
                     return (err && err.message) ? 'فشل تسجيل الدخول: ' + err.message : 'فشل تسجيل الدخول';
@@ -6030,7 +6188,7 @@ function updateProductsTable() {
 
             if (state.isAdmin) {
                 elements.adminPanel && (elements.adminPanel.style.display = 'block');
-                elements.adminLoginBtn && (elements.adminLoginBtn.style.display = 'none');
+                if (elements.adminLoginBtn) elements.adminLoginBtn.style.display = 'block';
 
                 // تذكير الواجهة (اختياري)
                 localStorage.setItem('wassam_admin', 'true');
@@ -6054,6 +6212,218 @@ function updateProductsTable() {
             }
         }
 
+
+        // ===== وضع المستخدم (حسابي) =====
+        function setUserAuthError(msg = '') {
+            const el1 = document.getElementById('userAuthError');
+            const el2 = document.getElementById('userAuthErrorRegister');
+            [el1, el2].forEach(el => {
+                if (!el) return;
+                el.textContent = msg || '';
+                el.style.display = msg ? 'block' : 'none';
+            });
+        }
+
+
+        function mapUserAuthError(err) {
+            const code = (err && err.code) ? String(err.code) : '';
+            switch (code) {
+                case 'auth/invalid-email': return 'البريد الإلكتروني غير صحيح';
+                case 'auth/user-not-found': return 'هذا الحساب غير موجود';
+                case 'auth/wrong-password': return 'كلمة المرور غير صحيحة';
+                case 'auth/email-already-in-use': return 'هذا البريد مستخدم بالفعل';
+                case 'auth/weak-password': return 'كلمة المرور ضعيفة';
+                case 'auth/network-request-failed': return 'مشكلة اتصال بالإنترنت';
+                case 'auth/unauthorized-domain': return 'الدومين غير مصرح به في Firebase (أضف الدومين من Authentication > Settings > Authorized domains)';
+                case 'auth/operation-not-allowed': return 'تسجيل Email/Password غير مفعّل في Firebase (فعّله من Authentication > Sign-in method)';
+                case 'auth/too-many-requests': return 'محاولات كثيرة جداً، حاول لاحقاً';
+                default:
+                    return (err && err.message) ? 'خطأ: ' + err.message : 'حدث خطأ';
+            }
+        }
+
+        function closeMobileDrawer() {
+            const d = document.getElementById('mDrawer');
+            const b = document.getElementById('mDrawerBackdrop');
+            if (d) { d.classList.remove('open'); d.setAttribute('aria-hidden', 'true'); }
+            if (b) { b.classList.remove('show'); }
+        }
+
+        async function saveUserProfile(user, profile = {}) {
+            if (!firebaseInitialized || !db || !user) return false;
+            try {
+                const ts = getServerTimestamp();
+                const payload = {
+                    uid: user.uid,
+                    email: user.email || '',
+                    name: profile.name || (user.displayName || ''),
+                    phone: profile.phone || '',
+                    updatedAt: ts,
+                    createdAt: ts
+                };
+                await db.collection('users').doc(user.uid).set(payload, { merge: true });
+                return true;
+            } catch (e) {
+                console.warn('saveUserProfile failed:', e);
+                return false;
+            }
+        }
+
+        async function trySaveOrderForUser(channel = 'unknown') {
+            try {
+                if (!firebaseInitialized || !db) return false;
+                if (!state.currentUser) {
+                    showNotification('ℹ️ لتخزين مشترياتك داخل حسابك، افتح "حسابي" وسجّل الدخول', 'info');
+                    return false;
+                }
+
+                const orderId = `OR-${Date.now()}`;
+                const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const shippingFee = state.shippingMethod === 'delivery' ? 2 : 0;
+                const total = subtotal + shippingFee;
+
+                const payload = {
+                    orderId,
+                    userId: state.currentUser.uid,
+                    userEmail: state.currentUser.email || '',
+                    customerName: (elements.customerName ? elements.customerName.value : '') || '',
+                    customerPhone: (elements.customerPhone ? elements.customerPhone.value : '') || '',
+                    shippingMethod: state.shippingMethod,
+                    customerAddress: (elements.customerAddress ? elements.customerAddress.value : '') || '',
+                    items: state.cart.map(i => ({
+                        id: i.id || '',
+                        name: i.name || '',
+                        price: i.price || 0,
+                        quantity: i.quantity || 0
+                    })),
+                    subtotal,
+                    shippingFee,
+                    total,
+                    channel,
+                    status: 'جديد',
+                    createdAt: getServerTimestamp(),
+                    updatedAt: getServerTimestamp()
+                };
+
+                await db.collection('orders').doc(orderId).set(payload, { merge: true });
+                return true;
+            } catch (e) {
+                console.warn('save order failed:', e);
+                return false;
+            }
+        }
+
+        function renderMiniItems(container, items, emptyText) {
+            if (!container) return;
+            if (!items || !items.length) {
+                container.innerHTML = `<div class="mini-item"><div class="mini-muted">${escapeHtml(emptyText || 'لا يوجد بيانات بعد')}</div></div>`;
+                return;
+            }
+            container.innerHTML = items.map(it => {
+                return `
+                    <div class="mini-item">
+                        <div class="row">
+                            <div><strong>${escapeHtml(it.title || '')}</strong></div>
+                            <div class="mini-muted">${escapeHtml(it.right || '')}</div>
+                        </div>
+                        ${it.lines && it.lines.length ? `<div style="margin-top:8px;" class="mini-muted">${it.lines.map(l=>escapeHtml(l)).join('<br>')}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function loadUserAccountData() {
+            if (!state.currentUser) return;
+            const u = state.currentUser;
+
+            if (elements.accountEmail) elements.accountEmail.textContent = u.email || '';
+            if (elements.accountName) elements.accountName.textContent = (state.currentUserProfile && state.currentUserProfile.name) ? state.currentUserProfile.name : (u.displayName || 'مستخدم');
+
+            if (!firebaseInitialized || !db) {
+                renderMiniItems(elements.userOrdersList, [], 'Firebase غير متصل حالياً');
+                renderMiniItems(elements.userServiceRequestsList, [], 'Firebase غير متصل حالياً');
+                return;
+            }
+
+            try {
+                let snap;
+                try {
+                    snap = await db.collection('orders').where('userId', '==', u.uid).orderBy('createdAt', 'desc').limit(20).get();
+                } catch (orderErr) {
+                    snap = await db.collection('orders').where('userId', '==', u.uid).limit(20).get();
+                }
+                const orders = [];
+                snap.forEach(doc => {
+                    const d = doc.data() || {};
+                    orders.push({
+                        title: `طلب #${d.orderId || doc.id}`,
+                        right: d.status || '',
+                        lines: [
+                            `المجموع: ${d.total || 0} دينار`,
+                            `الشحن: ${d.shippingMethod === 'delivery' ? 'توصيل' : 'استلام'}`,
+                            `القناة: ${d.channel || ''}`
+                        ]
+                    });
+                });
+                renderMiniItems(elements.userOrdersList, orders, 'لا توجد مشتريات محفوظة بعد');
+            } catch (e) {
+                console.warn(e);
+                renderMiniItems(elements.userOrdersList, [], 'تعذر تحميل المشتريات');
+            }
+
+            try {
+                let snap;
+                try {
+                    snap = await db.collection('service_requests').where('userId', '==', u.uid).orderBy('createdAt', 'desc').limit(20).get();
+                } catch (reqErr) {
+                    snap = await db.collection('service_requests').where('userId', '==', u.uid).limit(20).get();
+                }
+                const reqs = [];
+                snap.forEach(doc => {
+                    const d = doc.data() || {};
+                    reqs.push({
+                        title: `طلب صيانة #${d.requestId || doc.id}`,
+                        right: d.status || '',
+                        lines: [
+                            `${d.deviceType || ''} - ${d.deviceSize || ''}`,
+                            `${d.customerPhone || ''}`
+                        ]
+                    });
+                });
+                renderMiniItems(elements.userServiceRequestsList, reqs, 'لا توجد طلبات صيانة محفوظة بعد');
+            } catch (e) {
+                console.warn(e);
+                renderMiniItems(elements.userServiceRequestsList, [], 'تعذر تحميل طلبات الصيانة');
+            }
+        }
+
+        async function applyUserState(user, options = {}) {
+            state.currentUser = user || null;
+            state.currentUserProfile = null;
+
+            if (!user) {
+                if (elements.userAccountBtn) elements.userAccountBtn.innerHTML = '<i class="fas fa-user"></i> حسابي';
+                if (elements.mUserAccountBtn) elements.mUserAccountBtn.innerHTML = '<i class="fas fa-user"></i> حسابي';
+                return;
+            }
+
+            try {
+                if (firebaseInitialized && db) {
+                    const snap = await db.collection('users').doc(user.uid).get();
+                    if (snap && snap.exists) state.currentUserProfile = snap.data() || null;
+                }
+            } catch (e) {
+                console.warn('load user profile failed:', e);
+            }
+
+            const name = (state.currentUserProfile && state.currentUserProfile.name) ? state.currentUserProfile.name : (user.displayName || 'حسابي');
+            if (elements.userAccountBtn) elements.userAccountBtn.innerHTML = '<i class="fas fa-user"></i> ' + escapeHtml(name);
+            if (elements.mUserAccountBtn) elements.mUserAccountBtn.innerHTML = '<i class="fas fa-user"></i> ' + escapeHtml(name);
+
+            if (options.announce) showNotification('✅ تم تسجيل دخول المستخدم');
+        }
+
+
         function setupAuthObserver() {
             if (_authObserverAttached) return;
             _authObserverAttached = true;
@@ -6067,6 +6437,7 @@ function updateProductsTable() {
                 try {
                     if (!user) {
                         await applyAdminMode(false, { announce: !_authObserverFirstRun });
+                        await applyUserState(null, { announce: false });
                         _authObserverFirstRun = false;
                         return;
                     }
@@ -6074,14 +6445,11 @@ function updateProductsTable() {
                     const ok = await isFirebaseAdmin(user);
                     if (ok) {
                         await applyAdminMode(true, { announce: !_authObserverFirstRun });
+                        await applyUserState(user, { announce: false });
                     } else {
-                        // دخول ناجح لكن ليس أدمن -> نسجل خروج مباشرة
-                        await applyAdminMode(false, { announce: !_authObserverFirstRun });
-                        try { await window.auth.signOut(); } catch (e) {}
-                        if (!_authObserverFirstRun) showNotification('❌ هذا الحساب ليس أدمن', 'error');
-                    }
-
-                } catch (e) {
+                        await applyAdminMode(false, { announce: false });
+                        await applyUserState(user, { announce: !_authObserverFirstRun });
+                    }} catch (e) {
                     console.warn('Auth observer error:', e);
                 } finally {
                     _authObserverFirstRun = false;
@@ -6134,7 +6502,6 @@ function updateProductsTable() {
                 }
 
                 // نجاح
-                localStorage.setItem('wassam_admin_email', email);
                 await applyAdminMode(true, { announce: true });
                 closeLoginModalSafe();
 
@@ -6158,6 +6525,86 @@ function updateProductsTable() {
             } catch (e) {
                 console.warn('signOut failed:', e);
             }
+
+        async function handleUserLogin() {
+            if (!firebaseInitialized || !window.auth) {
+                setUserAuthError('Firebase غير جاهز حالياً');
+                showNotification('❌ Firebase غير جاهز', 'error');
+                return;
+            }
+            const email = (elements.userEmailLogin ? elements.userEmailLogin.value.trim() : '');
+            const password = elements.userPasswordLogin ? elements.userPasswordLogin.value : '';
+            if (!email || !password) {
+                setUserAuthError('أدخل البريد الإلكتروني وكلمة المرور');
+                return;
+            }
+            setUserAuthError('');
+            try {
+                await window.auth.signInWithEmailAndPassword(email, password);
+                if (elements.userAuthModal) elements.userAuthModal.style.display = 'none';
+                if (elements.overlay) elements.overlay.classList.remove('active');
+                showNotification('✅ تم تسجيل الدخول');
+            } catch (err) {
+                const msg = mapUserAuthError(err);
+                setUserAuthError(msg);
+                showNotification('❌ ' + msg, 'error');
+            } finally {
+                if (elements.userPasswordLogin) elements.userPasswordLogin.value = '';
+            }
+        }
+
+        async function handleUserRegister() {
+            if (!firebaseInitialized || !window.auth) {
+                setUserAuthError('Firebase غير جاهز حالياً');
+                showNotification('❌ Firebase غير جاهز', 'error');
+                return;
+            }
+            const name = (elements.userNameRegister ? elements.userNameRegister.value.trim() : '');
+            const phone = (elements.userPhoneRegister ? elements.userPhoneRegister.value.trim() : '');
+            const email = (elements.userEmailRegister ? elements.userEmailRegister.value.trim() : '');
+            const password = elements.userPasswordRegister ? elements.userPasswordRegister.value : '';
+
+            if (!email || !password) {
+                setUserAuthError('أدخل البريد الإلكتروني وكلمة المرور');
+                return;
+            }
+            if (password.length < 6) {
+                setUserAuthError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+                return;
+            }
+
+            setUserAuthError('');
+            try {
+                const cred = await window.auth.createUserWithEmailAndPassword(email, password);
+                const user = cred && cred.user;
+                if (user && name) {
+                    try { await user.updateProfile({ displayName: name }); } catch(e){}
+                }
+                try { await saveUserProfile(user, { name, phone }); } catch(e){}
+                if (elements.userAuthModal) elements.userAuthModal.style.display = 'none';
+                if (elements.overlay) elements.overlay.classList.remove('active');
+                showNotification('✅ تم إنشاء الحساب بنجاح');
+            } catch (err) {
+                const msg = mapUserAuthError(err);
+                setUserAuthError(msg);
+                showNotification('❌ ' + msg, 'error');
+            } finally {
+                if (elements.userPasswordRegister) elements.userPasswordRegister.value = '';
+            }
+        }
+
+        async function handleUserLogout() {
+            try {
+                if (window.auth) await window.auth.signOut();
+            } catch (e) {
+                console.warn('user signOut failed:', e);
+            }
+            if (elements.userAccountModal) elements.userAccountModal.style.display = 'none';
+            if (elements.userAuthModal) elements.userAuthModal.style.display = 'none';
+            if (elements.overlay) elements.overlay.classList.remove('active');
+            showNotification('✅ تم تسجيل الخروج');
+        }
+
             await applyAdminMode(false, { announce: true });
             showConnectionMessage('info', 'تم تسجيل الخروج');
         }
@@ -6166,7 +6613,11 @@ function updateProductsTable() {
 
 
         function setupEventListeners() {
-            const bind = (el, ev, fn, opts) => { if(el) el.addEventListener(ev, fn, opts); };
+            
+            // منع ربط الأحداث مرتين
+            if (window.__wesamEventsBound) return;
+            window.__wesamEventsBound = true;
+const bind = (el, ev, fn, opts) => { if(el) el.addEventListener(ev, fn, opts); };
 
             // البحث والفرز
             bind(elements.searchInput, 'input', filterProducts);
@@ -6183,15 +6634,16 @@ function updateProductsTable() {
             bind(elements.closeCart, 'click', closeCartModal);
             
             bind(elements.closeGalleryModal, 'click', () => {
-                elements.galleryModal.style.display = 'none';
+                if (elements.galleryModal) elements.galleryModal.style.display = 'none';
                 elements.overlay.classList.remove('active');
             });
             
             bind(elements.overlay, 'click', () => {
                 closeCartModal();
-                elements.galleryModal.style.display = 'none';
-                elements.loginModal.style.display = 'none';
-                elements.adminAccessModal.style.display = 'none';
+                if (elements.galleryModal) elements.galleryModal.style.display = 'none';
+                if (elements.loginModal) elements.loginModal.style.display = 'none';
+                if (elements.userAuthModal) elements.userAuthModal.style.display = 'none';
+                if (elements.userAccountModal) elements.userAccountModal.style.display = 'none';
                 elements.overlay.classList.remove('active');
                 document.body.style.overflow = 'auto';
             });
@@ -6232,60 +6684,113 @@ function updateProductsTable() {
             });
             
             // إرسال الطلب عبر واتساب
-            bind(elements.whatsappOrderBtn, 'click', () => {
+            bind(elements.whatsappOrderBtn, 'click', async () => {
                 if (state.cart.length === 0) {
                     alert('سلة التسوق فارغة');
                     return;
                 }
-                
                 if (!validateCustomerInfo()) return;
-                
+
+                try { await trySaveOrderForUser('whatsapp'); } catch(e){ console.warn(e); }
+
                 const orderMessage = createOrderMessage();
                 const whatsappUrl = state.storeSettings.whatsappLink || 'https://wa.me/962790781206';
                 const finalUrl = `${whatsappUrl}?text=${encodeURIComponent(orderMessage)}`;
                 window.open(finalUrl, '_blank');
-                
+
                 state.cart = [];
                 updateCart();
                 elements.addProductForm.reset();
                 elements.deliveryAddress.classList.remove('show');
                 elements.pickupOption.click();
-                
+
                 showNotification('✅ تم فتح واتساب لإرسال الطلب. شكراً لشرائك!');
             });
-            
-            // إرسال الطلب بالبريد
-            bind(elements.emailOrderBtn, 'click', () => {
+// إرسال الطلب بالبريد
+            bind(elements.emailOrderBtn, 'click', async () => {
                 if (state.cart.length === 0) {
                     alert('سلة التسوق فارغة');
                     return;
                 }
-                
                 if (!validateCustomerInfo()) return;
-                
+
+                try { await trySaveOrderForUser('email'); } catch(e){ console.warn(e); }
+
                 const orderMessage = createOrderMessage();
-                const emailAddress = 'wesamelectronics@gmail.com';
+                const emailAddress = (state.storeSettings.storeEmail || 'wesamelectronics@gmail.com').trim() || 'wesamelectronics@gmail.com';
                 const emailSubject = `طلب جديد من ${elements.customerName.value}`;
                 const emailBody = orderMessage;
                 const mailtoUrl = `mailto:${emailAddress}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-                
                 window.location.href = mailtoUrl;
-                
+
                 showNotification('✅ تم فتح بريدك الإلكتروني لإرسال الطلب');
             });
-            
-            // تسجيل الدخول
-            bind(elements.adminLoginBtn, 'click', () => {
-                // تجهيز النافذة
-                if (elements.adminEmail) {
-                    elements.adminEmail.value = localStorage.getItem('wassam_admin_email') || (ADMIN_EMAILS && ADMIN_EMAILS[0] ? ADMIN_EMAILS[0] : '');
-                }
-                setLoginError('');
-                elements.loginModal.style.display = 'block';
-                elements.overlay.classList.add('active');
-                setTimeout(() => { try { if (elements.adminEmail) elements.adminEmail.focus(); else if (elements.adminPassword) elements.adminPassword.focus(); } catch(e){} }, 80);
-            });
 
+            // أزرار الحساب (مستخدم / أدمن)
+            const openAdminLoginModal = () => {
+                setLoginError('');
+                if (elements.adminEmail) elements.adminEmail.value = '';
+                if (elements.adminPassword) elements.adminPassword.value = '';
+                if (elements.loginModal) elements.loginModal.style.display = 'block';
+                if (elements.overlay) elements.overlay.classList.add('active');
+                setTimeout(() => { try { if (elements.adminEmail) elements.adminEmail.focus(); else if (elements.adminPassword) elements.adminPassword.focus(); } catch(e){} }, 80);
+            };
+
+            const openUserAuthOrAccount = () => {
+                if (state.currentUser) {
+                    if (elements.userAccountModal) {
+                        elements.userAccountModal.style.display = 'block';
+                        if (elements.overlay) elements.overlay.classList.add('active');
+                        try { loadUserAccountData(); } catch(e){ console.warn(e); }
+                    }
+                } else {
+                    if (elements.userAuthModal) {
+                        elements.userAuthModal.style.display = 'block';
+                        if (elements.overlay) elements.overlay.classList.add('active');
+                        try { setUserAuthError(''); } catch(e){}
+                    }
+                }
+            };
+
+            bind(elements.adminLoginBtn, 'click', openAdminLoginModal);
+            bind(elements.mAdminPanelBtn, 'click', () => { try { closeMobileDrawer(); } catch(e){} openAdminLoginModal(); });
+
+            bind(elements.userAccountBtn, 'click', openUserAuthOrAccount);
+            bind(elements.mUserAccountBtn, 'click', () => { try { closeMobileDrawer(); } catch(e){} openUserAuthOrAccount(); });
+
+            // تبويبات تسجيل المستخدم
+            const authTabs = document.querySelectorAll('#userAuthModal .auth-tab');
+            authTabs.forEach(t => bind(t, 'click', () => {
+                authTabs.forEach(x => x.classList.remove('active'));
+                t.classList.add('active');
+                const tab = t.getAttribute('data-tab');
+                const loginPane = document.getElementById('authLoginPane');
+                const regPane = document.getElementById('authRegisterPane');
+                if (tab === 'register') {
+                    if (loginPane) loginPane.style.display = 'none';
+                    if (regPane) regPane.style.display = 'block';
+                } else {
+                    if (loginPane) loginPane.style.display = 'block';
+                    if (regPane) regPane.style.display = 'none';
+                }
+            }));
+
+            // تبويبات حساب المستخدم
+            const accountTabs = document.querySelectorAll('#userAccountModal .account-tab');
+            accountTabs.forEach(t => bind(t, 'click', () => {
+                accountTabs.forEach(x => x.classList.remove('active'));
+                t.classList.add('active');
+                const tab = t.getAttribute('data-tab');
+                const ordersPane = document.getElementById('accountOrdersPane');
+                const reqPane = document.getElementById('accountRequestsPane');
+                if (tab === 'requests') {
+                    if (ordersPane) ordersPane.style.display = 'none';
+                    if (reqPane) reqPane.style.display = 'block';
+                } else {
+                    if (ordersPane) ordersPane.style.display = 'block';
+                    if (reqPane) reqPane.style.display = 'none';
+                }
+            }));
 bind(elements.closeLoginModal, 'click', () => {
                 elements.loginModal.style.display = 'none';
                 elements.overlay.classList.remove('active');
@@ -6293,7 +6798,25 @@ bind(elements.closeLoginModal, 'click', () => {
                 elements.adminPassword.value = '';
             });
             
-            bind(elements.loginBtn, 'click', handleAdminLogin);
+            
+            bind(elements.closeUserAuthModal, 'click', () => {
+                if (elements.userAuthModal) elements.userAuthModal.style.display = 'none';
+                if (elements.overlay) elements.overlay.classList.remove('active');
+                setUserAuthError('');
+            });
+
+            bind(elements.closeUserAccountModal, 'click', () => {
+                if (elements.userAccountModal) elements.userAccountModal.style.display = 'none';
+                if (elements.overlay) elements.overlay.classList.remove('active');
+            });
+
+bind(elements.loginBtn, 'click', handleAdminLogin);
+
+            // حساب المستخدم
+            bind(elements.userLoginBtn, 'click', handleUserLogin);
+            bind(elements.userRegisterBtn, 'click', handleUserRegister);
+            bind(elements.userLogoutBtn, 'click', handleUserLogout);
+
 
             // Enter للتسجيل بسرعة
             bind(elements.adminEmail, 'keydown', (e) => { if (e.key === 'Enter') handleAdminLogin(); });
@@ -6303,35 +6826,8 @@ bind(elements.closeLoginModal, 'click', () => {
             // تسجيل الخروج
             bind(elements.adminLogoutBtn, 'click', handleAdminLogout);
             
-            // تحكم المدير
-            document.addEventListener('keydown', function(event) {
-                if (event.ctrlKey && (event.key === 'F7' || event.keyCode === 118)) {
-                    event.preventDefault();
-                    state.adminButtonVisible = !state.adminButtonVisible;
-                    elements.adminLoginBtn.style.display = state.adminButtonVisible ? 'block' : 'none';
-                    
-                    if (state.adminButtonVisible) {
-                        showNotification('🔓 زر دخول المدير ظاهر الآن. اضغط Esc لإخفائه.');
-                    } else {
-                        showNotification('🔒 تم إخفاء زر المدير');
-                    }
-                }
-                
-                if (event.key === 'Escape' || event.keyCode === 27) {
-                    if (state.adminButtonVisible) {
-                        state.adminButtonVisible = false;
-                        elements.adminLoginBtn.style.display = 'none';
-                    }
-                }
-                
-                if ((event.key === 'F12' || event.keyCode === 123) && state.isAdmin) {
-                    event.preventDefault();
-                    handleAdminLogout();
-                    showNotification('🔒 تم تسجيل الخروج من لوحة المدير');
-                }
-            });
-            
-            // تبويبات لوحة التحكم
+            // زر لوحة التحكم ظاهر دائماً
+// تبويبات لوحة التحكم
             elements.adminTabs.forEach(tab => {
                 tab.addEventListener('click', () => {
                     switchTab(tab.dataset.tab);
@@ -6408,7 +6904,7 @@ bind(elements.closeLoginModal, 'click', () => {
             
             bind(elements.accessHideBtn, 'click', () => {
                 state.adminButtonVisible = false;
-                elements.adminLoginBtn.style.display = 'none';
+                elements.adminLoginBtn.style.display = 'block';
                 elements.adminAccessModal.style.display = 'none';
                 elements.overlay.classList.remove('active');
                 document.body.style.overflow = 'auto';
@@ -6422,7 +6918,7 @@ bind(elements.closeLoginModal, 'click', () => {
 
                 // تجهيز نافذة الدخول
                 if (elements.adminEmail) {
-                    elements.adminEmail.value = localStorage.getItem('wassam_admin_email') || (ADMIN_EMAILS && ADMIN_EMAILS[0] ? ADMIN_EMAILS[0] : '');
+                    elements.adminEmail.value = '';
                 }
                 setLoginError('');
 
@@ -6553,6 +7049,8 @@ if (elements.serviceRequestForm) {
         const requestId = `SR-${Date.now()}`;
         const docData = {
             requestId,
+            userId: (state.currentUser ? state.currentUser.uid : null),
+            userEmail: (state.currentUser ? (state.currentUser.email || '') : ''),
             customerName,
             customerPhone,
             deviceType,
@@ -6625,7 +7123,11 @@ if (elements.refreshServiceRequestsBtn) {
 
     showConnectionMessage('info', 'جاري الاتصال بقاعدة البيانات...');
 
-    // تحميل بيانات أساسية للزوار
+        // ✅ اربط أزرار (حسابي / لوحة التحكم) فوراً حتى لو تعطل التحميل
+    try { setupEventListeners(); } catch (e) { console.warn(e); }
+    try { updateUI(); } catch (e) { console.warn(e); }
+
+// تحميل بيانات أساسية للزوار
     try { await loadSiteSettings(); } catch (e) { console.warn(e); }
     try { await loadStoreSettings(); } catch (e) { console.warn(e); }
     updateContactLinksUI();
@@ -6945,96 +7447,12 @@ document.addEventListener("DOMContentLoaded", function(){
 /* =========================
    DARK MODE THEME
 ========================= */
-body.dark {
   --light-color: #121212;
   --dark-color: #ffffff;
   --text-color: #eaeaea;
   --border-color: #2c2c2c;
   background-color: #121212;
   color: var(--text-color);
-}
-body.dark header,
-body.dark footer {
-  background: linear-gradient(135deg, #0b1c3d, #102a56);
-}
-body.dark .product-card,
-body.dark .category-card,
-body.dark .modal-content,
-body.dark .cart-modal-content {
-  background-color: #1b1b1b;
-  box-shadow: 0 12px 28px rgba(0,0,0,0.6);
-}
-body.dark .section-title,
-body.dark .product-name,
-body.dark .category-name {
-  color: #90caf9;
-}
-body.dark .buy-btn {
-  background: linear-gradient(135deg, #ff9800, #ff6f00);
-}
-
-/* Dark mode icons */
-body.dark i {
-  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.6));
-}
-
-/* =========================
-   DARK MODE TOGGLE BUTTON
-========================= */
-.dark-toggle {
-  position: fixed;
-  bottom: 90px;
-  right: 20px;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  background: linear-gradient(135deg, #ff9800, #ff6f00);
-  color: #fff;
-  font-size: 1.2rem;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.4);
-  z-index: 6000;
-}
-.dark-toggle:hover {
-  transform: scale(1.08);
-}
-</style>
-
-<script>
-/* ===== Dark Mode Toggle ===== */
-(function(){
-  const btn = document.createElement('button');
-  btn.className = 'dark-toggle';
-  btn.innerHTML = '<i class="fas fa-moon"></i>';
-  document.body.appendChild(btn);
-
-  const saved = localStorage.getItem('darkMode');
-  if(saved === 'on'){
-    document.body.classList.add('dark');
-    btn.innerHTML = '<i class="fas fa-sun"></i>';
-  }
-
-  btn.onclick = () => {
-    document.body.classList.toggle('dark');
-    const isDark = document.body.classList.contains('dark');
-    localStorage.setItem('darkMode', isDark ? 'on' : 'off');
-    btn.innerHTML = isDark
-      ? '<i class="fas fa-sun"></i>'
-      : '<i class="fas fa-moon"></i>';
-  };
-})();
-</script>
-
-
-<!-- ===== NEON GLOW + AUTO DARK + METAL LOGO VARIANTS + MICRO ANIMATIONS ===== -->
-<style>
-/* =========================
-   NEON GLOW (Primary CTAs)
-========================= */
-.cta, .buy-btn, .btn-primary, .whatsapp-btn {
-  position: relative;
-  isolation: isolate;
 }
 .cta::after, .buy-btn::after, .btn-primary::after, .whatsapp-btn::after{
   content:'';
@@ -7116,49 +7534,9 @@ body.dark i {
    AUTO DARK MODE (System)
 ========================= */
 /* default follows system */
-@media (prefers-color-scheme: dark){
-  body:not(.light-forced){
-    --light-color:#121212;
-    --dark-color:#ffffff;
-    --text-color:#eaeaea;
-    --border-color:#2c2c2c;
-    background:#121212; color:var(--text-color);
-  }
 }
 /* manual overrides already supported via .dark on body */
 </style>
-
-<script>
-/* ===== Auto Dark Mode with System Preference + Manual Override ===== */
-(function(){
-  const key='darkMode';
-  const saved = localStorage.getItem(key);
-  const mq = window.matchMedia('(prefers-color-scheme: dark)');
-  function apply(){
-    if(saved==='on'){ document.body.classList.add('dark'); document.body.classList.remove('light-forced'); }
-    else if(saved==='off'){ document.body.classList.remove('dark'); document.body.classList.add('light-forced'); }
-    else{
-      document.body.classList.toggle('dark', mq.matches);
-      document.body.classList.remove('light-forced');
-    }
-  }
-  mq.addEventListener?.('change', ()=>{ if(!localStorage.getItem(key)) apply(); });
-  apply();
-
-  /* Switch logo metal by theme */
-  function syncLogo(){
-    const logos=document.querySelectorAll('.logo-text, .m-brand-name');
-    logos.forEach(l=>{
-      l.classList.remove('metal-light','metal-dark');
-      l.classList.add(document.body.classList.contains('dark')?'metal-dark':'metal-light');
-    });
-  }
-  syncLogo();
-  const obs=new MutationObserver(syncLogo);
-  obs.observe(document.body,{attributes:true,attributeFilter:['class']});
-})();
-</script>
-
 
 <!-- ===== SMART NEON + CARD LIFT + GLASS TOP + ADS MODE ===== -->
 <style>
@@ -7202,7 +7580,6 @@ body.dark i {
   -webkit-backdrop-filter: blur(14px) saturate(120%);
   border: 1px solid rgba(255,255,255,.35);
 }
-body.dark .glass{
   background: rgba(20,20,20,.65);
   border-color: rgba(255,255,255,.08);
 }
@@ -7219,7 +7596,6 @@ header.glass, .top-nav.glass, .m-topbar.glass{}
 ========================= */
 body.ads-mode .categories-section,
 body.ads-mode footer,
-body.ads-mode .admin-access-panel{
   display:none !important;
 }
 body.ads-mode .hero{
@@ -7512,6 +7888,192 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.querySelectorAll('.logo-text, .m-brand-name')
     .forEach(el=> el.setAttribute('data-lottie','fill'));
 });
+</script>
+
+
+<!-- ✅ Admin Panel Patch (ensures "لوحة التحكم" works even if other scripts fail) -->
+<script>
+(function(){
+  if (window.__wesamAdminPatchBound) return;
+  window.__wesamAdminPatchBound = true;
+
+  const $ = (id) => document.getElementById(id);
+
+  function showMsg(text, ok){
+    // Try to use existing notification system if available
+    try{
+      if (typeof window.showNotification === 'function') return window.showNotification(text);
+    }catch(e){}
+    // Fallback
+    try{ console.log(text); }catch(e){}
+    if (!ok) {
+      try { alert(text); } catch(e){}
+    }
+  }
+
+  function setLoginError(msg){
+    const el = $('loginError');
+    if(!el) return;
+    if(msg){
+      el.textContent = msg;
+      el.style.display = 'block';
+    }else{
+      el.style.display = 'none';
+    }
+  }
+
+  function openAdminModal(){
+    const modal = $('loginModal');
+    const overlay = $('overlay');
+    if(modal) modal.style.display = 'block';
+    if(overlay) overlay.classList.add('active');
+    setLoginError('');
+    setTimeout(() => {
+      const email = $('adminEmail');
+      const pass = $('adminPassword');
+      try { (email || pass).focus(); } catch(e){}
+    }, 60);
+  }
+
+  function closeAdminModal(){
+    const modal = $('loginModal');
+    const overlay = $('overlay');
+    if(modal) modal.style.display = 'none';
+    if(overlay) overlay.classList.remove('active');
+    setLoginError('');
+  }
+
+  function openAdminPanel(){
+    const panel = $('adminPanel');
+    if(panel) panel.style.display = 'block';
+    // close modals/overlays if open
+    closeAdminModal();
+    // scroll to panel for clarity
+    try { panel.scrollIntoView({behavior:'smooth', block:'start'}); } catch(e){}
+  }
+
+  function hideAdminPanel(){
+    const panel = $('adminPanel');
+    if(panel) panel.style.display = 'none';
+  }
+
+  async function isCurrentUserAdmin(){
+    try{
+      const auth = window.auth || (window.firebase && firebase.auth && firebase.auth());
+      const db = window.db || (window.firebase && firebase.firestore && firebase.firestore());
+      if(!auth || !db) return false;
+      const u = auth.currentUser;
+      if(!u) return false;
+      const doc = await db.collection('admins').doc(u.uid).get();
+      return !!(doc && doc.exists);
+    }catch(e){
+      return false;
+    }
+  }
+
+  function bindOnce(el, ev, fn){
+    if(!el) return;
+    const key = '__bound_' + ev;
+    if(el[key]) return;
+    el[key] = true;
+    el.addEventListener(ev, fn);
+  }
+
+  async function onAdminButtonClick(ev){
+    try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){}
+    // If already logged in as admin, open panel directly; otherwise open login modal
+    const ok = await isCurrentUserAdmin();
+    if(ok) openAdminPanel();
+    else openAdminModal();
+  }
+
+  async function doAdminLogin(){
+    const email = ($('adminEmail') && $('adminEmail').value || '').trim();
+    const pass  = ($('adminPassword') && $('adminPassword').value || '');
+    if(!email || !pass){
+      setLoginError('يرجى إدخال البريد الإلكتروني وكلمة المرور');
+      return;
+    }
+
+    try{
+      const auth = window.auth || (window.firebase && firebase.auth && firebase.auth());
+      const db = window.db || (window.firebase && firebase.firestore && firebase.firestore());
+      if(!auth || !db){
+        setLoginError('Firebase غير جاهز. تأكد من اتصال الإنترنت وإعدادات Firebase.');
+        return;
+      }
+
+      setLoginError('');
+      const btn = $('loginBtn');
+      const oldText = btn ? btn.innerHTML : '';
+      if(btn){
+        btn.disabled = true;
+        btn.style.opacity = '0.85';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تسجيل الدخول...';
+      }
+
+      const cred = await auth.signInWithEmailAndPassword(email, pass);
+      const uid = cred && cred.user && cred.user.uid;
+      if(!uid){
+        setLoginError('فشل تسجيل الدخول.');
+        if(btn){ btn.disabled=false; btn.style.opacity=''; btn.innerHTML=oldText; }
+        return;
+      }
+
+      const snap = await db.collection('admins').doc(uid).get();
+      if(!snap.exists){
+        try{ await auth.signOut(); }catch(e){}
+        setLoginError('هذا الحساب ليس مديراً.');
+        if(btn){ btn.disabled=false; btn.style.opacity=''; btn.innerHTML=oldText; }
+        return;
+      }
+
+      if(btn){ btn.disabled=false; btn.style.opacity=''; btn.innerHTML=oldText; }
+      showMsg('✅ تم تسجيل الدخول كمدير بنجاح', true);
+      openAdminPanel();
+    }catch(err){
+      try{ console.warn(err); }catch(e){}
+      setLoginError('بيانات الدخول غير صحيحة أو لا يوجد صلاحية.');
+      const btn = $('loginBtn');
+      if(btn){
+        btn.disabled = false;
+        btn.style.opacity = '';
+        // restore basic label safely
+        btn.innerHTML = '<span class="btn-text">تسجيل الدخول</span>';
+      }
+    }
+  }
+
+  async function doAdminLogout(){
+    try{
+      const auth = window.auth || (window.firebase && firebase.auth && firebase.auth());
+      if(auth) await auth.signOut();
+    }catch(e){}
+    hideAdminPanel();
+    showMsg('تم تسجيل الخروج', true);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Buttons
+    bindOnce($('adminLoginBtn'), 'click', onAdminButtonClick);
+    bindOnce($('mAdminPanelBtn'), 'click', onAdminButtonClick);
+
+    // Close modal
+    bindOnce($('closeLoginModal'), 'click', (e)=>{ try{e.preventDefault()}catch(_){} closeAdminModal(); });
+    const modal = $('loginModal');
+    if(modal) bindOnce(modal, 'click', (e)=>{ if(e.target === modal) closeAdminModal(); });
+
+    // Login action
+    bindOnce($('loginBtn'), 'click', (e)=>{ try{e.preventDefault()}catch(_){} doAdminLogin(); });
+
+    // Enter key
+    const pass = $('adminPassword');
+    if(pass) bindOnce(pass, 'keydown', (e)=>{ if(e.key === 'Enter'){ doAdminLogin(); } });
+
+    // Logout in panel
+    bindOnce($('adminLogoutBtn'), 'click', (e)=>{ try{e.preventDefault()}catch(_){} doAdminLogout(); });
+  });
+})();
 </script>
 
 </body>
