@@ -6520,96 +6520,143 @@ function updateProductsTable() {
         }
 
         async function handleAdminLogout() {
-            try {
-                if (window.auth) await window.auth.signOut();
-            } catch (e) {
-                console.warn('signOut failed:', e);
-            }
+    try {
+        if (window.auth) await window.auth.signOut();
+    } catch (e) {
+        console.warn('signOut failed:', e);
+    }
+    await applyAdminMode(false, { announce: true });
+    showConnectionMessage('info', 'تم تسجيل الخروج');
+}
 
-        async function handleUserLogin() {
-            if (!firebaseInitialized || !window.auth) {
-                setUserAuthError('Firebase غير جاهز حالياً');
-                showNotification('❌ Firebase غير جاهز', 'error');
-                return;
+// ===== حساب المستخدم (تسجيل / إنشاء / خروج) =====
+async function handleUserLogin() {
+    if (!firebaseInitialized || !window.auth) {
+        setUserAuthError('Firebase غير جاهز حالياً');
+        showNotification('❌ Firebase غير جاهز', 'error');
+        return;
+    }
+
+    const email = (elements.userEmailLogin ? elements.userEmailLogin.value.trim() : '');
+    const password = elements.userPasswordLogin ? elements.userPasswordLogin.value : '';
+
+    if (!email || !password) {
+        setUserAuthError('أدخل البريد الإلكتروني وكلمة المرور');
+        return;
+    }
+
+    // مؤشر بسيط للمستخدم
+    const btn = elements.userLoginBtn;
+    const oldText = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="btn-text">جاري تسجيل الدخول...</span>'; }
+
+    setUserAuthError('');
+    try {
+        await window.auth.signInWithEmailAndPassword(email, password);
+
+        // أغلق نافذة التسجيل
+        if (elements.userAuthModal) elements.userAuthModal.style.display = 'none';
+        if (elements.overlay) elements.overlay.classList.remove('active');
+
+        showNotification('✅ تم تسجيل الدخول');
+
+        // افتح حسابي مباشرة
+        try {
+            if (elements.userAccountModal) {
+                elements.userAccountModal.style.display = 'block';
+                if (elements.overlay) elements.overlay.classList.add('active');
+                await loadUserAccountData();
             }
-            const email = (elements.userEmailLogin ? elements.userEmailLogin.value.trim() : '');
-            const password = elements.userPasswordLogin ? elements.userPasswordLogin.value : '';
-            if (!email || !password) {
-                setUserAuthError('أدخل البريد الإلكتروني وكلمة المرور');
-                return;
-            }
-            setUserAuthError('');
-            try {
-                await window.auth.signInWithEmailAndPassword(email, password);
-                if (elements.userAuthModal) elements.userAuthModal.style.display = 'none';
-                if (elements.overlay) elements.overlay.classList.remove('active');
-                showNotification('✅ تم تسجيل الدخول');
-            } catch (err) {
-                const msg = mapUserAuthError(err);
-                setUserAuthError(msg);
-                showNotification('❌ ' + msg, 'error');
-            } finally {
-                if (elements.userPasswordLogin) elements.userPasswordLogin.value = '';
-            }
+        } catch (e) {
+            console.warn(e);
         }
 
-        async function handleUserRegister() {
-            if (!firebaseInitialized || !window.auth) {
-                setUserAuthError('Firebase غير جاهز حالياً');
-                showNotification('❌ Firebase غير جاهز', 'error');
-                return;
-            }
-            const name = (elements.userNameRegister ? elements.userNameRegister.value.trim() : '');
-            const phone = (elements.userPhoneRegister ? elements.userPhoneRegister.value.trim() : '');
-            const email = (elements.userEmailRegister ? elements.userEmailRegister.value.trim() : '');
-            const password = elements.userPasswordRegister ? elements.userPasswordRegister.value : '';
+    } catch (err) {
+        const msg = mapUserAuthError(err);
+        setUserAuthError(msg);
+        showNotification('❌ ' + msg, 'error');
+    } finally {
+        if (elements.userPasswordLogin) elements.userPasswordLogin.value = '';
+        if (btn) { btn.disabled = false; btn.innerHTML = oldText; }
+    }
+}
 
-            if (!email || !password) {
-                setUserAuthError('أدخل البريد الإلكتروني وكلمة المرور');
-                return;
-            }
-            if (password.length < 6) {
-                setUserAuthError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
-                return;
-            }
+async function handleUserRegister() {
+    if (!firebaseInitialized || !window.auth) {
+        setUserAuthError('Firebase غير جاهز حالياً');
+        showNotification('❌ Firebase غير جاهز', 'error');
+        return;
+    }
 
-            setUserAuthError('');
-            try {
-                const cred = await window.auth.createUserWithEmailAndPassword(email, password);
-                const user = cred && cred.user;
-                if (user && name) {
-                    try { await user.updateProfile({ displayName: name }); } catch(e){}
-                }
-                try { await saveUserProfile(user, { name, phone }); } catch(e){}
-                if (elements.userAuthModal) elements.userAuthModal.style.display = 'none';
-                if (elements.overlay) elements.overlay.classList.remove('active');
-                showNotification('✅ تم إنشاء الحساب بنجاح');
-            } catch (err) {
-                const msg = mapUserAuthError(err);
-                setUserAuthError(msg);
-                showNotification('❌ ' + msg, 'error');
-            } finally {
-                if (elements.userPasswordRegister) elements.userPasswordRegister.value = '';
-            }
+    const name = (elements.userNameRegister ? elements.userNameRegister.value.trim() : '');
+    const phone = (elements.userPhoneRegister ? elements.userPhoneRegister.value.trim() : '');
+    const email = (elements.userEmailRegister ? elements.userEmailRegister.value.trim() : '');
+    const password = elements.userPasswordRegister ? elements.userPasswordRegister.value : '';
+
+    if (!email || !password) {
+        setUserAuthError('أدخل البريد الإلكتروني وكلمة المرور');
+        return;
+    }
+    if (password.length < 6) {
+        setUserAuthError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+        return;
+    }
+
+    const btn = elements.userRegisterBtn;
+    const oldText = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="btn-text">جاري إنشاء الحساب...</span>'; }
+
+    setUserAuthError('');
+    try {
+        const cred = await window.auth.createUserWithEmailAndPassword(email, password);
+        const user = cred && cred.user;
+
+        // الاسم داخل Firebase Auth
+        if (user && name) {
+            try { await user.updateProfile({ displayName: name }); } catch (e) { console.warn(e); }
         }
 
-        async function handleUserLogout() {
-            try {
-                if (window.auth) await window.auth.signOut();
-            } catch (e) {
-                console.warn('user signOut failed:', e);
+        // بروفايل داخل Firestore
+        try { await saveUserProfile(user, { name, phone }); } catch (e) { console.warn(e); }
+
+        // أغلق نافذة التسجيل
+        if (elements.userAuthModal) elements.userAuthModal.style.display = 'none';
+        if (elements.overlay) elements.overlay.classList.remove('active');
+
+        showNotification('✅ تم إنشاء الحساب بنجاح');
+
+        // افتح حسابي مباشرة
+        try {
+            if (elements.userAccountModal) {
+                elements.userAccountModal.style.display = 'block';
+                if (elements.overlay) elements.overlay.classList.add('active');
+                await loadUserAccountData();
             }
-            if (elements.userAccountModal) elements.userAccountModal.style.display = 'none';
-            if (elements.userAuthModal) elements.userAuthModal.style.display = 'none';
-            if (elements.overlay) elements.overlay.classList.remove('active');
-            showNotification('✅ تم تسجيل الخروج');
-        }
+        } catch (e) { console.warn(e); }
 
-            await applyAdminMode(false, { announce: true });
-            showConnectionMessage('info', 'تم تسجيل الخروج');
-        }
+    } catch (err) {
+        const msg = mapUserAuthError(err);
+        setUserAuthError(msg);
+        showNotification('❌ ' + msg, 'error');
+    } finally {
+        if (elements.userPasswordRegister) elements.userPasswordRegister.value = '';
+        if (btn) { btn.disabled = false; btn.innerHTML = oldText; }
+    }
+}
 
-        // ========== إعداد الأحداث ==========
+async function handleUserLogout() {
+    try {
+        if (window.auth) await window.auth.signOut();
+    } catch (e) {
+        console.warn('user signOut failed:', e);
+    }
+    if (elements.userAccountModal) elements.userAccountModal.style.display = 'none';
+    if (elements.userAuthModal) elements.userAuthModal.style.display = 'none';
+    if (elements.overlay) elements.overlay.classList.remove('active');
+    showNotification('✅ تم تسجيل الخروج');
+}
+
+// ========== إعداد الأحداث ==========
 
 
         function setupEventListeners() {
