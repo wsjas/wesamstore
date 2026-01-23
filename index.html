@@ -39,14 +39,18 @@
             // تهيئة الخدمات
             db = firebase.firestore();
             auth = firebase.auth();
-            storage = firebase.storage();
-            
-            // إعداد إعدادات CORS للتخزين
+            try { storage = firebase.storage(); } catch(e){ console.warn("Storage init failed", e); storage = null; }
+// إعداد إعدادات CORS للتخزين
             if (storage) {
                 console.log("✅ Firebase Storage initialized");
             }
             
             firebaseInitialized = true;
+            firebaseInitialized = true;
+            window.db = db;
+            window.auth = auth;
+            window.storage = storage;
+
             console.log("✅ Firebase services initialized successfully");
             
             // اختبار الاتصال
@@ -148,7 +152,7 @@
         window.db = db;
         window.auth = auth;
         window.storage = storage;
-        window.firebaseInitialized = firebaseInitialized;
+        firebaseInitialized = firebaseInitialized;
         window.firebaseError = firebaseError;
 
         // ===== مساعدات Firebase =====
@@ -3068,11 +3072,20 @@ body.dark .m-topbar.glass {
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="adminPassword">كلمة المرور</label>
-                    <input type="password" id="adminPassword" placeholder="أدخل كلمة المرور">
+                    <label for="adminEmail">البريد الإلكتروني</label>
+                    <input type="email" id="adminEmail" placeholder="example@email.com" autocomplete="username">
                 </div>
-                <button class="login-btn" id="loginBtn">تسجيل الدخول</button>
-                <p id="loginError" style="color: #f44336; margin-top: 10px; display: none;">كلمة المرور غير صحيحة</p>
+                <div class="form-group">
+                    <label for="adminPassword">كلمة المرور</label>
+                    <input type="password" id="adminPassword" placeholder="أدخل كلمة المرور" autocomplete="current-password">
+                </div>
+
+                <button class="login-btn" id="loginBtn">
+                    <span class="btn-text">تسجيل الدخول</span>
+                </button>
+
+                <p id="loginError" style="color: #f44336; margin-top: 10px; display: none;">بيانات الدخول غير صحيحة</p>
+
                 <p style="color: #666; margin-top: 15px; font-size: 0.9rem;">
                     <i class="fas fa-keyboard"></i> استخدم Ctrl+F7 لإظهار زر المدير
                 </p>
@@ -3861,6 +3874,7 @@ body.dark .m-topbar.glass {
             adminLoginBtn: document.getElementById('adminLoginBtn'),
             loginModal: document.getElementById('loginModal'),
             closeLoginModal: document.getElementById('closeLoginModal'),
+            adminEmail: document.getElementById('adminEmail'),
             adminPassword: document.getElementById('adminPassword'),
             loginBtn: document.getElementById('loginBtn'),
             loginError: document.getElementById('loginError'),
@@ -4041,7 +4055,7 @@ body.dark .m-topbar.glass {
 
         async function loadSiteSettings() {
             try {
-                if (!window.firebaseInitialized) {
+                if (!firebaseInitialized) {
                     console.warn('Firebase غير مهيأ، استخدام الإعدادات المحلية');
                     return;
                 }
@@ -4110,7 +4124,7 @@ body.dark .m-topbar.glass {
 
         async function loadProductOrder() {
             try {
-                if (!window.firebaseInitialized || !window.db) {
+                if (!firebaseInitialized || !window.db) {
                     console.warn('Firebase غير متصل، استخدام الترتيب المحلي');
                     state.siteSettings.productOrder = state.products.map(p => p.id);
                     state.siteSettings.categoryOrder = state.categories.map(c => c.id);
@@ -4340,7 +4354,7 @@ body.dark .m-topbar.glass {
 
         async function saveProductOrder() {
             try {
-                if (!window.firebaseInitialized) {
+                if (!firebaseInitialized) {
                     throw new Error("Firebase غير متصل");
                 }
                 
@@ -4366,7 +4380,7 @@ body.dark .m-topbar.glass {
 
         async function saveCategoryOrder() {
             try {
-                if (!window.firebaseInitialized) {
+                if (!firebaseInitialized) {
                     throw new Error("Firebase غير متصل");
                 }
                 
@@ -4415,7 +4429,7 @@ body.dark .m-topbar.glass {
                 state.siteSettings.categoryOrder.push(categoryName);
                 
                 // حفظ في Firebase إذا كان متصلاً
-                if (window.firebaseInitialized && window.db) {
+                if (firebaseInitialized && window.db) {
                     const db = getDbSafe();
                     if (!db) throw new Error('قاعدة البيانات غير جاهزة');
                     await db.collection('settings').doc('ordering').set({
@@ -4483,7 +4497,7 @@ body.dark .m-topbar.glass {
                 
                 showFirebaseLoading(true);
                 
-                if (window.firebaseInitialized && window.db) {
+                if (firebaseInitialized && window.db) {
                     const db = getDbSafe();
                     if (!db) throw new Error('قاعدة البيانات غير جاهزة');
                     await db.collection('settings').doc('store').set({
@@ -4525,7 +4539,7 @@ body.dark .m-topbar.glass {
                 
                 showFirebaseLoading(true);
                 
-                if (window.firebaseInitialized && window.db) {
+                if (firebaseInitialized && window.db) {
                     const db = getDbSafe();
                     if (!db) throw new Error('قاعدة البيانات غير جاهزة');
                     await db.collection('settings').doc('page_content').set(pageContent, { merge: true });
@@ -4697,7 +4711,7 @@ function updateSocialLinks() {
             try {
                 elements.loading.style.display = 'flex';
                 
-                if (!window.firebaseInitialized) {
+                if (!firebaseInitialized) {
                     throw new Error("Firebase غير متصل. تحقق من اتصال الإنترنت والإعدادات.");
                 }
                 
@@ -4783,7 +4797,7 @@ function updateSocialLinks() {
 
         async function saveProduct(productData) {
             try {
-                if (!window.firebaseInitialized) {
+                if (!firebaseInitialized) {
                     throw new Error("Firebase غير متصل");
                 }
                 
@@ -4849,7 +4863,7 @@ function updateSocialLinks() {
             }
             
             try {
-                if (!window.firebaseInitialized) {
+                if (!firebaseInitialized) {
                     throw new Error("Firebase غير متصل");
                 }
                 
@@ -5937,61 +5951,243 @@ function updateProductsTable() {
 
         // ========== إدارة تسجيل الدخول ==========
 
-        function handleAdminLogin() {
-            const password = elements.adminPassword.value;
-            const ADMIN_PASSWORD = "arduino"; // تم تغيير كلمة السر إلى arduino
-            
-            if (password === ADMIN_PASSWORD) {
-                state.isAdmin = true;
-                elements.adminPanel.style.display = 'block';
-                elements.adminLoginBtn.style.display = 'none';
-                elements.loginError.style.display = 'none';
-                elements.adminPassword.value = '';
-                elements.loginModal.style.display = 'none';
-                elements.overlay.classList.remove('active');
-                
-                updateProductsTable();
-                loadStoreSettings();
-                loadSiteSettings();
-                displayProductOrderList();
-                displayCategoryOrderList();
-                displayCategoriesList();
-                updateCategoryDropdown();
-                showNotification('✅ مرحباً بك في لوحة التحكم');
-            } else {
-                elements.loginError.style.display = 'block';
+        // ✅ أدمن عبر Firebase Auth + تحكم بالواجهة ورسائل احترافية
+        // ضع إيميلات الأدمن هنا (بدون كلمات مرور)
+        const ADMIN_EMAILS = ['wesam@store.store']; // عدّلها إذا لزم
+
+        let _authObserverAttached = false;
+        let _authObserverFirstRun = true;
+
+        function setLoginError(msg = '') {
+            if (!elements.loginError) return;
+            elements.loginError.textContent = msg || 'حدث خطأ في تسجيل الدخول';
+            elements.loginError.style.display = msg ? 'block' : 'none';
+        }
+
+        function setLoginLoading(isLoading) {
+            if (!elements.loginBtn) return;
+            elements.loginBtn.disabled = !!isLoading;
+            elements.loginBtn.style.opacity = isLoading ? '0.8' : '1';
+            const txt = elements.loginBtn.querySelector('.btn-text');
+            if (txt) txt.textContent = isLoading ? 'جاري التحقق...' : 'تسجيل الدخول';
+        }
+
+        function closeLoginModalSafe() {
+            if (elements.loginModal) elements.loginModal.style.display = 'none';
+            if (elements.overlay) elements.overlay.classList.remove('active');
+            try { document.body.style.overflow = 'auto'; } catch (e) {}
+        }
+
+        function mapAuthError(err) {
+            const code = (err && err.code) ? String(err.code) : '';
+            switch (code) {
+                case 'auth/invalid-email': return 'البريد الإلكتروني غير صحيح';
+                case 'auth/user-not-found': return 'هذا الحساب غير موجود';
+                case 'auth/wrong-password': return 'كلمة المرور غير صحيحة';
+                case 'auth/too-many-requests': return 'محاولات كثيرة، حاول لاحقاً';
+                case 'auth/network-request-failed': return 'مشكلة اتصال بالإنترنت';
+                case 'auth/user-disabled': return 'تم تعطيل هذا الحساب';
+                default:
+                    return (err && err.message) ? 'فشل تسجيل الدخول: ' + err.message : 'فشل تسجيل الدخول';
             }
         }
 
-        function handleAdminLogout() {
-            state.isAdmin = false;
-            elements.adminPanel.style.display = 'none';
-            showNotification('✅ تم تسجيل الخروج بنجاح');
+        function emailInAdminList(email) {
+            const e = (email || '').trim().toLowerCase();
+            return ADMIN_EMAILS.map(x => String(x).trim().toLowerCase()).includes(e);
+        }
+
+        async function checkAdminByAdminsDoc(user) {
+            // هذه الخطوة تساعدك إذا كنت تستخدم rules تعتمد على /admins/{uid}
+            // إذا كان الـ rules يمنع قراءة admins، سيتم تجاوز الفحص بدون كسر تسجيل الدخول
+            try {
+                if (!user || !window.db) return null;
+                const snap = await window.db.collection('admins').doc(user.uid).get();
+                return !!snap.exists;
+            } catch (e) {
+                console.warn('admins doc check failed:', e);
+                return null;
+            }
+        }
+
+        async function isFirebaseAdmin(user) {
+            if (!user) return false;
+
+            // 1) أولاً: تحقق من قائمة الإيميلات (سريع)
+            if (emailInAdminList(user.email)) return true;
+
+            // 2) ثانياً: تحقق من وجود مستند admins (إن أمكن)
+            const exists = await checkAdminByAdminsDoc(user);
+            if (exists === true) return true;
+
+            return false;
+        }
+
+        async function applyAdminMode(isAdmin, options = {}) {
+            const announce = !!options.announce;
+
+            state.isAdmin = !!isAdmin;
+
+            if (state.isAdmin) {
+                elements.adminPanel && (elements.adminPanel.style.display = 'block');
+                elements.adminLoginBtn && (elements.adminLoginBtn.style.display = 'none');
+
+                // تذكير الواجهة (اختياري)
+                localStorage.setItem('wassam_admin', 'true');
+
+                // تحميل بيانات المدير
+                try { updateProductsTable(); } catch (e) { console.warn(e); }
+                try { await loadStoreSettings(); } catch (e) { console.warn(e); }
+                try { await loadSiteSettings(); } catch (e) { console.warn(e); }
+                try { displayProductOrderList(); } catch (e) { console.warn(e); }
+                try { displayCategoryOrderList(); } catch (e) { console.warn(e); }
+                try { displayCategoriesList(); } catch (e) { console.warn(e); }
+                try { updateCategoryDropdown(); } catch (e) { console.warn(e); }
+                try { refreshServiceRequests(); } catch (e) { console.warn(e); }
+
+                if (announce) showNotification('✅ تم تسجيل الدخول كأدمن');
+            } else {
+                elements.adminPanel && (elements.adminPanel.style.display = 'none');
+                localStorage.removeItem('wassam_admin');
+
+                if (announce) showNotification('✅ تم تسجيل الخروج');
+            }
+        }
+
+        function setupAuthObserver() {
+            if (_authObserverAttached) return;
+            _authObserverAttached = true;
+
+            if (!window.auth) {
+                console.warn('Auth غير متوفر');
+                return;
+            }
+
+            window.auth.onAuthStateChanged(async (user) => {
+                try {
+                    if (!user) {
+                        await applyAdminMode(false, { announce: !_authObserverFirstRun });
+                        _authObserverFirstRun = false;
+                        return;
+                    }
+
+                    const ok = await isFirebaseAdmin(user);
+                    if (ok) {
+                        await applyAdminMode(true, { announce: !_authObserverFirstRun });
+                    } else {
+                        // دخول ناجح لكن ليس أدمن -> نسجل خروج مباشرة
+                        await applyAdminMode(false, { announce: !_authObserverFirstRun });
+                        try { await window.auth.signOut(); } catch (e) {}
+                        if (!_authObserverFirstRun) showNotification('❌ هذا الحساب ليس أدمن', 'error');
+                    }
+
+                } catch (e) {
+                    console.warn('Auth observer error:', e);
+                } finally {
+                    _authObserverFirstRun = false;
+                }
+            });
+        }
+
+        async function handleAdminLogin() {
+            const email = (elements.adminEmail ? elements.adminEmail.value.trim() : '');
+            const password = elements.adminPassword ? elements.adminPassword.value : '';
+
+            if (!email || !password) {
+                setLoginError('أدخل البريد الإلكتروني وكلمة المرور');
+                showNotification('⚠️ أكمل بيانات تسجيل الدخول', 'error');
+                return;
+            }
+
+            if (!firebaseInitialized || !window.auth) {
+                setLoginError('Firebase غير جاهز حالياً');
+                showNotification('❌ Firebase غير جاهز', 'error');
+                return;
+            }
+
+            setLoginError('');
+            setLoginLoading(true);
+
+            try {
+                const cred = await window.auth.signInWithEmailAndPassword(email, password);
+                const user = cred && cred.user;
+
+                const ok = await isFirebaseAdmin(user);
+
+                // ملاحظة مهمة: إذا كنت تعتمد في rules على /admins/{uid} لازم تنشئ المستند يدوياً مرة واحدة
+                const adminsDocExists = await checkAdminByAdminsDoc(user);
+                if (adminsDocExists === false) {
+                    // إذا أمكن قراءة المستند وثبت أنه غير موجود -> لا نسمح بالدخول كأدمن
+                    await window.auth.signOut();
+                    setLoginError('تم تسجيل الدخول، لكن صلاحية الأدمن غير مفعّلة (أضف مستند admins)');
+                    showNotification('⚠️ أنشئ /admins/UID في Firestore لتفعيل صلاحية الأدمن', 'error');
+                    showConnectionMessage('error', 'صلاحية الأدمن غير مفعّلة');
+                    return;
+                }
+
+                if (!ok) {
+                    await window.auth.signOut();
+                    setLoginError('هذا الحساب ليس لديه صلاحية أدمن');
+                    showNotification('❌ هذا الحساب ليس أدمن', 'error');
+                    showConnectionMessage('error', 'تم رفض الدخول: ليس أدمن');
+                    return;
+                }
+
+                // نجاح
+                localStorage.setItem('wassam_admin_email', email);
+                await applyAdminMode(true, { announce: true });
+                closeLoginModalSafe();
+
+                // رسالة نجاح واضحة
+                showConnectionMessage('success', 'تم تسجيل الدخول كأدمن في Firebase');
+
+            } catch (err) {
+                const msg = mapAuthError(err);
+                setLoginError(msg);
+                showNotification('❌ ' + msg, 'error');
+                showConnectionMessage('error', msg);
+            } finally {
+                setLoginLoading(false);
+                if (elements.adminPassword) elements.adminPassword.value = '';
+            }
+        }
+
+        async function handleAdminLogout() {
+            try {
+                if (window.auth) await window.auth.signOut();
+            } catch (e) {
+                console.warn('signOut failed:', e);
+            }
+            await applyAdminMode(false, { announce: true });
+            showConnectionMessage('info', 'تم تسجيل الخروج');
         }
 
         // ========== إعداد الأحداث ==========
 
+
         function setupEventListeners() {
+            const bind = (el, ev, fn, opts) => { if(el) el.addEventListener(ev, fn, opts); };
+
             // البحث والفرز
-            elements.searchInput.addEventListener('input', filterProducts);
-            elements.sortOptions.addEventListener('change', filterProducts);
+            bind(elements.searchInput, 'input', filterProducts);
+            bind(elements.sortOptions, 'change', filterProducts);
             
             // السلة
-            elements.cartIcon.addEventListener('click', openCartModal);
+            bind(elements.cartIcon, 'click', openCartModal);
 
             // زر السلة في الموبايل
             if (elements.mCartBtn) {
-                elements.mCartBtn.addEventListener('click', openCartModal);
+                bind(elements.mCartBtn, 'click', openCartModal);
             }
             
-            elements.closeCart.addEventListener('click', closeCartModal);
+            bind(elements.closeCart, 'click', closeCartModal);
             
-            elements.closeGalleryModal.addEventListener('click', () => {
+            bind(elements.closeGalleryModal, 'click', () => {
                 elements.galleryModal.style.display = 'none';
                 elements.overlay.classList.remove('active');
             });
             
-            elements.overlay.addEventListener('click', () => {
+            bind(elements.overlay, 'click', () => {
                 closeCartModal();
                 elements.galleryModal.style.display = 'none';
                 elements.loginModal.style.display = 'none';
@@ -6001,7 +6197,7 @@ function updateProductsTable() {
             });
             
             // خيارات الشحن
-            elements.pickupOption.addEventListener('click', () => {
+            bind(elements.pickupOption, 'click', () => {
                 state.shippingMethod = 'pickup';
                 elements.pickupOption.classList.add('selected');
                 elements.deliveryOption.classList.remove('selected');
@@ -6010,7 +6206,7 @@ function updateProductsTable() {
                 updateOrderSummary();
             });
             
-            elements.deliveryOption.addEventListener('click', () => {
+            bind(elements.deliveryOption, 'click', () => {
                 state.shippingMethod = 'delivery';
                 elements.deliveryOption.classList.add('selected');
                 elements.pickupOption.classList.remove('selected');
@@ -6020,10 +6216,10 @@ function updateProductsTable() {
             });
             
             // معاينة الصور
-            elements.productImageUrl.addEventListener('input', updateImagePreviews);
+            bind(elements.productImageUrl, 'input', updateImagePreviews);
             
             // إضافة صور إضافية
-            elements.addImageBtn.addEventListener('click', () => {
+            bind(elements.addImageBtn, 'click', () => {
                 const inputDiv = document.createElement('div');
                 inputDiv.className = 'form-group additional-image-input';
                 inputDiv.innerHTML = `
@@ -6036,7 +6232,7 @@ function updateProductsTable() {
             });
             
             // إرسال الطلب عبر واتساب
-            elements.whatsappOrderBtn.addEventListener('click', () => {
+            bind(elements.whatsappOrderBtn, 'click', () => {
                 if (state.cart.length === 0) {
                     alert('سلة التسوق فارغة');
                     return;
@@ -6059,7 +6255,7 @@ function updateProductsTable() {
             });
             
             // إرسال الطلب بالبريد
-            elements.emailOrderBtn.addEventListener('click', () => {
+            bind(elements.emailOrderBtn, 'click', () => {
                 if (state.cart.length === 0) {
                     alert('سلة التسوق فارغة');
                     return;
@@ -6079,23 +6275,33 @@ function updateProductsTable() {
             });
             
             // تسجيل الدخول
-            elements.adminLoginBtn.addEventListener('click', () => {
+            bind(elements.adminLoginBtn, 'click', () => {
+                // تجهيز النافذة
+                if (elements.adminEmail) {
+                    elements.adminEmail.value = localStorage.getItem('wassam_admin_email') || (ADMIN_EMAILS && ADMIN_EMAILS[0] ? ADMIN_EMAILS[0] : '');
+                }
+                setLoginError('');
                 elements.loginModal.style.display = 'block';
                 elements.overlay.classList.add('active');
-                            setTimeout(() => { try { elements.adminPassword && elements.adminPassword.focus(); } catch(e){} }, 80);
+                setTimeout(() => { try { if (elements.adminEmail) elements.adminEmail.focus(); else if (elements.adminPassword) elements.adminPassword.focus(); } catch(e){} }, 80);
             });
-            
-            elements.closeLoginModal.addEventListener('click', () => {
+
+bind(elements.closeLoginModal, 'click', () => {
                 elements.loginModal.style.display = 'none';
                 elements.overlay.classList.remove('active');
                 elements.loginError.style.display = 'none';
                 elements.adminPassword.value = '';
             });
             
-            elements.loginBtn.addEventListener('click', handleAdminLogin);
+            bind(elements.loginBtn, 'click', handleAdminLogin);
+
+            // Enter للتسجيل بسرعة
+            bind(elements.adminEmail, 'keydown', (e) => { if (e.key === 'Enter') handleAdminLogin(); });
+            bind(elements.adminPassword, 'keydown', (e) => { if (e.key === 'Enter') handleAdminLogin(); });
+
             
             // تسجيل الخروج
-            elements.adminLogoutBtn.addEventListener('click', handleAdminLogout);
+            bind(elements.adminLogoutBtn, 'click', handleAdminLogout);
             
             // تحكم المدير
             document.addEventListener('keydown', function(event) {
@@ -6133,7 +6339,7 @@ function updateProductsTable() {
             });
             
             // نموذج إضافة المنتج
-            elements.addProductForm.addEventListener('submit', async (e) => {
+            bind(elements.addProductForm, 'submit', async (e) => {
                 e.preventDefault();
                 
                 const productData = {};
@@ -6144,7 +6350,7 @@ function updateProductsTable() {
             document.getElementById('clearFormBtn').addEventListener('click', clearForm);
             
             // نموذج إضافة التصنيف الجديد
-            elements.addCategoryForm.addEventListener('submit', async (e) => {
+            bind(elements.addCategoryForm, 'submit', async (e) => {
                 e.preventDefault();
                 
                 const categoryName = elements.newCategoryName.value.trim();
@@ -6159,34 +6365,34 @@ function updateProductsTable() {
             });
             
             // حفظ إعدادات المتجر
-            elements.storeSettingsForm.addEventListener('submit', (e) => {
+            bind(elements.storeSettingsForm, 'submit', (e) => {
                 e.preventDefault();
                 saveStoreSettings();
             });
             
             // حفظ محتوى الصفحة
-            elements.savePageContentBtn.addEventListener('click', savePageContent);
+            bind(elements.savePageContentBtn, 'click', savePageContent);
             
             // حفظ ترتيب المنتجات
-            elements.saveProductOrderBtn.addEventListener('click', saveProductOrder);
+            bind(elements.saveProductOrderBtn, 'click', saveProductOrder);
             
             // حفظ ترتيب التصنيفات
-            elements.saveCategoryOrderBtn.addEventListener('click', saveCategoryOrder);
+            bind(elements.saveCategoryOrderBtn, 'click', saveCategoryOrder);
             
             // لوحة الوصول للمدير (الهاتف)
-            elements.openAdminAccess.addEventListener('click', () => {
+            bind(elements.openAdminAccess, 'click', () => {
                 elements.adminAccessModal.style.display = 'flex';
                 elements.overlay.classList.add('active');
                 document.body.style.overflow = 'hidden';
             });
             
-            elements.closeAdminAccess.addEventListener('click', () => {
+            bind(elements.closeAdminAccess, 'click', () => {
                 elements.adminAccessModal.style.display = 'none';
                 elements.overlay.classList.remove('active');
                 document.body.style.overflow = 'auto';
             });
             
-            elements.accessShowBtn.addEventListener('click', () => {
+            bind(elements.accessShowBtn, 'click', () => {
                 state.adminButtonVisible = true;
                 elements.adminLoginBtn.style.display = 'block';
                 elements.adminAccessModal.style.display = 'none';
@@ -6200,7 +6406,7 @@ function updateProductsTable() {
                 });
             });
             
-            elements.accessHideBtn.addEventListener('click', () => {
+            bind(elements.accessHideBtn, 'click', () => {
                 state.adminButtonVisible = false;
                 elements.adminLoginBtn.style.display = 'none';
                 elements.adminAccessModal.style.display = 'none';
@@ -6209,16 +6415,23 @@ function updateProductsTable() {
                 showNotification('🔒 تم إخفاء زر المدير');
             });
             
-            elements.accessDirectLoginBtn.addEventListener('click', () => {
+            bind(elements.accessDirectLoginBtn, 'click', () => {
                 elements.adminAccessModal.style.display = 'none';
                 elements.overlay.classList.remove('active');
                 document.body.style.overflow = 'auto';
+
+                // تجهيز نافذة الدخول
+                if (elements.adminEmail) {
+                    elements.adminEmail.value = localStorage.getItem('wassam_admin_email') || (ADMIN_EMAILS && ADMIN_EMAILS[0] ? ADMIN_EMAILS[0] : '');
+                }
+                setLoginError('');
+
                 elements.loginModal.style.display = 'block';
                 elements.overlay.classList.add('active');
-                            setTimeout(() => { try { elements.adminPassword && elements.adminPassword.focus(); } catch(e){} }, 80);
+                setTimeout(() => { try { if (elements.adminEmail) elements.adminEmail.focus(); else if (elements.adminPassword) elements.adminPassword.focus(); } catch(e){} }, 80);
             });
-            
-            elements.adminAccessModal.addEventListener('click', (e) => {
+
+bind(elements.adminAccessModal, 'click', (e) => {
                 if (e.target === elements.adminAccessModal) {
                     elements.adminAccessModal.style.display = 'none';
                     elements.overlay.classList.remove('active');
@@ -6234,14 +6447,14 @@ function updateProductsTable() {
             });
 // ====== Service (New) ======
 if (elements.navServiceBtn) {
-    elements.navServiceBtn.addEventListener('click', () => {
+    bind(elements.navServiceBtn, 'click', () => {
         elements.navServiceBtn.classList.add('active');
         elements.navShopBtn && elements.navShopBtn.classList.remove('active');
         scrollToSection(elements.serviceHome);
     });
 }
 if (elements.navShopBtn) {
-    elements.navShopBtn.addEventListener('click', () => {
+    bind(elements.navShopBtn, 'click', () => {
         elements.navShopBtn.classList.add('active');
         elements.navServiceBtn && elements.navServiceBtn.classList.remove('active');
         const shopSection = document.querySelector('.categories-section') || document.querySelector('.products-section');
@@ -6250,19 +6463,19 @@ if (elements.navShopBtn) {
 }
 
 if (elements.scrollToShopBtn) {
-    elements.scrollToShopBtn.addEventListener('click', () => {
+    bind(elements.scrollToShopBtn, 'click', () => {
         elements.navShopBtn && elements.navShopBtn.click();
     });
 }
 
 if (elements.openServiceRequestBtn) {
-    elements.openServiceRequestBtn.addEventListener('click', () => openModal(elements.serviceRequestModal));
+    bind(elements.openServiceRequestBtn, 'click', () => openModal(elements.serviceRequestModal));
 }
 if (elements.closeServiceRequestModal) {
-    elements.closeServiceRequestModal.addEventListener('click', () => closeModal(elements.serviceRequestModal));
+    bind(elements.closeServiceRequestModal, 'click', () => closeModal(elements.serviceRequestModal));
 }
 if (elements.overlay) {
-    elements.overlay.addEventListener('click', () => {
+    bind(elements.overlay, 'click', () => {
         // close service modal if open
         if (elements.serviceRequestModal && elements.serviceRequestModal.style.display === 'block') {
             closeModal(elements.serviceRequestModal);
@@ -6271,7 +6484,7 @@ if (elements.overlay) {
 }
 
 if (elements.srClearImageBtn) {
-    elements.srClearImageBtn.addEventListener('click', () => {
+    bind(elements.srClearImageBtn, 'click', () => {
         if (elements.srFaultImage) elements.srFaultImage.value = '';
         if (elements.srImageLink) elements.srImageLink.value = '';
         setUploadStatus('تم مسح الصورة/الرابط.', true);
@@ -6279,14 +6492,14 @@ if (elements.srClearImageBtn) {
 }
 
 if (elements.srUploadImageBtn) {
-    elements.srUploadImageBtn.addEventListener('click', () => {
+    bind(elements.srUploadImageBtn, 'click', () => {
         window.open('https://postimages.org/', '_blank', 'noopener');
         setUploadStatus('افتح PostImages، ارفع الصورة، ثم انسخ رابط (Hotlink for websites) والصقه في خانة رابط الصورة.', true);
     });
 }
 
 if (elements.srGetLocationBtn) {
-    elements.srGetLocationBtn.addEventListener('click', () => {
+    bind(elements.srGetLocationBtn, 'click', () => {
         if (!navigator.geolocation) {
             alert('المتصفح لا يدعم تحديد الموقع.');
             return;
@@ -6312,7 +6525,7 @@ if (elements.srGetLocationBtn) {
 }
 
 if (elements.srClearLocationBtn) {
-    elements.srClearLocationBtn.addEventListener('click', () => {
+    bind(elements.srClearLocationBtn, 'click', () => {
         if (elements.srLocationLink) elements.srLocationLink.value = '';
         if (elements.srAddressText) elements.srAddressText.value = '';
         if (elements.srLocationHint) elements.srLocationHint.textContent = 'يمكنك أيضاً وضع رابط خرائط أو كتابة عنوان مختصر.';
@@ -6320,7 +6533,7 @@ if (elements.srClearLocationBtn) {
 }
 
 if (elements.serviceRequestForm) {
-    elements.serviceRequestForm.addEventListener('submit', async (e) => {
+    bind(elements.serviceRequestForm, 'submit', async (e) => {
         e.preventDefault();
 
         const customerName = (elements.srCustomerName.value || '').trim();
@@ -6374,7 +6587,7 @@ if (elements.serviceRequestForm) {
 }
 
 if (elements.srEmailBtn) {
-    elements.srEmailBtn.addEventListener('click', async () => {
+    bind(elements.srEmailBtn, 'click', async () => {
         const customerName = (elements.srCustomerName.value || '').trim();
         const customerPhone = (elements.srCustomerPhone.value || '').trim();
         const deviceType = (elements.srDeviceType.value || '').trim();
@@ -6399,7 +6612,7 @@ if (elements.srEmailBtn) {
 }
 
 if (elements.refreshServiceRequestsBtn) {
-    elements.refreshServiceRequestsBtn.addEventListener('click', refreshServiceRequests);
+    bind(elements.refreshServiceRequestsBtn, 'click', refreshServiceRequests);
 }
 
 
@@ -6416,6 +6629,9 @@ if (elements.refreshServiceRequestsBtn) {
     try { await loadSiteSettings(); } catch (e) { console.warn(e); }
     try { await loadStoreSettings(); } catch (e) { console.warn(e); }
     updateContactLinksUI();
+    // ✅ مراقبة حالة تسجيل الدخول (Firebase Auth)
+    try { setupAuthObserver(); } catch (e) { console.warn(e); }
+
     // ✅ اربط السلة مبكرًا دائماً
     try { bindCartOpenAlways(); } catch (e) { console.warn(e); }
 
@@ -6423,7 +6639,7 @@ if (elements.refreshServiceRequestsBtn) {
     try { await loadProducts(); } catch (e) { console.warn('⚠️ loadProducts failed:', e); showConnectionMessage('warning', 'تعذر تحميل المنتجات، لكن الموقع يعمل'); }
 
     // بيانات إضافية للمدير
-    if (state.isAdmin || localStorage.getItem('wassam_admin') === 'true') {
+    if (state.isAdmin) {
         try { await loadProductOrder(); } catch (e) { console.warn(e); }
         try { await loadSiteSettings(); } catch (e) { console.warn(e); }
         try { await loadStoreSettings(); } catch (e) { console.warn(e); }
