@@ -6250,22 +6250,29 @@ function updateProductsTable() {
         }
 
         async function saveUserProfile(user, profile = {}) {
-            if (!firebaseInitialized || !db || !user) return false;
+            if (!firebaseInitialized || !db || !user) return { ok: false, error: 'firebase_not_ready' };
             try {
                 const ts = getServerTimestamp();
+                const ref = db.collection('users').doc(user.uid);
+
+                // نحافظ على createdAt القديم إن وجد
+                const snap = await ref.get().catch(() => null);
+                const existingCreatedAt = (snap && snap.exists && snap.data && snap.data().createdAt) ? snap.data().createdAt : null;
+
                 const payload = {
                     uid: user.uid,
                     email: user.email || '',
                     name: profile.name || (user.displayName || ''),
                     phone: profile.phone || '',
                     updatedAt: ts,
-                    createdAt: ts
+                    createdAt: existingCreatedAt || ts
                 };
-                await db.collection('users').doc(user.uid).set(payload, { merge: true });
-                return true;
+
+                await ref.set(payload, { merge: true });
+                return { ok: true };
             } catch (e) {
                 console.warn('saveUserProfile failed:', e);
-                return false;
+                return { ok: false, error: e };
             }
         }
 
@@ -6284,8 +6291,8 @@ function updateProductsTable() {
 
                 const payload = {
                     orderId,
-                    userId: state.currentUser.uid,
-                    userEmail: state.currentUser.email || '',
+                    userId: (state.currentUser ? state.currentUser.uid : null),
+                    userEmail: (state.currentUser ? (state.currentUser.email || '') : ''),
                     customerName: (elements.customerName ? elements.customerName.value : '') || '',
                     customerPhone: (elements.customerPhone ? elements.customerPhone.value : '') || '',
                     shippingMethod: state.shippingMethod,
