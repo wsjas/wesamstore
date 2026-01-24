@@ -2318,6 +2318,113 @@
         #adminLoginBtn, #mAdminPanelBtn, .admin-login-btn, .admin-panel-btn{
             display: none !important;
         }
+
+/* ===== Slider Wrapper ===== */
+.slider-wrapper{
+  width:100%;
+  padding: 12px 0 0;
+}
+.slider-viewport{
+  position: relative;
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #000;
+  box-shadow: 0 10px 30px rgba(0,0,0,.15);
+}
+.slider-track{
+  display:flex;
+  will-change: transform;
+  transition: transform .55s ease;
+  touch-action: pan-y;
+}
+.slide{
+  position: relative;
+  min-width: 100%;
+  height: clamp(180px, 28vw, 420px);
+}
+.slide img{
+  width:100%;
+  height:100%;
+  object-fit: cover;
+  display:block;
+  filter: saturate(1.05);
+}
+.slide-caption{
+  position:absolute;
+  inset:auto 16px 16px 16px;
+  max-width:560px;
+  padding:14px 16px;
+  border-radius:14px;
+  background: rgba(0,0,0,.45);
+  color:#fff;
+}
+@supports ((-webkit-backdrop-filter: blur(6px)) or (backdrop-filter: blur(6px))){
+  .slide-caption{
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+}
+.slide-caption h3{
+  margin:0 0 6px 0;
+  font-size:1.1rem;
+  font-weight:800;
+}
+.slide-caption p{
+  margin:0 0 10px 0;
+  opacity:.92;
+  font-size:.95rem;
+}
+.slide-btn{
+  display:inline-block;
+  padding:10px 14px;
+  border-radius:12px;
+  text-decoration:none;
+  background: var(--blue, #0A58CA);
+  color:#fff;
+  font-weight:800;
+}
+.slider-nav{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  width:44px;
+  height:44px;
+  border:0;
+  border-radius:999px;
+  background: rgba(255,255,255,.85);
+  box-shadow:0 10px 24px rgba(0,0,0,.2);
+  cursor:pointer;
+  font-size:26px;
+  line-height:44px;
+  user-select:none;
+}
+.slider-nav.prev{ left:12px; }
+.slider-nav.next{ right:12px; }
+.slider-dots{
+  position:absolute;
+  left:0; right:0;
+  bottom:10px;
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  align-items:center;
+}
+.slider-dots button{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  border:0;
+  background: rgba(255,255,255,.55);
+  cursor:pointer;
+  transition: transform .2s ease, background .2s ease;
+}
+.slider-dots button.active{
+  background: var(--orange, #FF8C00);
+  transform: scale(1.3);
+}
+
 </style>
 <style>
 /* Inline social buttons next to WhatsApp/Email */
@@ -3264,6 +3371,7 @@ header.glass i {
 <button class="admin-tab" data-tab="storeSettings" onclick="return switchAdminTab('storeSettings')" type="button">إعدادات المتجر</button>
 <button class="admin-tab" data-tab="serviceRequests" onclick="return switchAdminTab('serviceRequests')" type="button">طلبات الصيانة</button>
 <button class="admin-tab" data-tab="pageContent" onclick="return switchAdminTab('pageContent')" type="button">محتوى الصفحة</button>
+<button class="admin-tab" data-tab="slider" onclick="return switchAdminTab('slider')" type="button">إدارة السلايدر</button>
 </div>
 <div class="admin-content">
 <!-- Add Product Section -->
@@ -3586,11 +3694,176 @@ header.glass i {
 <a href="mailto:wesamelectronics@gmail.com" id="navEmail">
 <i class="fas fa-envelope"></i> ايميل
                 </a>
+<!-- Slider Manager Section -->
+<div class="admin-section" id="sliderSection">
+  <h4 style="margin-bottom:12px;"><i class="fas fa-images"></i> إدارة السلايدر</h4>
+  <p class="hint" style="margin-top:-6px; margin-bottom:14px;">
+    اختر الصور وارفعها على رابط خارجي (مثل Postimages) ثم ضع رابط الصورة المباشر هنا. بعد الحفظ سيظهر السلايدر في الصفحة الرئيسية تلقائيًا.
+  </p>
+
+  <div class="admin-grid" style="display:grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap:12px;">
+    
+<div class="card" style="background:#fff; border-radius:14px; padding:12px; box-shadow:0 6px 18px rgba(0,0,0,.06);">
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+    <strong>سلايد 1</strong>
+    <span style="opacity:.7; font-size:.85rem;">#1</span>
+  </div>
+  <div class="form-group" style="margin-top:10px;">
+    <label>رابط الصورة (مباشر)</label>
+    <input id="slide1ImageUrl" type="url" placeholder="https://..." />
+    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+      <input id="slide1File" type="file" accept="image/*" />
+      <button class="secondary-btn" id="slide1CopyBtn" type="button"><i class="fas fa-copy"></i> نسخ الرابط</button>
+    </div>
+    <small style="display:block; opacity:.75; margin-top:6px;">ارفع الصورة خارجيًا ثم ألصق الرابط هنا. (يمكنك فتح Postimages من الزر بالأسفل)</small>
+  </div>
+
+  <div class="form-group">
+    <label>العنوان</label>
+    <input id="slide1Title" type="text" placeholder="مثال: عروض قوية اليوم" />
+  </div>
+  <div class="form-group">
+    <label>الوصف</label>
+    <input id="slide1Subtitle" type="text" placeholder="مثال: خصومات على قطع الإلكترونيات" />
+  </div>
+  <div class="form-group">
+    <label>رابط الزر</label>
+    <input id="slide1Link" type="text" placeholder="#productsGrid" />
+  </div>
+
+  <div style="margin-top:10px;">
+    <img id="slide1Preview" alt="معاينة السلايد 1" style="width:100%; height:140px; object-fit:cover; border-radius:12px; display:none; background:#f1f3f5;" />
+  </div>
+</div>
+
+
+<div class="card" style="background:#fff; border-radius:14px; padding:12px; box-shadow:0 6px 18px rgba(0,0,0,.06);">
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+    <strong>سلايد 2</strong>
+    <span style="opacity:.7; font-size:.85rem;">#2</span>
+  </div>
+  <div class="form-group" style="margin-top:10px;">
+    <label>رابط الصورة (مباشر)</label>
+    <input id="slide2ImageUrl" type="url" placeholder="https://..." />
+    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+      <input id="slide2File" type="file" accept="image/*" />
+      <button class="secondary-btn" id="slide2CopyBtn" type="button"><i class="fas fa-copy"></i> نسخ الرابط</button>
+    </div>
+    <small style="display:block; opacity:.75; margin-top:6px;">ارفع الصورة خارجيًا ثم ألصق الرابط هنا. (يمكنك فتح Postimages من الزر بالأسفل)</small>
+  </div>
+
+  <div class="form-group">
+    <label>العنوان</label>
+    <input id="slide2Title" type="text" placeholder="مثال: عروض قوية اليوم" />
+  </div>
+  <div class="form-group">
+    <label>الوصف</label>
+    <input id="slide2Subtitle" type="text" placeholder="مثال: خصومات على قطع الإلكترونيات" />
+  </div>
+  <div class="form-group">
+    <label>رابط الزر</label>
+    <input id="slide2Link" type="text" placeholder="#productsGrid" />
+  </div>
+
+  <div style="margin-top:10px;">
+    <img id="slide2Preview" alt="معاينة السلايد 2" style="width:100%; height:140px; object-fit:cover; border-radius:12px; display:none; background:#f1f3f5;" />
+  </div>
+</div>
+
+
+<div class="card" style="background:#fff; border-radius:14px; padding:12px; box-shadow:0 6px 18px rgba(0,0,0,.06);">
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+    <strong>سلايد 3</strong>
+    <span style="opacity:.7; font-size:.85rem;">#3</span>
+  </div>
+  <div class="form-group" style="margin-top:10px;">
+    <label>رابط الصورة (مباشر)</label>
+    <input id="slide3ImageUrl" type="url" placeholder="https://..." />
+    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+      <input id="slide3File" type="file" accept="image/*" />
+      <button class="secondary-btn" id="slide3CopyBtn" type="button"><i class="fas fa-copy"></i> نسخ الرابط</button>
+    </div>
+    <small style="display:block; opacity:.75; margin-top:6px;">ارفع الصورة خارجيًا ثم ألصق الرابط هنا. (يمكنك فتح Postimages من الزر بالأسفل)</small>
+  </div>
+
+  <div class="form-group">
+    <label>العنوان</label>
+    <input id="slide3Title" type="text" placeholder="مثال: عروض قوية اليوم" />
+  </div>
+  <div class="form-group">
+    <label>الوصف</label>
+    <input id="slide3Subtitle" type="text" placeholder="مثال: خصومات على قطع الإلكترونيات" />
+  </div>
+  <div class="form-group">
+    <label>رابط الزر</label>
+    <input id="slide3Link" type="text" placeholder="#productsGrid" />
+  </div>
+
+  <div style="margin-top:10px;">
+    <img id="slide3Preview" alt="معاينة السلايد 3" style="width:100%; height:140px; object-fit:cover; border-radius:12px; display:none; background:#f1f3f5;" />
+  </div>
+</div>
+
+  </div>
+
+  <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+    <button class="save-btn" id="saveSliderBtn" type="button"><i class="fas fa-save"></i> حفظ السلايدر</button>
+    <button class="secondary-btn" id="reloadSliderBtn" type="button"><i class="fas fa-sync"></i> إعادة تحميل</button>
+    <button class="secondary-btn" id="openUploadSiteBtn" type="button"><i class="fas fa-upload"></i> فتح موقع رفع خارجي</button>
+  </div>
+  <div id="sliderAdminMsg" class="admin-message" style="margin-top:10px; display:none;"></div>
+</div>
+
 </div>
 </div>
 </div>
 </div>
 <!-- Hero + Service Main Section (New) -->
+
+<!-- Slider Wrapper -->
+<section class="slider-wrapper" aria-label="Home Slider">
+  <div class="slider-viewport" id="homeSlider">
+    <div class="slider-track">
+      <!-- Slide 1 -->
+      <article class="slide">
+        <img src="https://dummyimage.com/1200x500/0a58ca/ffffff&text=Wesam+Electronics+Offers" alt="عرض 1" loading="lazy">
+        <div class="slide-caption">
+          <h3>عروض قوية اليوم</h3>
+          <p>خصومات على قطع الإلكترونيات والصيانة</p>
+          <a class="slide-btn" href="#productsGrid">تسوق الآن</a>
+        </div>
+      </article>
+
+      <!-- Slide 2 -->
+      <article class="slide">
+        <img src="https://dummyimage.com/1200x500/ff8c00/ffffff&text=New+Arrivals" alt="عرض 2" loading="lazy">
+        <div class="slide-caption">
+          <h3>منتجات جديدة</h3>
+          <p>وصلت شحنات جديدة لمستلزمات الإلكترونيات</p>
+          <a class="slide-btn" href="#categoriesGrid">شاهد التصنيفات</a>
+        </div>
+      </article>
+
+      <!-- Slide 3 -->
+      <article class="slide">
+        <img src="https://dummyimage.com/1200x500/111111/ffffff&text=Service+Requests" alt="عرض 3" loading="lazy">
+        <div class="slide-caption">
+          <h3>طلبات صيانة أسرع</h3>
+          <p>قدّم طلب الصيانة خلال دقيقة</p>
+          <a class="slide-btn" href="#serviceHome">طلب صيانة</a>
+        </div>
+      </article>
+    </div>
+
+    <!-- Nav -->
+    <button class="slider-nav prev" type="button" aria-label="السابق">‹</button>
+    <button class="slider-nav next" type="button" aria-label="التالي">›</button>
+
+    <!-- Dots -->
+    <div class="slider-dots" aria-label="مؤشرات السلايدر"></div>
+  </div>
+</section>
+
 <section class="hero" id="serviceHome">
 <div class="container">
 <div class="hero-card">
@@ -5757,6 +6030,236 @@ elements.adminTabs.forEach(tab => {
     }
 }
 
+
+// ===== Slider Settings (Firestore) =====
+const DEFAULT_SLIDES = [
+  { imageUrl: "https://picsum.photos/1200/500?1", title: "عروض قوية اليوم", subtitle: "خصومات على قطع الإلكترونيات والصيانة", link: "#products" },
+  { imageUrl: "https://picsum.photos/1200/500?2", title: "منتجات جديدة", subtitle: "وصلت شحنات جديدة لمستلزمات الإلكترونيات", link: "#categories" },
+  { imageUrl: "https://picsum.photos/1200/500?3", title: "طلبات صيانة أسرع", subtitle: "ارسل طلب الصيانة الآن وسنتواصل معك", link: "#service" },
+];
+
+async function getSliderDoc(){
+  const db = window.db;
+  if(!db) throw new Error("Firestore not ready");
+  return db.collection("settings").doc("homeSlider");
+}
+
+async function loadSliderSettings(){
+  try{
+    const ref = await getSliderDoc();
+    const snap = await ref.get();
+    if(snap.exists){
+      const data = snap.data() || {};
+      if(Array.isArray(data.slides) && data.slides.length){
+        return data.slides.slice(0, 10).map(s => ({
+          imageUrl: String(s.imageUrl || "").trim(),
+          title: String(s.title || "").trim(),
+          subtitle: String(s.subtitle || "").trim(),
+          link: String(s.link || "").trim(),
+        }));
+      }
+    }
+  }catch(e){
+    console.warn("loadSliderSettings failed:", e);
+  }
+  return DEFAULT_SLIDES;
+}
+
+async function saveSliderSettings(slides){
+  const ref = await getSliderDoc();
+  const cleaned = (slides || []).map(s => ({
+    imageUrl: String(s.imageUrl || "").trim(),
+    title: String(s.title || "").trim(),
+    subtitle: String(s.subtitle || "").trim(),
+    link: String(s.link || "").trim(),
+  })).filter(s => s.imageUrl);
+  await ref.set({
+    slides: cleaned,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  }, { merge:true });
+  return cleaned;
+}
+
+function renderHomeSliderSlides(slides){
+  const viewport = document.getElementById('homeSlider');
+  if(!viewport) return;
+  const track = viewport.querySelector('.slider-track');
+  if(!track) return;
+
+  const safe = (slides && slides.length) ? slides : DEFAULT_SLIDES;
+
+  track.innerHTML = safe.map((s) => {
+    const img = (s.imageUrl || "").trim();
+    const title = (s.title || "").trim();
+    const subtitle = (s.subtitle || "").trim();
+    const link = (s.link || "#").trim();
+    return `
+      <article class="slide">
+        <img src="${img}" alt="${title ? title : 'عرض'}" loading="lazy">
+        <div class="slide-caption">
+          ${title ? `<h3>${title}</h3>` : ``}
+          ${subtitle ? `<p>${subtitle}</p>` : ``}
+          <a class="slide-btn" href="${link}">عرض التفاصيل</a>
+        </div>
+      </article>
+    `;
+  }).join('');
+}
+
+// ===== Admin: Slider UI =====
+function sliderAdminSetMsg(msg, ok=true){
+  const el = document.getElementById('sliderAdminMsg');
+  if(!el) return;
+  el.style.display = 'block';
+  el.style.padding = '10px 12px';
+  el.style.borderRadius = '12px';
+  el.style.fontWeight = '700';
+  el.style.background = ok ? 'rgba(0,180,90,.12)' : 'rgba(220,53,69,.12)';
+  el.style.color = ok ? '#0b6b3a' : '#b02a37';
+  el.innerText = msg;
+}
+
+function bindSliderAdminHandlers(){
+  const saveBtn = document.getElementById('saveSliderBtn');
+  const reloadBtn = document.getElementById('reloadSliderBtn');
+  const openUploadBtn = document.getElementById('openUploadSiteBtn');
+  if(openUploadBtn){
+    openUploadBtn.addEventListener('click', ()=>{
+      window.open('https://postimages.org/', '_blank', 'noopener');
+    });
+  }
+
+  // Copy buttons + previews
+  for(let i=1;i<=3;i++){
+    const urlInput = document.getElementById(`slide${i}ImageUrl`);
+    const fileInput = document.getElementById(`slide${i}File`);
+    const copyBtn = document.getElementById(`slide${i}CopyBtn`);
+    const preview = document.getElementById(`slide${i}Preview`);
+
+    if(urlInput){
+      urlInput.addEventListener('input', ()=>{
+        const v = (urlInput.value || '').trim();
+        if(preview){
+          if(v){
+            preview.src = v;
+            preview.style.display = 'block';
+          } else {
+            preview.removeAttribute('src');
+            preview.style.display = 'none';
+          }
+        }
+      });
+    }
+
+    if(fileInput){
+      // Only local preview (upload is external/manual)
+      fileInput.addEventListener('change', ()=>{
+        const f = fileInput.files && fileInput.files[0];
+        if(!f || !preview) return;
+        const u = URL.createObjectURL(f);
+        preview.src = u;
+        preview.style.display = 'block';
+      });
+    }
+
+    if(copyBtn && urlInput){
+      copyBtn.addEventListener('click', async ()=>{
+        try{
+          await navigator.clipboard.writeText((urlInput.value || '').trim());
+          sliderAdminSetMsg(`✅ تم نسخ رابط صورة السلايد ${i}`);
+        }catch(e){
+          sliderAdminSetMsg(`⚠️ لم أستطع النسخ تلقائياً، انسخ الرابط يدوياً`, false);
+        }
+      });
+    }
+  }
+
+  async function loadIntoForm(){
+    const slides = await loadSliderSettings();
+    for(let i=1;i<=3;i++){
+      const s = slides[i-1] || {};
+      const img = (s.imageUrl || '').trim();
+      const t = (s.title || '').trim();
+      const sub = (s.subtitle || '').trim();
+      const link = (s.link || '').trim();
+
+      const urlInput = document.getElementById(`slide${i}ImageUrl`);
+      const tInput = document.getElementById(`slide${i}Title`);
+      const subInput = document.getElementById(`slide${i}Subtitle`);
+      const linkInput = document.getElementById(`slide${i}Link`);
+      const preview = document.getElementById(`slide${i}Preview`);
+
+      if(urlInput) urlInput.value = img;
+      if(tInput) tInput.value = t;
+      if(subInput) subInput.value = sub;
+      if(linkInput) linkInput.value = link;
+
+      if(preview){
+        if(img){
+          preview.src = img;
+          preview.style.display = 'block';
+        }else{
+          preview.removeAttribute('src');
+          preview.style.display = 'none';
+        }
+      }
+    }
+    sliderAdminSetMsg('✅ تم تحميل إعدادات السلايدر');
+  }
+
+  if(reloadBtn){
+    reloadBtn.addEventListener('click', async ()=>{
+      try{
+        await loadIntoForm();
+      }catch(e){
+        console.error(e);
+        sliderAdminSetMsg('❌ فشل تحميل إعدادات السلايدر (تحقق من الصلاحيات)', false);
+      }
+    });
+  }
+
+  if(saveBtn){
+    saveBtn.addEventListener('click', async ()=>{
+      try{
+        const slides = [];
+        for(let i=1;i<=3;i++){
+          slides.push({
+            imageUrl: (document.getElementById(`slide${i}ImageUrl`)?.value || '').trim(),
+            title: (document.getElementById(`slide${i}Title`)?.value || '').trim(),
+            subtitle: (document.getElementById(`slide${i}Subtitle`)?.value || '').trim(),
+            link: (document.getElementById(`slide${i}Link`)?.value || '').trim() || '#',
+          });
+        }
+        const saved = await saveSliderSettings(slides);
+        renderHomeSliderSlides(saved);
+        // Re-init slider (if it exists)
+        if(typeof window.initSlider === 'function'){
+          window.initSlider(true);
+        }
+        sliderAdminSetMsg('✅ تم حفظ السلايدر وتحديثه في الصفحة');
+      }catch(e){
+        console.error(e);
+        sliderAdminSetMsg('❌ لم يتم الحفظ (صلاحيات Firestore أو إعدادات Firebase)', false);
+      }
+    });
+  }
+
+  // initial
+  loadIntoForm().catch(()=>{});
+}
+
+// Ensure slider admin handlers bind once
+(function(){
+  const onceKey = '__sliderAdminBound';
+  if(window[onceKey]) return;
+  window[onceKey] = true;
+  document.addEventListener('DOMContentLoaded', ()=>{
+    // Bind only if section exists (admin panel present)
+    if(document.getElementById('sliderSection')){
+      bindSliderAdminHandlers();
+    }
+  });
+})();
 
 // === Admin Tabs: binding robust (prevents overlays/forms from breaking clicks) ===
 window.switchAdminTab = function(tabId){
@@ -8010,5 +8513,119 @@ document.addEventListener('DOMContentLoaded', ()=>{
   });
 })();
 </script>
+
+
+<script>
+(function initSlider(forceReset){
+  const viewport = document.getElementById('homeSlider');
+  if(!viewport) return;
+
+  // Reset previous interval if any
+  if(forceReset && viewport.__sliderTimer){
+    clearInterval(viewport.__sliderTimer);
+    viewport.__sliderTimer = null;
+  }
+
+  const track = viewport.querySelector('.slider-track');
+  const prevBtn = viewport.querySelector('.slider-nav.prev');
+  const nextBtn = viewport.querySelector('.slider-nav.next');
+  const dotsWrap = viewport.querySelector('.slider-dots');
+  if(!track || !dotsWrap) return;
+
+  const slides = Array.from(viewport.querySelectorAll('.slide'));
+  if(!slides.length) return;
+
+  let index = 0;
+
+  // Create dots
+  dotsWrap.innerHTML = '';
+  const dots = slides.map((_, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('aria-label', 'انتقال إلى الشريحة ' + (i + 1));
+    b.addEventListener('click', () => goTo(i));
+    dotsWrap.appendChild(b);
+    return b;
+  });
+
+  function render(){
+    track.style.transform = `translateX(${-index * 100}%)`;
+    dots.forEach((d, i) => d.classList.toggle('active', i === index));
+  }
+
+  function goTo(i){
+    index = (i + slides.length) % slides.length;
+    render();
+    restartAuto();
+  }
+
+  function next(){ goTo(index + 1); }
+  function prev(){ goTo(index - 1); }
+
+  // Bind buttons مرة واحدة
+  if(!viewport.__navBound){
+    viewport.__navBound = true;
+    prevBtn?.addEventListener('click', prev);
+    nextBtn?.addEventListener('click', next);
+
+    // Pause on hover
+    viewport.addEventListener('mouseenter', stopAuto);
+    viewport.addEventListener('mouseleave', startAuto);
+
+    // Swipe support (Pointer events)
+    let startX = 0;
+    let dx = 0;
+    let isDown = false;
+
+    viewport.addEventListener('pointerdown', (e) => {
+      isDown = true;
+      startX = e.clientX;
+      dx = 0;
+      viewport.setPointerCapture(e.pointerId);
+      stopAuto();
+    });
+
+    viewport.addEventListener('pointermove', (e) => {
+      if(!isDown) return;
+      dx = e.clientX - startX;
+    });
+
+    viewport.addEventListener('pointerup', () => {
+      if(!isDown) return;
+      isDown = false;
+      const threshold = 50;
+      if(dx > threshold) prev();
+      else if(dx < -threshold) next();
+      startAuto();
+    });
+  }
+
+  // Auto play
+  function startAuto(){
+    stopAuto();
+    viewport.__sliderTimer = setInterval(next, 4500);
+  }
+  function stopAuto(){
+    if(viewport.__sliderTimer) clearInterval(viewport.__sliderTimer);
+    viewport.__sliderTimer = null;
+  }
+  function restartAuto(){ startAuto(); }
+
+  // Init
+  render();
+  startAuto();
+}
+
+(async function(){
+  try{
+    const slides = await loadSliderSettings();
+    renderHomeSliderSlides(slides);
+  }catch(e){
+    console.warn(e);
+  }
+  initSlider(true);
+})();;
+</script>
+
 </body>
 </html>
