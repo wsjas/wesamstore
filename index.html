@@ -2425,6 +2425,35 @@
   transform: scale(1.3);
 }
 
+
+
+/* ===== Home Slider V2 (Fade, RTL-safe) ===== */
+.hs-wrapper{margin:18px 0 14px}
+.hs{position:relative; overflow:hidden; border-radius:18px; background:#000; box-shadow:0 10px 28px rgba(0,0,0,.12)}
+.hs-stage{position:relative; height:clamp(180px, 28vw, 420px)}
+.hs-slide{position:absolute; inset:0; opacity:0; transition:opacity .6s ease; pointer-events:none}
+.hs-slide.is-active{opacity:1; z-index:2; pointer-events:auto}
+.hs-slide img{width:100%; height:100%; object-fit:cover; display:block}
+.hs-caption{position:absolute; left:16px; right:16px; bottom:16px; max-width:560px; padding:14px 16px; border-radius:14px;
+  background:rgba(0,0,0,.45); color:#fff}
+@supports ((-webkit-backdrop-filter: blur(6px)) or (backdrop-filter: blur(6px))){
+  .hs-caption{-webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);}
+}
+.hs-caption h3{margin:0 0 6px 0; font-size:1.15rem; font-weight:900}
+.hs-caption p{margin:0 0 10px 0; opacity:.92; font-size:.95rem}
+.hs-caption a{display:inline-block; padding:10px 14px; border-radius:12px; text-decoration:none; background:var(--blue,#0A58CA); color:#fff; font-weight:800}
+.hs-nav{position:absolute; top:50%; transform:translateY(-50%); z-index:5; width:44px; height:44px; border:0; border-radius:999px;
+  background:rgba(255,255,255,.85); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:900}
+.hs-prev{left:12px}
+.hs-next{right:12px}
+.hs-dots{position:absolute; left:0; right:0; bottom:10px; z-index:6; display:flex; gap:8px; justify-content:center; align-items:center}
+.hs-dots button{width:10px; height:10px; border-radius:999px; border:0; opacity:.45; cursor:pointer}
+.hs-dots button.active{opacity:1; transform:scale(1.15)}
+@media(max-width:768px){
+  .hs-stage{height:240px}
+  .hs-caption{max-width:none}
+}
+
 </style>
 <style>
 /* Inline social buttons next to WhatsApp/Email */
@@ -3821,48 +3850,22 @@ header.glass i {
 <!-- Hero + Service Main Section (New) -->
 
 <!-- Slider Wrapper -->
-<section class="slider-wrapper" aria-label="Home Slider">
-  <div class="slider-viewport" id="homeSlider">
-    <div class="slider-track">
-      <!-- Slide 1 -->
-      <article class="slide">
-        <img src="https://dummyimage.com/1200x500/0a58ca/ffffff&text=Wesam+Electronics+Offers" alt="عرض 1" loading="lazy">
-        <div class="slide-caption">
-          <h3>عروض قوية اليوم</h3>
-          <p>خصومات على قطع الإلكترونيات والصيانة</p>
-          <a class="slide-btn" href="#productsGrid">تسوق الآن</a>
-        </div>
-      </article>
+<section class="hs-wrapper" aria-label="سلايدر العروض">
+  <div class="container">
+    <div class="hs" id="homeSlider">
+      <div class="hs-stage" aria-live="polite"></div>
 
-      <!-- Slide 2 -->
-      <article class="slide">
-        <img src="https://dummyimage.com/1200x500/ff8c00/ffffff&text=New+Arrivals" alt="عرض 2" loading="lazy">
-        <div class="slide-caption">
-          <h3>منتجات جديدة</h3>
-          <p>وصلت شحنات جديدة لمستلزمات الإلكترونيات</p>
-          <a class="slide-btn" href="#categoriesGrid">شاهد التصنيفات</a>
-        </div>
-      </article>
+      <button class="hs-nav hs-prev" type="button" aria-label="السابق">‹</button>
+      <button class="hs-nav hs-next" type="button" aria-label="التالي">›</button>
 
-      <!-- Slide 3 -->
-      <article class="slide">
-        <img src="https://dummyimage.com/1200x500/111111/ffffff&text=Service+Requests" alt="عرض 3" loading="lazy">
-        <div class="slide-caption">
-          <h3>طلبات صيانة أسرع</h3>
-          <p>قدّم طلب الصيانة خلال دقيقة</p>
-          <a class="slide-btn" href="#serviceHome">طلب صيانة</a>
-        </div>
-      </article>
+      <div class="hs-dots" aria-label="مؤشرات السلايدر"></div>
     </div>
-
-    <!-- Nav -->
-    <button class="slider-nav prev" type="button" aria-label="السابق">‹</button>
-    <button class="slider-nav next" type="button" aria-label="التالي">›</button>
-
-    <!-- Dots -->
-    <div class="slider-dots" aria-label="مؤشرات السلايدر"></div>
   </div>
 </section>
+
+
+
+
 
 <section class="hero" id="serviceHome">
 <div class="container">
@@ -6120,28 +6123,91 @@ async function saveSliderSettings(slides){
 function renderHomeSliderSlides(slides){
   const viewport = document.getElementById('homeSlider');
   if(!viewport) return;
-  const track = viewport.querySelector('.slider-track');
-  if(!track) return;
+
+  const stage = viewport.querySelector('.hs-stage');
+  const dotsWrap = viewport.querySelector('.hs-dots');
+  if(!stage || !dotsWrap) return;
 
   const safe = (slides && slides.length) ? slides : DEFAULT_SLIDES;
 
-  track.innerHTML = safe.map((s) => {
-    const img = normalizeImageUrl(s.imageUrl);
-    const title = (s.title || "").trim();
-    const subtitle = (s.subtitle || "").trim();
-    const link = (s.link || "#").trim();
+  // Build slides (fade, RTL-safe)
+  stage.innerHTML = safe.map((s, i)=>{
+    const img = normalizeImageUrl(s.imageUrl || '');
+    const title = String(s.title || '').trim();
+    const subtitle = String(s.subtitle || '').trim();
+    const link = String(s.link || '#').trim() || '#';
+    const alt = title || `عرض ${i+1}`;
+
+    // Put a visible fallback FIRST (prevents black box), then we swap to real when it is verified
+    const fallback = "https://picsum.photos/1200/500?blur=2";
+    const real = img || fallback;
+
     return `
-      <article class="slide">
-        <img src="${img}" alt="${title ? title : 'عرض'}" loading="lazy" onerror="this.onerror=null; this.src='https://picsum.photos/1200/500?blur=2';">
-        <div class="slide-caption">
+      <div class="hs-slide${i===0 ? ' is-active' : ''}" data-index="${i}" aria-hidden="${i===0 ? 'false' : 'true'}">
+        <img src="${fallback}" data-real="${real}" alt="${alt}" decoding="async" referrerpolicy="no-referrer">
+        <div class="hs-caption">
           ${title ? `<h3>${title}</h3>` : ``}
           ${subtitle ? `<p>${subtitle}</p>` : ``}
-          <a class="slide-btn" href="${link}">عرض التفاصيل</a>
+          <a href="${link}">عرض التفاصيل</a>
         </div>
-      </article>
+      </div>
     `;
   }).join('');
+
+  // Dots
+  dotsWrap.innerHTML = safe.map((_, i)=>`<button type="button" aria-label="انتقال إلى ${i+1}" data-dot="${i}" class="${i===0?'active':''}"></button>`).join('');
+
+  // Verify & swap images safely (even if URL returns HTML 200)
+  const imgs = stage.querySelectorAll('img[data-real]');
+  imgs.forEach((imgEl, idx)=>{
+    const real = imgEl.getAttribute('data-real') || '';
+    if(!real || real === imgEl.src) return;
+
+    const test = new Image();
+    test.decoding = "async";
+    test.referrerPolicy = "no-referrer";
+
+    const swapToFallback = (reason)=>{
+      // keep current fallback (already visible) and optionally log
+      // console.warn("[Slider] fallback used for slide", idx+1, reason, real);
+    };
+
+    test.onload = async ()=>{
+      try{
+        // decode() makes sure it's a real decodable image, not HTML
+        if(test.decode) await test.decode();
+      }catch(_){
+        // decode failed => keep fallback
+        swapToFallback("decode_failed");
+        return;
+      }
+      // Swap
+      imgEl.src = real;
+    };
+
+    test.onerror = ()=> swapToFallback("error");
+
+    // Timeout guard: if never loads, keep fallback (prevents black)
+    const t = setTimeout(()=> swapToFallback("timeout"), 4500);
+    test.onload = (function(orig){
+      return async function(){
+        clearTimeout(t);
+        await orig();
+      }
+    })(test.onload);
+
+    test.onerror = (function(orig){
+      return function(){
+        clearTimeout(t);
+        orig();
+      }
+    })(test.onerror);
+
+    test.src = real;
+  });
 }
+
+// ===== Admin: Slider UI =====
 
 // ===== Admin: Slider UI =====
 function sliderAdminSetMsg(msg, ok=true){
@@ -8563,99 +8629,103 @@ function initSlider(forceReset){
   const viewport = document.getElementById('homeSlider');
   if(!viewport) return;
 
-  // Reset previous interval if any
-  if(forceReset && viewport.__sliderTimer){
-    clearInterval(viewport.__sliderTimer);
-    viewport.__sliderTimer = null;
-  }
+  const stage = viewport.querySelector('.hs-stage');
+  const slides = stage ? Array.from(stage.querySelectorAll('.hs-slide')) : [];
+  const dotsWrap = viewport.querySelector('.hs-dots');
+  const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll('button[data-dot]')) : [];
+  const prevBtn = viewport.querySelector('.hs-prev');
+  const nextBtn = viewport.querySelector('.hs-next');
 
-  const track = viewport.querySelector('.slider-track');
-  const prevBtn = viewport.querySelector('.slider-nav.prev');
-  const nextBtn = viewport.querySelector('.slider-nav.next');
-  const dotsWrap = viewport.querySelector('.slider-dots');
-  if(!track || !dotsWrap) return;
-
-  const slides = Array.from(viewport.querySelectorAll('.slide'));
   if(!slides.length) return;
 
-  let index = 0;
+  // Destroy previous state if any
+  if(forceReset && viewport.__hsState){
+    try{ clearInterval(viewport.__hsState.timer); }catch(_){}
+    viewport.__hsState = null;
+  }
 
-  // Create dots
-  dotsWrap.innerHTML = '';
-  const dots = slides.map((_, i) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.setAttribute('aria-label', 'انتقال إلى الشريحة ' + (i + 1));
-    b.addEventListener('click', () => goTo(i));
-    dotsWrap.appendChild(b);
-    return b;
-  });
+  const state = viewport.__hsState || { index: 0, timer: null, bound:false };
+  viewport.__hsState = state;
 
-  function render(){
-    track.style.transform = `translateX(${-index * 100}%)`;
-    dots.forEach((d, i) => d.classList.toggle('active', i === index));
+  function apply(){
+    slides.forEach((el,i)=>{
+      const active = i === state.index;
+      el.classList.toggle('is-active', active);
+      el.setAttribute('aria-hidden', active ? 'false' : 'true');
+    });
+    dots.forEach((d,i)=> d.classList.toggle('active', i === state.index));
   }
 
   function goTo(i){
-    index = (i + slides.length) % slides.length;
-    render();
+    state.index = (i + slides.length) % slides.length;
+    apply();
     restartAuto();
   }
+  function next(){ goTo(state.index + 1); }
+  function prev(){ goTo(state.index - 1); }
 
-  function next(){ goTo(index + 1); }
-  function prev(){ goTo(index - 1); }
+  function stopAuto(){
+    if(state.timer){ clearInterval(state.timer); state.timer = null; }
+  }
+  function startAuto(){
+    stopAuto();
+    state.timer = setInterval(next, 3800);
+  }
+  function restartAuto(){
+    // keep behavior smooth, especially after click/swipe
+    startAuto();
+  }
 
-  // Bind buttons مرة واحدة
-  if(!viewport.__navBound){
-    viewport.__navBound = true;
-    prevBtn?.addEventListener('click', prev);
-    nextBtn?.addEventListener('click', next);
+  if(!state.bound){
+    state.bound = true;
+
+    prevBtn && prevBtn.addEventListener('click', prev);
+    nextBtn && nextBtn.addEventListener('click', next);
+
+    dotsWrap && dotsWrap.addEventListener('click', (e)=>{
+      const b = e.target && e.target.closest && e.target.closest('button[data-dot]');
+      if(!b) return;
+      const idx = parseInt(b.getAttribute('data-dot'), 10);
+      if(Number.isFinite(idx)) goTo(idx);
+    });
 
     // Pause on hover
     viewport.addEventListener('mouseenter', stopAuto);
     viewport.addEventListener('mouseleave', startAuto);
 
-    // Swipe support (Pointer events)
-    let startX = 0;
-    let dx = 0;
-    let isDown = false;
+    // Swipe support (pointer)
+    let startX = 0, dx = 0, isDown = false;
 
-    viewport.addEventListener('pointerdown', (e) => {
+    viewport.addEventListener('pointerdown', (e)=>{
       isDown = true;
-      startX = e.clientX;
+      startX = e.clientX || 0;
       dx = 0;
-      viewport.setPointerCapture(e.pointerId);
+      try{ viewport.setPointerCapture(e.pointerId); }catch(_){}
       stopAuto();
     });
 
-    viewport.addEventListener('pointermove', (e) => {
+    viewport.addEventListener('pointermove', (e)=>{
       if(!isDown) return;
-      dx = e.clientX - startX;
+      dx = (e.clientX || 0) - startX;
     });
 
-    viewport.addEventListener('pointerup', () => {
+    viewport.addEventListener('pointerup', ()=>{
       if(!isDown) return;
       isDown = false;
-      const threshold = 50;
+      const threshold = 40;
       if(dx > threshold) prev();
       else if(dx < -threshold) next();
       startAuto();
     });
-  }
 
-  // Auto play
-  function startAuto(){
-    stopAuto();
-    viewport.__sliderTimer = setInterval(next, 4500);
+    viewport.addEventListener('pointercancel', ()=>{
+      isDown = false;
+      startAuto();
+    });
   }
-  function stopAuto(){
-    if(viewport.__sliderTimer) clearInterval(viewport.__sliderTimer);
-    viewport.__sliderTimer = null;
-  }
-  function restartAuto(){ startAuto(); }
 
   // Init
-  render();
+  apply();
   startAuto();
 }
 
