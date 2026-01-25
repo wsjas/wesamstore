@@ -3109,10 +3109,6 @@ header.glass i {
 <a aria-label="الإيميل" class="m-qs email" href="mailto:wesamelectronics@gmail.com" id="mQSEmail">
 <i class="fas fa-envelope"></i>
 </a>
-<button aria-label="السلة" class="m-qs cart" id="mQSCart" type="button">
-<i class="fas fa-cart-shopping"></i>
-<span class="m-qs-badge" id="mQSCartCount" style="display:none;">0</span>
-</button>
 </div>
 </div>
 
@@ -8695,6 +8691,8 @@ function initSlider(forceReset){
   const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll('button[data-dot]')) : [];
   const prevBtn = viewport.querySelector('.hs-prev');
   const nextBtn = viewport.querySelector('.hs-next');
+
+  const bar = viewport.querySelector('.hs-bar');
 
   if(!slides.length) return;
 
