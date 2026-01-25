@@ -6038,6 +6038,43 @@ const DEFAULT_SLIDES = [
   { imageUrl: "https://picsum.photos/1200/500?3", title: "طلبات صيانة أسرع", subtitle: "ارسل طلب الصيانة الآن وسنتواصل معك", link: "#service" },
 ];
 
+
+function isProbablyDirectImageUrl(url){
+  try{
+    const u = new URL(url);
+    const path = (u.pathname || "").toLowerCase();
+    // basic extension check (allow common image types)
+    return /\.(png|jpe?g|webp|gif|bmp|svg)$/.test(path);
+  }catch(e){
+    return false;
+  }
+}
+
+function normalizeImageUrl(raw){
+  let v = String(raw || '').trim();
+  if(!v) return '';
+  // If user accidentally pasted the URL twice (concatenated), keep the first URL only
+  const firstHttp = v.indexOf('http');
+  if(firstHttp > 0) v = v.slice(firstHttp);
+  const secondHttp = v.indexOf('http', firstHttp + 4);
+  if(secondHttp > 0) v = v.slice(0, secondHttp);
+  // If there are spaces/newlines, take the first token
+  v = v.split(/\s+/)[0].trim();
+  // If still contains another protocol occurrence, cut again defensively
+  const again = v.indexOf('http', 5);
+  if(again > 0) v = v.slice(0, again).trim();
+  return v;
+}
+
+async function waitForFirestoreReady(timeoutMs=6000){
+  const start = Date.now();
+  while(!window.db){
+    if(Date.now() - start > timeoutMs) return false;
+    await new Promise(r => setTimeout(r, 120));
+  }
+  return true;
+}
+
 async function getSliderDoc(){
   const db = window.db;
   if(!db) throw new Error("Firestore not ready");
@@ -6052,7 +6089,7 @@ async function loadSliderSettings(){
       const data = snap.data() || {};
       if(Array.isArray(data.slides) && data.slides.length){
         return data.slides.slice(0, 10).map(s => ({
-          imageUrl: String(s.imageUrl || "").trim(),
+          imageUrl: normalizeImageUrl(s.imageUrl),
           title: String(s.title || "").trim(),
           subtitle: String(s.subtitle || "").trim(),
           link: String(s.link || "").trim(),
@@ -6068,7 +6105,7 @@ async function loadSliderSettings(){
 async function saveSliderSettings(slides){
   const ref = await getSliderDoc();
   const cleaned = (slides || []).map(s => ({
-    imageUrl: String(s.imageUrl || "").trim(),
+    imageUrl: normalizeImageUrl(s.imageUrl),
     title: String(s.title || "").trim(),
     subtitle: String(s.subtitle || "").trim(),
     link: String(s.link || "").trim(),
@@ -6089,13 +6126,13 @@ function renderHomeSliderSlides(slides){
   const safe = (slides && slides.length) ? slides : DEFAULT_SLIDES;
 
   track.innerHTML = safe.map((s) => {
-    const img = (s.imageUrl || "").trim();
+    const img = normalizeImageUrl(s.imageUrl);
     const title = (s.title || "").trim();
     const subtitle = (s.subtitle || "").trim();
     const link = (s.link || "#").trim();
     return `
       <article class="slide">
-        <img src="${img}" alt="${title ? title : 'عرض'}" loading="lazy">
+        <img src="${img}" alt="${title ? title : 'عرض'}" loading="lazy" onerror="this.onerror=null; this.src='https://picsum.photos/1200/500?blur=2';">
         <div class="slide-caption">
           ${title ? `<h3>${title}</h3>` : ``}
           ${subtitle ? `<p>${subtitle}</p>` : ``}
@@ -6232,11 +6269,17 @@ function bindSliderAdminHandlers(){
         }
         const saved = await saveSliderSettings(slides);
         renderHomeSliderSlides(saved);
+
+        // Warn about non-direct image URLs (e.g., postimg.cc page links)
+        const bad = (saved || []).filter(s => s && s.imageUrl && !isProbablyDirectImageUrl(s.imageUrl));
+        if(bad.length){
+          sliderAdminSetMsg('⚠️ تم الحفظ، لكن بعض الروابط ليست رابط صورة مباشر. استخدم رابط مباشر ينتهي بـ .jpg / .png / .webp (مثل i.postimg.cc/...).', false);
+        } else {
+          }
         // Re-init slider (if it exists)
         if(typeof window.initSlider === 'function'){
           window.initSlider(true);
         }
-        sliderAdminSetMsg('✅ تم حفظ السلايدر وتحديثه في الصفحة');
       }catch(e){
         console.error(e);
         sliderAdminSetMsg('❌ لم يتم الحفظ (صلاحيات Firestore أو إعدادات Firebase)', false);
@@ -8618,10 +8661,18 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 (async function(){
   try{
-    const slides = await loadSliderSettings();
+    // Ensure Firestore is ready before reading slider settings
+    const ready = await waitForFirestoreReady(8000);
+    const slides = ready ? await loadSliderSettings() : DEFAULT_SLIDES;
+    // Warn if admin saved non-direct links (e.g., a page link instead of image direct link)
+    const bad = (slides || []).filter(s => s && s.imageUrl && !isProbablyDirectImageUrl(s.imageUrl));
+    if(bad.length){
+      console.warn("Slider image URL may not be a direct image link. Use direct image URL ending with .jpg/.png/.webp, etc.", bad);
+    }
     renderHomeSliderSlides(slides);
   }catch(e){
-    console.warn(e);
+    console.warn("Slider init failed:", e);
+    renderHomeSliderSlides(DEFAULT_SLIDES);
   }
   initSlider(true);
 })();;
