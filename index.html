@@ -2431,6 +2431,7 @@
 .hs-wrapper{margin:18px 0 14px}
 .hs{position:relative; overflow:hidden; border-radius:18px; background:#000; box-shadow:0 10px 28px rgba(0,0,0,.12)}
 .hs-stage{position:relative; height:clamp(180px, 28vw, 420px)}
+.hs-slides{position:relative; height:100%}
 .hs-slide{position:absolute; inset:0; opacity:0; transition:opacity .6s ease; pointer-events:none}
 .hs-slide.is-active{opacity:1; z-index:2; pointer-events:auto}
 .hs-slide img{width:100%; height:100%; object-fit:cover; display:block}
@@ -2449,9 +2450,56 @@
 .hs-dots{position:absolute; left:0; right:0; bottom:10px; z-index:6; display:flex; gap:8px; justify-content:center; align-items:center}
 .hs-dots button{width:10px; height:10px; border-radius:999px; border:0; opacity:.45; cursor:pointer}
 .hs-dots button.active{opacity:1; transform:scale(1.15)}
+/* Mobile: show slide info under the image (avoid covering the photo) */
+.hs-bar{
+  display:none;
+  background:#fff;
+  border-top:1px solid rgba(0,0,0,.08);
+  padding:12px 14px;
+}
+.hs-bar-inner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.hs-bar-text{flex:1; min-width:0}
+.hs-bar-title{
+  font-weight:900;
+  color:#111;
+  margin:0 0 4px 0;
+  font-size:1.05rem;
+}
+.hs-bar-sub{
+  color:#555;
+  margin:0;
+  font-size:.95rem;
+  line-height:1.55;
+}
+.hs-bar-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px 14px;
+  border-radius:12px;
+  text-decoration:none;
+  background:var(--blue,#0A58CA);
+  color:#fff;
+  font-weight:900;
+  white-space:nowrap;
+}
 @media(max-width:768px){
-  .hs-stage{height:240px}
-  .hs-caption{max-width:none}
+  .hs-stage{height:220px}
+  .hs-caption{display:none !important;}
+  .hs-bar{display:block;}
+  .hs-bar-sub{
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .hs-nav{width:40px; height:40px; font-size:20px;}
 }
 
 </style>
@@ -3853,12 +3901,17 @@ header.glass i {
 <section class="hs-wrapper" aria-label="سلايدر العروض">
   <div class="container">
     <div class="hs" id="homeSlider">
-      <div class="hs-stage" aria-live="polite"></div>
+      <div class="hs-stage">
+        <div class="hs-slides" aria-live="polite"></div>
 
-      <button class="hs-nav hs-prev" type="button" aria-label="السابق">‹</button>
-      <button class="hs-nav hs-next" type="button" aria-label="التالي">›</button>
+        <button class="hs-nav hs-prev" type="button" aria-label="السابق">‹</button>
+        <button class="hs-nav hs-next" type="button" aria-label="التالي">›</button>
 
-      <div class="hs-dots" aria-label="مؤشرات السلايدر"></div>
+        <div class="hs-dots" aria-label="مؤشرات السلايدر"></div>
+      </div>
+
+      <!-- Mobile-friendly bar (no text over image) -->
+      <div class="hs-bar" aria-label="معلومات العرض"></div>
     </div>
   </div>
 </section>
@@ -6124,11 +6177,13 @@ function renderHomeSliderSlides(slides){
   const viewport = document.getElementById('homeSlider');
   if(!viewport) return;
 
-  const stage = viewport.querySelector('.hs-stage');
+  const stage = viewport.querySelector('.hs-slides');
   const dotsWrap = viewport.querySelector('.hs-dots');
   if(!stage || !dotsWrap) return;
 
   const safe = (slides && slides.length) ? slides : DEFAULT_SLIDES;
+  // Keep data for the bar below (mobile)
+  viewport.__hsSlidesData = safe;
 
   // Build slides (fade, RTL-safe)
   stage.innerHTML = safe.map((s, i)=>{
@@ -6138,17 +6193,22 @@ function renderHomeSliderSlides(slides){
     const link = String(s.link || '#').trim() || '#';
     const alt = title || `عرض ${i+1}`;
 
+    const eTitle = escapeHtml(title);
+    const eSub = escapeHtml(subtitle);
+    const eLink = escapeHtml(link);
+    const eAlt = escapeHtml(alt);
+
     // Put a visible fallback FIRST (prevents black box), then we swap to real when it is verified
     const fallback = "https://picsum.photos/1200/500?blur=2";
     const real = img || fallback;
 
     return `
       <div class="hs-slide${i===0 ? ' is-active' : ''}" data-index="${i}" aria-hidden="${i===0 ? 'false' : 'true'}">
-        <img src="${fallback}" data-real="${real}" alt="${alt}" decoding="async" referrerpolicy="no-referrer">
+        <img src="${fallback}" data-real="${real}" alt="${eAlt}" decoding="async" referrerpolicy="no-referrer">
         <div class="hs-caption">
-          ${title ? `<h3>${title}</h3>` : ``}
-          ${subtitle ? `<p>${subtitle}</p>` : ``}
-          <a href="${link}">عرض التفاصيل</a>
+          ${title ? `<h3>${eTitle}</h3>` : ``}
+          ${subtitle ? `<p>${eSub}</p>` : ``}
+          <a href="${eLink}">عرض التفاصيل</a>
         </div>
       </div>
     `;
@@ -8629,7 +8689,7 @@ function initSlider(forceReset){
   const viewport = document.getElementById('homeSlider');
   if(!viewport) return;
 
-  const stage = viewport.querySelector('.hs-stage');
+  const stage = viewport.querySelector('.hs-slides');
   const slides = stage ? Array.from(stage.querySelectorAll('.hs-slide')) : [];
   const dotsWrap = viewport.querySelector('.hs-dots');
   const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll('button[data-dot]')) : [];
@@ -8654,6 +8714,23 @@ function initSlider(forceReset){
       el.setAttribute('aria-hidden', active ? 'false' : 'true');
     });
     dots.forEach((d,i)=> d.classList.toggle('active', i === state.index));
+
+    // Mobile bar: show title/subtitle/button under the image (no overlay)
+    if(bar){
+      const data = (viewport.__hsSlidesData && viewport.__hsSlidesData[state.index]) || {};
+      const t = String(data.title || '').trim();
+      const sub = String(data.subtitle || '').trim();
+      const link = String(data.link || '#').trim() || '#';
+      bar.innerHTML = `
+        <div class="hs-bar-inner">
+          <div class="hs-bar-text">
+            ${t ? `<div class="hs-bar-title">${escapeHtml(t)}</div>` : ``}
+            ${sub ? `<div class="hs-bar-sub">${escapeHtml(sub)}</div>` : ``}
+          </div>
+          <a class="hs-bar-btn" href="${escapeHtml(link)}">عرض التفاصيل</a>
+        </div>
+      `;
+    }
   }
 
   function goTo(i){
