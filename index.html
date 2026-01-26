@@ -224,7 +224,7 @@
             font-family: 'Cairo', sans-serif;
             font-weight: 800;
             font-size: 2.2rem;
-            background: linear-gradient(45deg, #FFFFFF, var(--accent-color));
+            background: linear-gradient(90deg, var(--brand-orange, #FF8C00), var(--brand-blue, #0A58CA));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
@@ -1279,8 +1279,8 @@
 
         /* Footer */
         footer {
-            background-color: var(--primary-color);
-            color: white;
+              background-color: #fff;
+            color: #022aff;
             padding: 30px 0 15px;
             margin-top: 40px;
         }
@@ -1979,6 +1979,9 @@
     transform: translateY(-1px);
 }
 .hero{ padding:18px 0 6px; }
+/* Hide the old big maintenance hero (now we use a featured tile under the slider) */
+#serviceHome{ display:none !important; }
+
 .hero-card{
     border-radius: 18px;
     padding: 18px;
@@ -2278,7 +2281,7 @@
             height:56px;
             border-radius:50%;
             border:none;
-            background: linear-gradient(135deg,#ff3b3b,#c80000);
+            background: linear-gradient( 90deg, var(--brand-orange, #FF8C00), var(--brand-blue, #0A58CA));
             color:#fff;
             cursor:pointer;
             display:flex;
@@ -2500,6 +2503,243 @@
     overflow:hidden;
   }
   .hs-nav{width:40px; height:40px; font-size:20px;}
+}
+
+
+/* ====== Mikroelectron-inspired header + layout (Blue/Orange on White) ====== */
+:root{
+  --brand-blue:#0A58CA;
+  --brand-blue-dark:#073B8A;
+  --brand-orange:#FF8C00;
+  --brand-gray:#f3f5f7;
+}
+/* Header: white background, blue/orange accents */
+header{
+  background:#fff !important;
+  border-bottom:1px solid rgba(10,88,202,.15) !important;
+  box-shadow:0 6px 18px rgba(0,0,0,.06) !important;
+  color: var(--brand-blue-dark) !important;
+}
+.header-top,.header-bottom{
+  background:#fff !important;
+}
+/* Ensure all header text is visible on white */
+.logo-icon i{ color: var(--brand-orange) !important; }
+.nav-links button, .nav-cta a, .header-actions button, .header-actions a{ color: var(--brand-blue-dark) !important; }
+.nav-links button.active{ border-color: rgba(255,140,0,.55) !important; color: var(--brand-orange) !important; }
+.nav-links button:hover{ border-color: rgba(255,140,0,.45) !important; }
+.nav-cta a{ border:1px solid rgba(10,88,202,.18) !important; background:#fff !important; }
+.nav-cta a:hover{ border-color: rgba(255,140,0,.55) !important; color: var(--brand-orange) !important; }
+.logo-subtext{ color:var(--brand-blue-dark) !important; }
+.logo-text{ color:var(--brand-orange) !important; }
+.logo-slogan, .tagline{ color:var(--brand-blue-dark) !important; opacity:.9; }
+/* Header info: Blue text + Orange accents (like Mikroelectron) */
+.contact-info{ color:var(--brand-blue-dark) !important; }
+.contact-info i{ color:var(--brand-orange) !important; }
+.contact-info .phone-number{ color:var(--brand-orange) !important; font-weight:900; }
+
+.header-actions .cart-icon i{ color:var(--brand-blue-dark) !important; }
+.cart-count{
+  background:var(--brand-orange) !important;
+  color:#fff !important;
+}
+/* Buttons */
+.user-account-btn, .admin-login-btn{
+  background:#fff !important;
+  color:var(--brand-blue-dark) !important;
+  border:1px solid rgba(10,88,202,.25) !important;
+}
+.user-account-btn:hover, .admin-login-btn:hover{
+  border-color:var(--brand-orange) !important;
+  color:var(--brand-orange) !important;
+}
+
+/* ====== Shop layout: sidebar categories + main products ====== */
+.shop-section{ padding:24px 0 10px; }
+.shop-grid{
+  display:grid;
+  grid-template-columns: 320px 1fr;
+  gap:18px;
+  align-items:start;
+}
+.shop-sidebar{
+  background:#fff;
+  border:1px solid rgba(10,88,202,.10);
+  border-radius:14px;
+  box-shadow:0 6px 18px rgba(0,0,0,.05);
+  padding:14px;
+  position:sticky;
+  top:110px;
+}
+.sidebar-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:6px 4px 12px;
+  border-bottom:1px solid rgba(10,88,202,.10);
+  margin-bottom:12px;
+  color:var(--brand-blue-dark);
+  font-weight:800;
+}
+.sidebar-title i{ color:var(--brand-orange); }
+
+.categories-grid.sidebar-list{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:10px !important;
+}
+/* Turn category "cards" into sidebar rows */
+.category-card{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:12px !important;
+  padding:10px 12px !important;
+  border:1px solid rgba(10,88,202,.10) !important;
+  border-radius:12px !important;
+  background:#fff !important;
+  cursor:pointer !important;
+  transition:transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+}
+.category-card:hover{
+  transform:translateY(-1px);
+  border-color:rgba(255,140,0,.55) !important;
+  box-shadow:0 10px 22px rgba(0,0,0,.06);
+}
+.category-card.active{
+  border-color:var(--brand-orange) !important;
+  box-shadow:0 10px 26px rgba(255,140,0,.18);
+}
+.category-icon{
+  width:42px !important;
+  height:42px !important;
+  border-radius:12px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:rgba(10,88,202,.08) !important;
+  color:var(--brand-blue-dark) !important;
+  flex:0 0 auto;
+}
+.category-card.active .category-icon{
+  background:rgba(255,140,0,.18) !important;
+  color:var(--brand-orange) !important;
+}
+.category-name{
+  flex:1 1 auto;
+  text-align:right;
+  color:var(--brand-blue-dark) !important;
+  font-weight:800;
+}
+.category-count{
+  display:inline-flex;
+  margin-top:4px;
+  padding:2px 8px;
+  border-radius:999px;
+  background:rgba(10,88,202,.08);
+  color:var(--brand-blue-dark);
+  font-weight:700;
+  font-size:12px;
+}
+.category-card.active .category-count{
+  background:rgba(255,140,0,.18);
+  color:var(--brand-orange);
+}
+
+/* Featured image categories (New / Offers) */
+.featured-categories-row{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:16px;
+  margin:18px 0;
+}
+
+@media (max-width: 1200px){
+  .featured-categories-row{ grid-template-columns: 1fr 1fr; }
+}
+
+.featured-cat-card{
+  border:0;
+  width:100%;
+  min-height:140px;
+  border-radius:16px;
+  overflow:hidden;
+  background:linear-gradient(135deg, rgba(10,88,202,.95), rgba(255,140,0,.90));
+  background-size:cover;
+  background-position:center;
+  position:relative;
+  cursor:pointer;
+  box-shadow:0 10px 26px rgba(0,0,0,.10);
+}
+.featured-cat-card::after{
+  content:"";
+  position:absolute; inset:0;
+  background:linear-gradient(90deg, rgba(0,0,0,.35), rgba(0,0,0,.08));
+}
+.featured-cat-overlay{
+  position:absolute; inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:14px 16px;
+  z-index:1;
+  color:#fff;
+  text-align:right;
+}
+.featured-cat-title{
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:.2px;
+}
+.featured-cat-sub{
+  margin-top:6px;
+  font-size:13px;
+  opacity:.95;
+}
+.featured-cat-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin-top:10px;
+  width:max-content;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(255,255,255,.18);
+  backdrop-filter: blur(6px);
+  font-weight:800;
+  font-size:12px;
+}
+.featured-cat-badge i{ color:var(--brand-orange); }
+
+/* Main products area */
+.shop-main{
+  background:transparent;
+}
+.products-section{
+  padding-top:0 !important;
+}
+.products-header{
+  background:#fff;
+  border:1px solid rgba(10,88,202,.10);
+  border-radius:14px;
+  padding:14px;
+  box-shadow:0 6px 18px rgba(0,0,0,.05);
+}
+.products-header h2{
+  color:var(--brand-blue-dark) !important;
+}
+.search-box{
+  background:var(--brand-gray) !important;
+  border:1px solid rgba(10,88,202,.10) !important;
+}
+.search-box input{ color:#111 !important; }
+.search-box i{ color:var(--brand-blue-dark) !important; }
+
+@media (max-width: 992px){
+  .shop-grid{ grid-template-columns: 1fr; }
+  .shop-sidebar{ position:relative; top:auto; }
+  .featured-categories-row{ grid-template-columns: 1fr; }
 }
 
 </style>
@@ -2961,7 +3201,7 @@ header.glass {
   box-shadow: 0 8px 24px rgba(0,0,0,0.25);
 }
 header.glass, header.glass * {
-  color: #ffffff !important;
+  color: #110aee !important;
 }
 header.glass i {
   color: var(--accent-color) !important;
@@ -3074,6 +3314,14 @@ header.glass i {
 .mini-item .row{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
 .mini-muted{ opacity:.75; font-size:.9rem; }
 </style>
+
+<style>
+/* Hide mobile quick strip on desktop */
+@media (min-width: 769px){
+  .m-quickstrip{ display: none !important; }
+}
+</style>
+
 </head>
 <body>
 <!-- ===== Mobile Top Bar (Professional) ===== -->
@@ -3515,6 +3763,56 @@ header.glass i {
                         <a href="https://imgbb.com" target="_blank">ImgBB</a> أو 
                         <a href="https://postimages.org" target="_blank">PostImages</a> للحصول على رابط مجاني
                     </div>
+
+<hr style="margin:16px 0;border:none;border-top:1px solid rgba(10,88,202,.12);" />
+<h4 style="margin:10px 0 12px;color:#073B8A;"><i class="fas fa-images" style="color:#FF8C00;"></i> تصنيفات مميزة (صور تحت السلايدر)</h4>
+
+<div class="form-grid">
+  <div class="form-group">
+    <label for="featuredNewTitle">عنوان: المنتجات الجديدة</label>
+    <input id="featuredNewTitle" type="text" placeholder="المنتجات الجديدة"/>
+  </div>
+  <div class="form-group">
+    <label for="featuredNewImage">رابط صورة المنتجات الجديدة (Direct URL)</label>
+    <input id="featuredNewImage" type="text" placeholder="https://.../new.jpg"/>
+  </div>
+  <div class="form-group">
+    <label for="featuredNewSub">وصف قصير (اختياري)</label>
+    <input id="featuredNewSub" type="text" placeholder="منتجات وصلت حديثًا"/>
+  </div>
+</div>
+
+<div class="form-grid">
+  <div class="form-group">
+    <label for="featuredOffersTitle">عنوان: العروض والخصومات</label>
+    <input id="featuredOffersTitle" type="text" placeholder="العروض والخصومات"/>
+  </div>
+  <div class="form-group">
+    <label for="featuredOffersImage">رابط صورة العروض والخصومات (Direct URL)</label>
+    <input id="featuredOffersImage" type="text" placeholder="https://.../offers.jpg"/>
+  </div>
+  <div class="form-group">
+    <label for="featuredOffersSub">وصف قصير (اختياري)</label>
+    <input id="featuredOffersSub" type="text" placeholder="أفضل الأسعار والتخفيضات"/>
+  </div>
+</div>
+
+
+<div class="form-grid">
+  <div class="form-group">
+    <label for="featuredServiceTitle">عنوان: قسم الصيانة</label>
+    <input id="featuredServiceTitle" type="text" placeholder="قسم الصيانة"/>
+  </div>
+  <div class="form-group">
+    <label for="featuredServiceImage">رابط صورة قسم الصيانة (Direct URL)</label>
+    <input id="featuredServiceImage" type="text" placeholder="https://.../service.jpg"/>
+  </div>
+  <div class="form-group">
+    <label for="featuredServiceSub">وصف قصير (اختياري)</label>
+    <input id="featuredServiceSub" type="text" placeholder="قدّم طلبك خلال دقيقة"/>
+  </div>
+</div>
+
 <div class="form-actions">
 <button class="save-btn" type="submit">
 <i class="fas fa-save"></i> حفظ المنتج
@@ -4027,17 +4325,49 @@ header.glass i {
 </div>
 </div>
 </div>
-<!-- Categories Section -->
-<section class="categories-section">
-<div class="container">
-<h2 class="section-title">تصنيفات المنتجات</h2>
-<div class="categories-grid" id="categoriesGrid"></div>
-</div>
-</section>
-<!-- Products Section -->
-<section class="products-section">
-<div class="container">
-<div class="products-header">
+<!-- Shop Section (Sidebar Categories + Featured Categories + Products) -->
+<section class="shop-section">
+  <div class="container">
+    <h2 class="section-title">تصنيفات المنتجات</h2>
+
+    <!-- Featured image categories -->
+    <div class="featured-categories-row">
+      <button class="featured-cat-card" id="featuredCatNew" type="button" data-category="new" aria-label="المنتجات الجديدة">
+        <div class="featured-cat-overlay">
+          <div class="featured-cat-title" id="featuredNewTitleText">المنتجات الجديدة</div>
+          <div class="featured-cat-sub" id="featuredNewSubText">منتجات وصلت حديثًا</div>
+          <div class="featured-cat-badge"><i class="fas fa-bolt"></i> تصفّح الآن</div>
+        </div>
+      </button>
+
+      <button class="featured-cat-card" id="featuredCatOffers" type="button" data-category="offers" aria-label="العروض والخصومات">
+        <div class="featured-cat-overlay">
+          <div class="featured-cat-title" id="featuredOffersTitleText">العروض والخصومات</div>
+          <div class="featured-cat-sub" id="featuredOffersSubText">أفضل الأسعار والتخفيضات</div>
+          <div class="featured-cat-badge"><i class="fas fa-tags"></i> شاهد العروض</div>
+        </div>
+      </button>
+
+      <button class="featured-cat-card" id="featuredCatService" type="button" data-action="service" aria-label="قسم الصيانة">
+        <div class="featured-cat-overlay">
+          <div class="featured-cat-title" id="featuredServiceTitleText">قسم الصيانة</div>
+          <div class="featured-cat-sub" id="featuredServiceSubText">قدّم طلبك خلال دقيقة</div>
+          <div class="featured-cat-badge"><i class="fas fa-screwdriver-wrench"></i> سجل الآن</div>
+        </div>
+      </button>
+
+    </div>
+
+    <div class="shop-grid">
+      <aside class="shop-sidebar">
+        <div class="sidebar-title"><span><i class="fas fa-list"></i> القائمة الجانبية</span></div>
+        <div class="categories-grid sidebar-list" id="categoriesGrid"></div>
+      </aside>
+
+      <main class="shop-main">
+        <section class="products-section">
+          <div class="container" style="padding:0;">
+            <div class="products-header">
 <h2 id="productsSectionTitle"><i class="fas fa-th-large"></i> المنتجات المختارة والأفضل</h2>
 <div class="products-controls">
 <div class="search-box">
@@ -4065,8 +4395,14 @@ header.glass i {
 <h3>لا توجد منتجات</h3>
 <p>لا توجد منتجات في المخزن حالياً</p>
 </div>
-</div>
+
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
 </section>
+
 <!-- Footer -->
 <footer>
 <div class="container">
@@ -4119,6 +4455,7 @@ header.glass i {
             cartCount: document.getElementById('cartCount'),
             mCartBtn: document.getElementById('mCartBtn'),
             mCartCount: document.getElementById('mCartCount'),
+            mOpenService: document.getElementById('mOpenService'),
             cartModal: document.getElementById('cartModal'),
             closeCart: document.getElementById('closeCart'),
             cartItems: document.getElementById('cartItems'),
@@ -4238,6 +4575,18 @@ header.glass i {
             storeEmail: document.getElementById('storeEmail'),
             workingHours: document.getElementById('workingHours'),
             servicesList: document.getElementById('servicesList'),
+
+            featuredNewTitle: document.getElementById('featuredNewTitle'),
+            featuredNewImage: document.getElementById('featuredNewImage'),
+            featuredNewSub: document.getElementById('featuredNewSub'),
+            featuredOffersTitle: document.getElementById('featuredOffersTitle'),
+            featuredOffersImage: document.getElementById('featuredOffersImage'),
+            featuredOffersSub: document.getElementById('featuredOffersSub'),
+
+            featuredServiceTitle: document.getElementById('featuredServiceTitle'),
+            featuredServiceImage: document.getElementById('featuredServiceImage'),
+            featuredServiceSub: document.getElementById('featuredServiceSub'),
+
             savePageContentBtn: document.getElementById('savePageContentBtn'),
             footerAboutText: document.getElementById('footerAboutText'),
             footerAddress: document.getElementById('footerAddress'),
@@ -4285,6 +4634,18 @@ header.glass i {
                 storeAddress: 'عمان - شفابدران',
                 storeTagline: 'أفضل المنتجات الإلكترونية بأفضل الأسعار - جودة واستبدال فوري',
                 specializationText: 'TV - LCD - LED - إلكترونيات',
+
+                featuredNewTitle: 'المنتجات الجديدة',
+                featuredNewSub: 'منتجات وصلت حديثًا',
+                featuredNewImage: '',
+                featuredOffersTitle: 'العروض والخصومات',
+                featuredOffersSub: 'أفضل الأسعار والتخفيضات',
+                featuredOffersImage: '',
+
+                featuredServiceTitle: 'قسم الصيانة',
+                featuredServiceSub: 'قدّم طلبك خلال دقيقة',
+                featuredServiceImage: '',
+
                 footerAbout: 'متجر وسام للإلكترونيات هو الوجهة المفضلة في عمان لشراء جميع المنتجات الإلكترونية والاكسسوارات ذات الجودة العالية. نقدم أفضل الأسعار مع استبدال فوري.',
                 storeEmail: 'wesamelectronics@gmail.com',
                 workingHours: '9:00 ص - 10:00 م',
@@ -4303,6 +4664,10 @@ header.glass i {
             draggedCategory: null,
             categories: [
                 { id: "all", name: "المنتجات المختارة والأفضل", icon: "fas fa-star" },
+
+                { id: "new", name: "المنتجات الجديدة", icon: "fas fa-bolt" },
+                { id: "offers", name: "العروض والخصومات", icon: "fas fa-tags" },
+
                 { id: "سماعات", name: "سماعات", icon: "fas fa-headphones" },
                 { id: "ريموتات", name: "ريموتات", icon: "fas fa-tv" },
                 { id: "رسيفرات", name: "رسيفرات", icon: "fas fa-satellite-dish" },
@@ -4796,8 +5161,21 @@ header.glass i {
             elements.servicesList.value = Array.isArray(state.pageContent.servicesList) 
                 ? state.pageContent.servicesList.join('\n') 
                 : state.pageContent.servicesList;
+
+            // تصنيفات مميزة (صور)
+            if (elements.featuredNewTitle) elements.featuredNewTitle.value = state.pageContent.featuredNewTitle || 'المنتجات الجديدة';
+            if (elements.featuredNewImage) elements.featuredNewImage.value = state.pageContent.featuredNewImage || '';
+            if (elements.featuredNewSub) elements.featuredNewSub.value = state.pageContent.featuredNewSub || 'منتجات وصلت حديثًا';
+            if (elements.featuredOffersTitle) elements.featuredOffersTitle.value = state.pageContent.featuredOffersTitle || 'العروض والخصومات';
+            if (elements.featuredOffersImage) elements.featuredOffersImage.value = state.pageContent.featuredOffersImage || '';
+            if (elements.featuredOffersSub) elements.featuredOffersSub.value = state.pageContent.featuredOffersSub || 'أفضل الأسعار والتخفيضات';
+            if (elements.featuredServiceTitle) elements.featuredServiceTitle.value = state.pageContent.featuredServiceTitle || 'قسم الصيانة';
+            if (elements.featuredServiceImage) elements.featuredServiceImage.value = state.pageContent.featuredServiceImage || '';
+            if (elements.featuredServiceSub) elements.featuredServiceSub.value = state.pageContent.featuredServiceSub || 'قدّم طلبك خلال دقيقة';
+
             
             updatePageContentUI();
+            try { applyFeaturedCategoryCards(); } catch(e) { console.warn(e); }
             updateSocialLinks();
         }
 
@@ -4850,6 +5228,17 @@ header.glass i {
                     storeEmail: elements.storeEmail.value.trim(),
                     workingHours: elements.workingHours.value.trim(),
                     servicesList: elements.servicesList.value.trim().split('\n').filter(line => line.trim() !== ''),
+
+                    featuredNewTitle: (elements.featuredNewTitle ? elements.featuredNewTitle.value.trim() : 'المنتجات الجديدة') || 'المنتجات الجديدة',
+                    featuredNewImage: (elements.featuredNewImage ? elements.featuredNewImage.value.trim() : '') || '',
+                    featuredNewSub: (elements.featuredNewSub ? elements.featuredNewSub.value.trim() : 'منتجات وصلت حديثًا') || 'منتجات وصلت حديثًا',
+                    featuredOffersTitle: (elements.featuredOffersTitle ? elements.featuredOffersTitle.value.trim() : 'العروض والخصومات') || 'العروض والخصومات',
+                    featuredOffersImage: (elements.featuredOffersImage ? elements.featuredOffersImage.value.trim() : '') || '',
+                    featuredOffersSub: (elements.featuredOffersSub ? elements.featuredOffersSub.value.trim() : 'أفضل الأسعار والتخفيضات') || 'أفضل الأسعار والتخفيضات',
+                    featuredServiceTitle: (elements.featuredServiceTitle ? elements.featuredServiceTitle.value.trim() : 'قسم الصيانة') || 'قسم الصيانة',
+                    featuredServiceImage: (elements.featuredServiceImage ? elements.featuredServiceImage.value.trim() : '') || '',
+                    featuredServiceSub: (elements.featuredServiceSub ? elements.featuredServiceSub.value.trim() : 'قدّم طلبك خلال دقيقة') || 'قدّم طلبك خلال دقيقة',
+
                     updatedAt: getServerTimestamp()
                 };
                 
@@ -4865,6 +5254,7 @@ header.glass i {
                 
                 localStorage.setItem('wassam_page_content', JSON.stringify(pageContent));
                 updatePageContentUI();
+            try { applyFeaturedCategoryCards(); } catch(e) { console.warn(e); }
                 showNotification('✅ تم حفظ محتوى الصفحة');
                 
             } catch (error) {
@@ -4893,18 +5283,105 @@ header.glass i {
             elements.footerHours.textContent = state.pageContent.workingHours;
             elements.footerEmail.textContent = state.pageContent.storeEmail;
             
-            elements.footerServices.innerHTML = '';
-            if (Array.isArray(state.pageContent.servicesList)) {
-                state.pageContent.servicesList.forEach(service => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `<i class="fas fa-chevron-left"></i> ${service}`;
-                    elements.footerServices.appendChild(li);
-                });
+            
+            // تحديث قائمة خدمات الفوتر
+            if (elements.footerServices) {
+                elements.footerServices.innerHTML = '';
+                if (Array.isArray(state.pageContent.servicesList)) {
+                    state.pageContent.servicesList.forEach(service => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `<i class="fas fa-chevron-left"></i> ${escapeHtml(service)}`;
+                        elements.footerServices.appendChild(li);
+                    });
+                }
             }
+
+            // تحديث بطاقات التصنيفات المميزة (صور) تحت السلايدر
+            try { applyFeaturedCategoryCards(); } catch (e) { console.warn(e); }
         }
 
-        
-        // Normalize external links to ensure they open correctly (adds https:// when missing)
+        // بطاقات مميزة تحت السلايدر (المنتجات الجديدة / العروض / الصيانة)
+        function applyFeaturedCategoryCards() {
+            const newCard = document.getElementById('featuredCatNew');
+            const offersCard = document.getElementById('featuredCatOffers');
+            const serviceCard = document.getElementById('featuredCatService');
+
+            const setCard = (card, cfg) => {
+                if (!card) return;
+
+                // النص
+                const titleEl = card.querySelector('.featured-cat-title');
+                const subEl = card.querySelector('.featured-cat-sub');
+                if (titleEl) titleEl.textContent = cfg.title || '';
+                if (subEl) subEl.textContent = cfg.sub || '';
+
+                // صورة خلفية
+                const url = (cfg.image || '').trim();
+                if (url && /^https?:\/\//i.test(url)) {
+                    card.style.backgroundImage = `url('${url.replace(/'/g, "%27")}')`;
+                } else {
+                    card.style.backgroundImage = '';
+                }
+
+                // ربط النقر مرة واحدة
+                if (!card.dataset.bound) {
+                    card.addEventListener('click', (e) => {
+                        e.preventDefault();
+
+                        if (cfg.type === 'category') {
+                            state.currentCategory = cfg.categoryId || 'all';
+                            try { displayCategories(); } catch (_) {}
+                            try { filterProducts(); } catch (_) {}
+                            try {
+                                const target = document.getElementById('productsSectionTitle');
+                                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            } catch (_) {}
+                            return;
+                        }
+
+                        // type === 'service'
+                        try {
+                            const modal = document.getElementById('serviceRequestModal');
+                            if (modal && typeof openModal === 'function') {
+                                openModal(modal);
+                            } else {
+                                const sec = document.getElementById('serviceSection');
+                                if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        } catch (err) {
+                            console.warn(err);
+                        }
+                    });
+                    card.dataset.bound = '1';
+                }
+            };
+
+            // قيم افتراضية + من page_content إذا موجود
+            setCard(newCard, {
+                type: 'category',
+                categoryId: 'new',
+                title: (state.pageContent.featuredNewTitle || 'المنتجات الجديدة'),
+                sub: (state.pageContent.featuredNewSub || 'منتجات وصلت حديثًا'),
+                image: (state.pageContent.featuredNewImage || '')
+            });
+
+            setCard(offersCard, {
+                type: 'category',
+                categoryId: 'offers',
+                title: (state.pageContent.featuredOffersTitle || 'العروض والخصومات'),
+                sub: (state.pageContent.featuredOffersSub || 'أفضل الأسعار والتخفيضات'),
+                image: (state.pageContent.featuredOffersImage || '')
+            });
+
+            setCard(serviceCard, {
+                type: 'service',
+                title: (state.pageContent.featuredServiceTitle || 'قسم الصيانة'),
+                sub: (state.pageContent.featuredServiceSub || 'قدّم طلبك خلال دقيقة'),
+                image: (state.pageContent.featuredServiceImage || '')
+            });
+        }
+
+// Normalize external links to ensure they open correctly (adds https:// when missing)
         function normalizeUrl(url) {
             try {
                 if (!url) return '';
@@ -5202,9 +5679,13 @@ function updateSocialLinks() {
 
         function updateCategoryCounts() {
             state.categories.forEach(category => {
-                category.count = category.id === "all" 
-                    ? state.products.length 
-                    : state.products.filter(p => p.category === category.id).length;
+                category.count = category.id === "all"
+                    ? state.products.filter(p => !!p.featured).length
+                    : (category.id === "new"
+                        ? state.products.filter(p => isNewProduct(p)).length
+                        : (category.id === "offers"
+                            ? state.products.filter(p => isOfferProduct(p)).length
+                            : state.products.filter(p => p.category === category.id).length));
             });
         }
 
@@ -5242,7 +5723,45 @@ function updateSocialLinks() {
             });
         }
 
-        function truncateDescription(description, maxLength = 100) {
+        
+        // ====== Helpers for new categories (New / Offers) ======
+        function isNewProduct(product) {
+            try {
+                if (product == null) return false;
+                if (product.isNew === true || product.new === true || product.newProduct === true) return true;
+
+                // createdAt could be Firestore Timestamp, ISO string, or number
+                const ca = product.createdAt || product.created_at || product.created;
+                let d = null;
+                if (ca && typeof ca === 'object' && typeof ca.toDate === 'function') d = ca.toDate();
+                else if (typeof ca === 'string') d = new Date(ca);
+                else if (typeof ca === 'number') d = new Date(ca);
+                if (d && !isNaN(d.getTime())) {
+                    const days = (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24);
+                    return days <= 30; // آخر 30 يوم
+                }
+                return false;
+            } catch (_) { return false; }
+        }
+
+        function isOfferProduct(product) {
+            try {
+                if (product == null) return false;
+                if (product.onSale === true || product.sale === true || product.discount === true) return true;
+
+                const discount = Number(product.discount || product.discountPercent || product.discount_percentage || 0);
+                if (!isNaN(discount) && discount > 0) return true;
+
+                const price = Number(product.price || 0);
+                const oldPrice = Number(product.oldPrice || product.compareAtPrice || product.old_price || 0);
+                if (!isNaN(price) && !isNaN(oldPrice) && oldPrice > price && price > 0) return true;
+
+                return false;
+            } catch (_) { return false; }
+        }
+
+
+function truncateDescription(description, maxLength = 100) {
             if (!description) return '';
             if (description.length <= maxLength) return description;
             return description.substring(0, maxLength) + '...';
@@ -5453,7 +5972,16 @@ function updateSocialLinks() {
             let filtered = state.products.filter(product => {
                 const matchesSearch = product.name.toLowerCase().includes(searchTerm) || 
                                      (product.description && product.description.toLowerCase().includes(searchTerm));
-                const matchesCategory = state.currentCategory === 'all' ? !!product.featured : (product.category === state.currentCategory);
+                let matchesCategory = false;
+                if (state.currentCategory === 'all') {
+                    matchesCategory = !!product.featured;
+                } else if (state.currentCategory === 'new') {
+                    matchesCategory = isNewProduct(product);
+                } else if (state.currentCategory === 'offers') {
+                    matchesCategory = isOfferProduct(product);
+                } else {
+                    matchesCategory = (product.category === state.currentCategory);
+                }
                 return matchesSearch && matchesCategory;
             });
             
@@ -7582,7 +8110,9 @@ if (elements.navServiceBtn) {
     bind(elements.navServiceBtn, 'click', () => {
         elements.navServiceBtn.classList.add('active');
         elements.navShopBtn && elements.navShopBtn.classList.remove('active');
-        scrollToSection(elements.serviceHome);
+        // Open maintenance request form (modal)
+        const modal = elements.serviceRequestModal || document.getElementById('serviceRequestModal');
+        if (modal) openModal(modal);
     });
 }
 if (elements.navShopBtn) {
@@ -7591,6 +8121,13 @@ if (elements.navShopBtn) {
         elements.navServiceBtn && elements.navServiceBtn.classList.remove('active');
         const shopSection = document.querySelector('.categories-section') || document.querySelector('.products-section');
         scrollToSection(shopSection);
+    });
+}
+
+if (elements.mOpenService) {
+    bind(elements.mOpenService, 'click', () => {
+        const modal = elements.serviceRequestModal || document.getElementById('serviceRequestModal');
+        if (modal) openModal(modal);
     });
 }
 
