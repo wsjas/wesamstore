@@ -190,6 +190,7 @@
         }
 
         :root {
+  --m-topbar-h: 0px;
             --primary-color: #1a237e;
             --secondary-color: #283593;
             --accent-color: #4fc3f7;
@@ -562,7 +563,7 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.7);
-            z-index: 2000;
+            z-index: 99999;
             overflow-y: auto;
         }
 
@@ -1334,7 +1335,7 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.7);
-            z-index: 1001;
+            z-index: 99999;
             overflow-y: auto;
         }
 
@@ -2776,18 +2777,18 @@ header{
   /* hide the big desktop header on mobile */
   header{ display:none !important; }
 
+  /* prevent content from going under the fixed mobile top bar */
+  body{ padding-top: 0 !important; }
+
   /* show top bar */
   .m-topbar{
-    display:block; left:0;
-    right:0;
-    ;
-    
-    top: 0;
-    z-index: 3000;
-    background: rgba(255,255,255,0.94);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(0,0,0,0.08);
-  }
+ display:block;
+ position: relative; width: 100%;
+ z-index: 600;
+ background: rgba(255,255,255,0.94);
+ backdrop-filter: blur(10px);
+ border-bottom: 1px solid rgba(0,0,0,0.08);
+ }
   .m-topbar-inner{
     display:flex;
     align-items:center;
@@ -2844,7 +2845,7 @@ header{
   }
 
   /* Add padding so content doesn't stick under topbar */
-  body{ padding-top: calc(62px + env(safe-area-inset-top)); }
+  body{ padding-top: 0 !important; }
 }
 
 /* Drawer */
@@ -3039,21 +3040,24 @@ header{
 /* Mobile Quick Strip buttons styling */
 @media (max-width: 768px){
   .m-quickstrip{
-    position: sticky;
-    top: 0;
-    z-index: 2999;
+    position: relative;
+    top: auto;
+    z-index: 600;
     background: rgba(255,255,255,0.94);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(0,0,0,0.08);
   }
   .m-quickstrip-inner{
     display:flex;
-    justify-content:center;
     align-items:center;
     gap:14px;
-    padding: 10px 0 12px;
+    padding: 10px 12px 12px;
+    overflow-x:auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
-  .m-qs{
+  .m-quickstrip-inner::-webkit-scrollbar{ display:none; }
+.m-qs{
     width: 46px;
     height: 46px;
     border-radius: 50%;
@@ -3072,12 +3076,16 @@ header{
   .m-qs.maps{ background:#34A853; }
   .m-qs.youtube{ background:#FF0000; }
   .m-qs.email{ background: var(--accent-color); }
+  .m-qs.account{ background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); }
+  .m-qs.account i{ pointer-events:none; }
+  .m-qs{ border: none; cursor: pointer; }
+
 }
 </style>
 <style>
 /* Ensure mobile top icons are clickable and above overlays */
 @media (max-width: 768px){
-  .m-quickstrip{ position: sticky; top: calc(62px + env(safe-area-inset-top)); z-index: 4000; pointer-events: auto; }
+  .m-quickstrip{ position: relative; top: auto; z-index: 600; pointer-events: auto; }
   .m-quickstrip *{ pointer-events: auto; }
 }
 </style>
@@ -3357,6 +3365,8 @@ header.glass i {
 <a aria-label="الإيميل" class="m-qs email" href="mailto:wesamelectronics@gmail.com" id="mQSEmail">
 <i class="fas fa-envelope"></i>
 </a>
+<button type="button" aria-label="حسابي" class="m-qs account" id="mQSAccountBtn"><i class="fas fa-user"></i></button>
+
 </div>
 </div>
 
@@ -4506,6 +4516,7 @@ header.glass i {
             userAccountBtn: document.getElementById('userAccountBtn'),
             mUserAccountBtn: document.getElementById('mUserAccountBtn'),
             mAdminPanelBtn: document.getElementById('mAdminPanelBtn'),
+            mQSAccountBtn: document.getElementById('mQSAccountBtn'),
             userAuthModal: document.getElementById('userAuthModal'),
             closeUserAuthModal: document.getElementById('closeUserAuthModal'),
             userAccountModal: document.getElementById('userAccountModal'),
@@ -7922,6 +7933,7 @@ const bind = (el, ev, fn, opts) => { if(el) el.addEventListener(ev, fn, opts); }
             bind(elements.userAccountBtn, 'click', openUserAuthOrAccount);
             bind(elements.mUserAccountBtn, 'click', () => { try { closeMobileDrawer(); } catch(e){} openUserAuthOrAccount(); });
 
+            bind(elements.mQSAccountBtn, 'click', openUserAuthOrAccount);
             // تبويبات تسجيل المستخدم
             const authTabs = document.querySelectorAll('#userAuthModal .auth-tab');
             authTabs.forEach(t => bind(t, 'click', () => {
@@ -9358,6 +9370,22 @@ function initSlider(forceReset){
   }
   initSlider(true);
 })();;
+</script>
+
+
+<script>
+(function(){
+  function setMTopbarOffset(){
+    var bar = document.getElementById('mTopbar');
+    if(!bar) return;
+    // If hidden (desktop), height will be 0 and padding-top will reset automatically
+    var h = Math.round(bar.getBoundingClientRect().height || 0);
+    document.documentElement.style.setProperty('--m-topbar-h', h + 'px');
+  }
+  document.addEventListener('DOMContentLoaded', setMTopbarOffset);
+  window.addEventListener('load', setMTopbarOffset);
+  window.addEventListener('resize', function(){ setTimeout(setMTopbarOffset, 50); });
+})();
 </script>
 
 </body>
