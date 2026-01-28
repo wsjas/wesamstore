@@ -2346,7 +2346,7 @@
   margin: 0 auto;
   overflow: hidden;
   border-radius: 18px;
-  background: #000;
+  background: #fff;
   box-shadow: 0 10px 30px rgba(0,0,0,.15);
 }
 .slider-track{
@@ -2371,7 +2371,7 @@
 
 /* Mobile: show full image in legacy slider (no cropping) */
 @media(max-width:768px){
-  .slide img{object-fit:contain !important; background:#000;}
+  .slide img{object-fit:contain !important; background:transparent;}
 }
 .slide-caption{
   position:absolute;
@@ -2459,8 +2459,26 @@
 .hs-slide img{width:100%; height:100%; object-fit:cover; display:block}
 /* Mobile: show full slider image (no cropping) */
 @media(max-width:768px){
-  .hs{background:#000;}
-  .hs-slide img{object-fit:contain !important; background:#000;}
+  /* Make the slider FULL width on mobile (no frame / no rounded corners) */
+  .hs-wrapper{margin:0 !important;}
+  .hs-wrapper .container{max-width:100% !important; padding-left:0 !important; padding-right:0 !important;}
+
+  /* break out of bootstrap/container width */
+  .hs{
+    width:100vw;
+    margin-left:calc(50% - 50vw);
+    margin-right:calc(50% - 50vw);
+    border-radius:0 !important;
+    box-shadow:none !important;
+    background:#fff !important;
+  }
+
+  /* keep a nice mobile height and show full image without cropping */
+  .hs-stage{background:#fff !important; height:clamp(170px, 52vw, 320px) !important;}
+  .hs-slide img{object-fit:contain !important; background:#fff !important;}
+
+  /* dots / bar should also be edge-to-edge */
+  .hs-bar{border-radius:0 !important;}
 }
 
 .hs-caption{position:absolute; left:16px; right:16px; bottom:16px; max-width:560px; padding:14px 16px; border-radius:14px;
@@ -6749,7 +6767,7 @@ function renderHomeSliderSlides(slides){
     const img = normalizeImageUrl(s.imageUrl || '');
     const title = String(s.title || '').trim();
     const subtitle = String(s.subtitle || '').trim();
-    const link = String(s.link || '#').trim() || '#';
+    const link = String(s.link || '#products').trim() || '#products';
     const alt = title || `عرض ${i+1}`;
 
     const eTitle = escapeHtml(title);
@@ -9291,7 +9309,7 @@ function initSlider(forceReset){
       const data = (viewport.__hsSlidesData && viewport.__hsSlidesData[state.index]) || {};
       const t = String(data.title || '').trim();
       const sub = String(data.subtitle || '').trim();
-      const link = String(data.link || '#').trim() || '#';
+      const link = String(data.link || '#products').trim() || '#products';
       bar.innerHTML = `
         <div class="hs-bar-inner">
           <div class="hs-bar-text">
@@ -9340,6 +9358,22 @@ function initSlider(forceReset){
     // Pause on hover
     viewport.addEventListener('mouseenter', stopAuto);
     viewport.addEventListener('mouseleave', startAuto);
+
+    // Make "عرض التفاصيل" work reliably for all slides (hash + normal links)
+    viewport.addEventListener('click', (e)=>{
+      const a = e.target && e.target.closest ? e.target.closest('a.hs-bar-btn, .hs-caption a') : null;
+      if(!a) return;
+      const href = (a.getAttribute('href') || '').trim();
+      if(!href || href === '#') return;
+      // If it's an in-page anchor, scroll smoothly
+      if(href.startsWith('#')){
+        const target = document.querySelector(href);
+        if(target){
+          e.preventDefault();
+          try{ target.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){ location.hash = href; }
+        }
+      }
+    });
 
     // Swipe support (pointer)
     let startX = 0, dx = 0, isDown = false;
