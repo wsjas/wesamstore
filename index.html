@@ -399,7 +399,19 @@
             display: block;
         }
 
-        .logo-text-container {
+        
+
+        /* Hide the fallback icon when logo image is visible */
+        #logoIcon{ display:none; }
+
+        /* Responsive logo sizing */
+        @media (max-width: 768px){
+            .logo-img{ width:46px; height:46px; }
+        }
+        @media (max-width: 420px){
+            .logo-img{ width:42px; height:42px; }
+        }
+.logo-text-container {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
@@ -2355,6 +2367,12 @@
   display:block;
   filter: saturate(1.05);
 }
+
+
+/* Mobile: show full image in legacy slider (no cropping) */
+@media(max-width:768px){
+  .slide img{object-fit:contain !important; background:#000;}
+}
 .slide-caption{
   position:absolute;
   inset:auto 16px 16px 16px;
@@ -2439,6 +2457,12 @@
 .hs-slide{position:absolute; inset:0; opacity:0; transition:opacity .6s ease; pointer-events:none}
 .hs-slide.is-active{opacity:1; z-index:2; pointer-events:auto}
 .hs-slide img{width:100%; height:100%; object-fit:cover; display:block}
+/* Mobile: show full slider image (no cropping) */
+@media(max-width:768px){
+  .hs{background:#000;}
+  .hs-slide img{object-fit:contain !important; background:#000;}
+}
+
 .hs-caption{position:absolute; left:16px; right:16px; bottom:16px; max-width:560px; padding:14px 16px; border-radius:14px;
   background:rgba(0,0,0,.45); color:#fff}
 @supports ((-webkit-backdrop-filter: blur(6px)) or (backdrop-filter: blur(6px))){
@@ -3445,7 +3469,7 @@ header.glass i {
 <div class="logo">
 <div class="logo-icon">
 <i class="fas fa-tv" id="logoIcon"></i>
-<img alt="شعار المتجر" class="logo-img" id="logoImage" src=""/>
+<img alt="شعار المتجر" class="logo-img active" id="logoImage" src="wesam-logo.png"/>
 </div>
 <div class="logo-text-container">
 <div class="logo-main">
