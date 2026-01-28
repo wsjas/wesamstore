@@ -6561,7 +6561,7 @@ async function refreshServiceRequests() {
                     <td>${escapeHtml(d.deviceSize || '')}</td>
                     <td>
                         <select class="sr-status-select" style="padding:8px; border-radius:10px; border:1px solid rgba(0,0,0,0.12);">
-                            ${['جديد','تم التواصل','قيد التجهيز','تم الإصلاح','تم التسليم','ملغي'].map(s => `<option value="${s}" ${s===status?'selected':''}>${s}</option>`).join('')}
+                            ${['جديد','تم التواصل','قيد التجهيز','تم الإصلاح','تم التسليم','ملغي'].map((s,i)=> `<option value="${s}" ${s===status?'selected':''}>${s}</option>`).join('')}
                         </select>
                     </td>
                     <td>
@@ -6721,7 +6721,7 @@ async function loadSliderSettings(){
     if(snap.exists){
       const data = snap.data() || {};
       if(Array.isArray(data.slides) && data.slides.length){
-        return data.slides.slice(0, 10).map(s => ({
+        return data.slides.slice(0, 10).map((s,i)=> ({
           imageUrl: normalizeImageUrl(s.imageUrl),
           title: String(s.title || "").trim(),
           subtitle: String(s.subtitle || "").trim(),
@@ -6737,7 +6737,7 @@ async function loadSliderSettings(){
 
 async function saveSliderSettings(slides){
   const ref = await getSliderDoc();
-  const cleaned = (slides || []).map(s => ({
+  const cleaned = (slides || []).map((s,i)=> ({
     imageUrl: normalizeImageUrl(s.imageUrl),
     title: String(s.title || "").trim(),
     subtitle: String(s.subtitle || "").trim(),
@@ -6750,6 +6750,7 @@ async function saveSliderSettings(slides){
   return cleaned;
 }
 
+const defaultLinks = ['#productsSectionTitle','#featuredCatOffers','#serviceRequestsSection'];
 function renderHomeSliderSlides(slides){
   const viewport = document.getElementById('homeSlider');
   if(!viewport) return;
@@ -6785,7 +6786,7 @@ function renderHomeSliderSlides(slides){
         <div class="hs-caption">
           ${title ? `<h3>${eTitle}</h3>` : ``}
           ${subtitle ? `<p>${eSub}</p>` : ``}
-          <a href="${eLink}">عرض التفاصيل</a>
+          <a class="hs-bar-btn" href="${(eLink && eLink!=='#') ? eLink : (defaultLinks[i] || '#')}">عرض التفاصيل</a>
         </div>
       </div>
     `;
@@ -9364,15 +9365,21 @@ function initSlider(forceReset){
       const a = e.target && e.target.closest ? e.target.closest('a.hs-bar-btn, .hs-caption a') : null;
       if(!a) return;
       const href = (a.getAttribute('href') || '').trim();
-      if(!href || href === '#') return;
-      // If it's an in-page anchor, scroll smoothly
+      if(!href || href === '#'){ e.preventDefault(); return; }
+
+      // Hash navigation -> smooth scroll
       if(href.startsWith('#')){
         const target = document.querySelector(href);
         if(target){
           e.preventDefault();
-          try{ target.scrollIntoView({behavior:'smooth', block:'start'}); }catch(_){ location.hash = href; }
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Close any open overlays if needed
+          stopAuto(); restartAuto();
         }
+        return;
       }
+      // Normal navigation
+      // allow default
     });
 
     // Swipe support (pointer)
