@@ -2825,6 +2825,27 @@ header{
   .featured-categories-row{ grid-template-columns: 1fr; }
 }
 
+
+/* ====== Offers / Discount UI ====== */
+.product-price { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.product-price .price-now { font-weight:800; }
+.product-price .price-old { text-decoration: line-through; opacity:.6; font-weight:700;   color:#dc3545; opacity:1;   color:#dc3545; opacity:1; }
+.product-price .discount-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:4px 8px; border-radius:999px;
+  font-weight:800; font-size:.85rem;
+  color:#dc3545;
+  background: rgba(220,53,69,.12);
+  border:1px solid rgba(220,53,69,.35);
+}
+.product-image .discount-float {
+  position:absolute;
+  top:48px;
+  right:12px;
+  left:auto;
+  z-index:5;
+}
+.product-image .discount-float .discount-badge { color:#dc3545; background: rgba(220,53,69,.12); border-color: rgba(220,53,69,.35); }
 </style>
 <style>
 /* Inline social buttons next to WhatsApp/Email */
@@ -2891,6 +2912,14 @@ header{
     box-shadow: 0 10px 22px rgba(0,0,0,0.06);
   }
   .m-icon-btn:active{ transform: scale(0.98); }
+
+  /* Mobile logo inside left button */
+  .m-menu-logo{
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    display:block;
+  }
 
   .m-brand{
     flex: 1;
@@ -3417,8 +3446,9 @@ header.glass i {
 <!-- ===== Mobile Top Bar (Professional) ===== -->
 <div class="m-topbar" id="mTopbar">
 <div class="m-topbar-inner container">
-<button aria-label="القائمة" class="m-icon-btn" id="mMenuBtn">
-<i class="fas fa-bars"></i>
+<button aria-label="الشعار" class="m-icon-btn" id="mMenuBtn" type="button">
+<!-- Mobile logo (replaces inactive hamburger icon) -->
+<img src="wesam-logo.png" alt="شعار المتجر" class="m-menu-logo" id="mMenuLogo" />
 </button>
 <div class="m-brand" id="mBrand">
 <span class="m-brand-name" id="mStoreNameMobile">وسام للالكترونيات</span>
@@ -3812,7 +3842,24 @@ header.glass i {
 <label for="productStock">الكمية في المخزون *</label>
 <input id="productStock" min="0" required="" type="number"/>
 </div>
+
+<div class="form-group">
+<label for="productOldPrice">السعر قبل الخصم (دينار) (اختياري)</label>
+<input id="productOldPrice" min="0" step="0.01" type="number" placeholder="مثال: 25"/>
+</div>
+<div class="form-group">
+<label for="productDiscountPercent">نسبة الخصم % (اختياري)</label>
+<input id="productDiscountPercent" min="0" max="99" step="1" type="number" placeholder="مثال: 20"/>
+</div>
 <div class="form-group" style="display:flex; align-items:flex-end;">
+<label style="display:flex; gap:10px; align-items:center; cursor:pointer;">
+<input id="productOnSale" style="transform:scale(1.2);" type="checkbox"/>
+                                أضف ضمن العروض والخصومات
+                            </label>
+</div>
+
+<div class="form-group" style="display:flex; align-items:flex-end;">
+
 <label style="display:flex; gap:10px; align-items:center; cursor:pointer;">
 <input id="productFeatured" style="transform:scale(1.2);" type="checkbox"/>
                                 عرض ضمن المنتجات المختارة والأفضل
@@ -3884,6 +3931,9 @@ header.glass i {
 <th>الفئة</th>
 <th>السعر</th>
 <th>المخزون</th>
+<th>قبل الخصم</th>
+<th>خصم%</th>
+<th>عرض</th>
 <th>فيديو</th>
 <th>الإجراءات</th>
 </tr>
@@ -4021,7 +4071,7 @@ header.glass i {
 </thead>
 <tbody id="serviceRequestsTableBody">
 <tr>
-<td colspan="7" style="text-align:center; padding:18px;">لا توجد بيانات بعد</td>
+<td colspan="10" style="text-align:center; padding:18px;">لا توجد بيانات بعد</td>
 </tr>
 </tbody>
 </table>
@@ -5709,7 +5759,45 @@ function updateSocialLinks() {
                 productData.name = document.getElementById('productName').value;
                 productData.category = document.getElementById('productCategory').value;
                 productData.sell = parseFloat(document.getElementById('productPrice').value);
-                productData.stock = parseInt(document.getElementById('productStock').value);
+                
+                // خصم / سعر قبل الخصم
+                const oldPriceInput = document.getElementById('productOldPrice');
+                const discountInput = document.getElementById('productDiscountPercent');
+                const onSaleInput = document.getElementById('productOnSale');
+
+                let sellNow = Number(productData.sell || 0);
+                let oldPrice = oldPriceInput ? Number(oldPriceInput.value) : 0;
+                let discountPercent = discountInput ? Number(discountInput.value) : 0;
+
+                if (isNaN(oldPrice) || oldPrice <= 0) oldPrice = 0;
+                if (isNaN(discountPercent) || discountPercent < 0) discountPercent = 0;
+
+                // لو أدخل نسبة خصم فقط -> احسب السعر قبل الخصم تقريبياً
+                if (discountPercent > 0 && sellNow > 0 && oldPrice <= 0 && discountPercent < 100) {
+                    oldPrice = sellNow / (1 - (discountPercent / 100));
+                    oldPrice = Math.round(oldPrice * 100) / 100;
+                }
+
+                // لو أدخل سعر قبل الخصم فقط -> احسب نسبة الخصم
+                if (oldPrice > 0 && sellNow > 0 && oldPrice > sellNow && discountPercent <= 0) {
+                    discountPercent = Math.round((1 - (sellNow / oldPrice)) * 100);
+                }
+
+                // تنظيف الحالات غير المنطقية
+                if (oldPrice > 0 && sellNow > 0 && oldPrice <= sellNow) {
+                    oldPrice = 0;
+                }
+                if (discountPercent < 0) discountPercent = 0;
+                if (discountPercent > 99) discountPercent = 99;
+
+                // خزن القيم
+                if (oldPrice > 0) productData.oldPrice = oldPrice; else delete productData.oldPrice;
+                if (discountPercent > 0) productData.discountPercent = discountPercent; else delete productData.discountPercent;
+
+                // تمييز المنتج كعرض
+                const onSaleChecked = !!(onSaleInput && onSaleInput.checked);
+                productData.onSale = onSaleChecked || (oldPrice > 0) || (discountPercent > 0);
+productData.stock = parseInt(document.getElementById('productStock').value);
                 productData.featured = !!document.getElementById('productFeatured')?.checked;
                 productData.description = document.getElementById('productDescription').value || '';
                 productData.deliveryFee = parseFloat(document.getElementById('productDeliveryFee').value) || 2;
@@ -5859,7 +5947,7 @@ function updateSocialLinks() {
                 const discount = Number(product.discount || product.discountPercent || product.discount_percentage || 0);
                 if (!isNaN(discount) && discount > 0) return true;
 
-                const price = Number(product.price || 0);
+                const price = Number((product.sell ?? product.price ?? 0) || 0);
                 const oldPrice = Number(product.oldPrice || product.compareAtPrice || product.old_price || 0);
                 if (!isNaN(price) && !isNaN(oldPrice) && oldPrice > price && price > 0) return true;
 
@@ -5917,7 +6005,16 @@ function truncateDescription(description, maxLength = 100) {
                     <div class="product-image" data-product-id="${product.id}">
                         ${hasVideo ? `<button class="video-btn-card" data-video-url="${product.videoUrl}" onclick="if(event){event.stopPropagation();} openVideoPopup(this.dataset.videoUrl); return false;"><i class="fas fa-play"></i></button>` : ''}
                         ${hasSoftware ? `<button class="software-btn-card" data-software-url="${product.softwareUrl}" onclick="if(event){event.stopPropagation();} openSoftwareLink(this.dataset.softwareUrl); return false;"><i class=\"fas fa-download\"></i></button>` : ''}
-                        <div class="product-category">${product.category}</div>
+                        
+                        ${(() => {
+                            const now = Number(product.sell ?? product.price ?? 0);
+                            const old = Number(product.oldPrice ?? product.compareAtPrice ?? product.old_price ?? 0);
+                            const pctRaw = Number(product.discountPercent ?? product.discount_percentage ?? product.discount ?? 0);
+                            let pct = (!isNaN(pctRaw) && pctRaw > 0) ? Math.round(pctRaw) : 0;
+                            if (!pct && !isNaN(old) && old > now && now > 0) pct = Math.round((1 - (now / old)) * 100);
+                            return (pct > 0) ? `<div class="discount-float"><span class="discount-badge"><i class="fas fa-tag"></i> ${pct}%</span></div>` : '';
+                        })()}
+<div class="product-category">${product.category}</div>
                         <img src="${product.image}" 
                              alt="${product.name}" 
                              onerror="this.src='https://images.unsplash.com/photo-1556656793-08538906a9f8?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80'">
@@ -5941,7 +6038,16 @@ function truncateDescription(description, maxLength = 100) {
                         ` : ''}
                         <div class="product-price">
                             <i class="fas fa-dollar-sign"></i>
-                            ${product.sell} دينار
+                            ${(() => {
+                                const now = Number(product.sell ?? product.price ?? 0);
+                                const old = Number(product.oldPrice ?? product.compareAtPrice ?? product.old_price ?? 0);
+                                const pctRaw = Number(product.discountPercent ?? product.discount_percentage ?? product.discount ?? 0);
+                                let pct = (!isNaN(pctRaw) && pctRaw > 0) ? Math.round(pctRaw) : 0;
+                                if (!pct && !isNaN(old) && old > now && now > 0) pct = Math.round((1 - (now / old)) * 100);
+                                const oldHtml = (!isNaN(old) && old > now && now > 0) ? `<span class="price-old">${old.toFixed(2).replace(/\.00$/,'')} د</span>` : '';
+                                const pctHtml = (pct > 0) ? `<span class="discount-badge"><i class="fas fa-tag"></i> ${pct}%</span>` : '';
+                                return `<span class="price-now">${now.toFixed(2).replace(/\.00$/,'')} د</span> ${oldHtml} ${pctHtml}`;
+                            })()}
                         </div>
                         <div class="delivery-fee">
                             <i class="fas fa-truck"></i>
@@ -6047,7 +6153,17 @@ function truncateDescription(description, maxLength = 100) {
             
             let detailsHTML = `
                 <h4>تفاصيل المنتج</h4>
-                <p><strong>السعر:</strong> ${product.sell} دينار</p>
+                <p><strong>السعر:</strong> ${(() => {
+                    const now = Number(product.sell ?? product.price ?? 0);
+                    const old = Number(product.oldPrice ?? product.compareAtPrice ?? product.old_price ?? 0);
+                    const pctRaw = Number(product.discountPercent ?? product.discount_percentage ?? product.discount ?? 0);
+                    let pct = (!isNaN(pctRaw) && pctRaw > 0) ? Math.round(pctRaw) : 0;
+                    if (!pct && !isNaN(old) && old > now && now > 0) pct = Math.round((1 - (now / old)) * 100);
+                    let html = `${now.toFixed(2).replace(/\.00$/,'')} دينار`;
+                    if (!isNaN(old) && old > now && now > 0) html += ` <span style="text-decoration:line-through;color:#dc3545;opacity:1;font-weight:800;">${old.toFixed(2).replace(/\.00$/,'')} دينار</span>`;
+                    if (pct > 0) html += ` <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;font-weight:800;font-size:.85rem;color:#dc3545;background:rgba(220,53,69,.12);border:1px solid rgba(220,53,69,.35);"><i class="fas fa-tag"></i> ${pct}%</span>`;
+                    return html;
+                })()}</p>
                 <p><strong>رسوم التوصيل:</strong> ${product.deliveryFee || 2} دينار</p>
                 <p><strong>المخزون:</strong> ${product.stock > 0 ? `متوفر (${product.stock})` : 'غير متوفر'}</p>
                 <p><strong>الفئة:</strong> ${product.category}</p>
@@ -6563,18 +6679,18 @@ async function refreshServiceRequests() {
     // If Firebase not available, show message
     if (!firebaseInitialized || !db) {
         elements.serviceRequestsTableBody.innerHTML = `
-            <tr><td colspan="7" style="text-align:center; padding:18px;">
+            <tr><td colspan="10" style="text-align:center; padding:18px;">
                 Firebase غير متصل. لا يمكن عرض طلبات الصيانة الآن.
             </td></tr>`;
         return;
     }
 
     elements.serviceRequestsTableBody.innerHTML = `
-        <tr><td colspan="7" style="text-align:center; padding:18px;">جاري التحميل...</td></tr>`;
+        <tr><td colspan="10" style="text-align:center; padding:18px;">جاري التحميل...</td></tr>`;
 
     const renderError = (msg) => {
         elements.serviceRequestsTableBody.innerHTML = `
-            <tr><td colspan="7" style="text-align:center; padding:18px;">
+            <tr><td colspan="10" style="text-align:center; padding:18px;">
                 ${msg}
             </td></tr>`;
     };
@@ -6599,7 +6715,7 @@ async function refreshServiceRequests() {
 
         if (!docs.length) {
             elements.serviceRequestsTableBody.innerHTML = `
-                <tr><td colspan="7" style="text-align:center; padding:18px;">لا توجد طلبات صيانة بعد</td></tr>`;
+                <tr><td colspan="10" style="text-align:center; padding:18px;">لا توجد طلبات صيانة بعد</td></tr>`;
             return;
         }
 
@@ -7124,7 +7240,7 @@ function updateProductsTable() {
             if (state.products.length === 0) {
                 elements.productsTableBody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 20px;">
+                        <td colspan="10" style="text-align: center; padding: 20px;">
                             لا توجد منتجات
                         </td>
                     </tr>
@@ -7145,6 +7261,20 @@ function updateProductsTable() {
                     <td>${product.category}</td>
                     <td>${product.sell} دينار</td>
                     <td>${product.stock}</td>
+                    <td>${(() => {
+                        const now = Number(product.sell ?? product.price ?? 0);
+                        const old = Number(product.oldPrice ?? product.compareAtPrice ?? product.old_price ?? 0);
+                        return (!isNaN(old) && old > now && now > 0) ? (old.toFixed(2).replace(/\.00$/,'')) + ' د' : '-';
+                    })()}</td>
+                    <td>${(() => {
+                        const pctRaw = Number(product.discountPercent ?? product.discount_percentage ?? product.discount ?? 0);
+                        let pct = (!isNaN(pctRaw) && pctRaw > 0) ? Math.round(pctRaw) : 0;
+                        const now = Number(product.sell ?? product.price ?? 0);
+                        const old = Number(product.oldPrice ?? product.compareAtPrice ?? product.old_price ?? 0);
+                        if (!pct && !isNaN(old) && old > now && now > 0) pct = Math.round((1 - (now / old)) * 100);
+                        return (pct > 0) ? (pct + '%') : '-';
+                    })()}</td>
+                    <td>${(product.onSale === true || (Number(product.discountPercent ?? product.discount ?? 0) > 0) || (Number(product.oldPrice ?? 0) > Number(product.sell ?? 0))) ? '<span style="font-weight:800;color:var(--orange);">✔</span>' : '-'}</td>
                     <td>
                         ${product.videoUrl ? 
                             '<i class="fab fa-youtube" style="color: #FF0000;"></i>' : 
@@ -7186,6 +7316,12 @@ function updateProductsTable() {
             document.getElementById('productName').value = product.name;
             document.getElementById('productCategory').value = product.category;
             document.getElementById('productPrice').value = product.sell;
+            const op = document.getElementById('productOldPrice');
+            if (op) op.value = (product.oldPrice ?? product.compareAtPrice ?? product.old_price ?? '') || '';
+            const dp = document.getElementById('productDiscountPercent');
+            if (dp) dp.value = (product.discountPercent ?? product.discount_percentage ?? product.discount ?? '') || '';
+            const os = document.getElementById('productOnSale');
+            if (os) os.checked = (product.onSale === true) || (Number(product.discountPercent||product.discount||0) > 0) || (Number(product.oldPrice||0) > Number(product.sell||0));
             document.getElementById('productStock').value = product.stock;
             if (document.getElementById('productFeatured')) document.getElementById('productFeatured').checked = product.featured === true;
             const pf = document.getElementById('productFeatured');
@@ -7231,6 +7367,9 @@ function updateProductsTable() {
             elements.addProductForm.reset();
             document.getElementById('productDeliveryFee').value = 2;
             document.getElementById('productVideoUrl').value = '';
+            const op = document.getElementById('productOldPrice'); if (op) op.value = '';
+            const dp = document.getElementById('productDiscountPercent'); if (dp) dp.value = '';
+            const os = document.getElementById('productOnSale'); if (os) os.checked = false;
             document.getElementById('productSoftwareUrl').value = '';
             elements.additionalImagesContainer.innerHTML = `
                 <div class="form-group additional-image-input">
@@ -9472,6 +9611,15 @@ function initSlider(forceReset){
     let startX = 0, dx = 0, isDown = false;
 
     viewport.addEventListener('pointerdown', (e)=>{
+      // مهم: على الكمبيوتر، الـ pointer-capture على كامل السلايدر ممكن يمنع ضغط أزرار السابق/التالي
+      // لذلك نتجاهل بدء السحب إذا كان المستخدم يضغط على أزرار التحكم أو النقاط أو أي رابط.
+      try{
+        const t = e.target;
+        if(t && t.closest && (t.closest('.hs-nav') || t.closest('.hs-dots') || t.closest('a'))){
+          return;
+        }
+      }catch(_){ }
+
       isDown = true;
       startX = e.clientX || 0;
       dx = 0;
