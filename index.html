@@ -313,6 +313,52 @@
         [data-theme="dark"] .m-search input { background: transparent !important; color: #dde0e6 !important; }
         [data-theme="dark"] .m-topbar { background: linear-gradient(135deg, #252a48, #2d3358) !important; }
 
+        /* ===== ORDER CONFIRMATION POPUP ===== */
+        .order-confirm-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 99999;
+            background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+            animation: fadeInOverlay 0.3s ease;
+        }
+        @keyframes fadeInOverlay { from{opacity:0} to{opacity:1} }
+        .order-confirm-box {
+            background: #fff; border-radius: 20px; padding: 32px 28px; max-width: 400px; width: 90%;
+            text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: popIn 0.4s ease;
+        }
+        [data-theme="dark"] .order-confirm-box { background: #282e48; color: #dde0e6; }
+        @keyframes popIn { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+        .order-confirm-icon {
+            width: 70px; height: 70px; border-radius: 50%; margin: 0 auto 16px;
+            display: flex; align-items: center; justify-content: center; font-size: 2rem;
+        }
+        .order-confirm-icon.success { background: #e8f5e9; color: #4caf50; }
+        [data-theme="dark"] .order-confirm-icon.success { background: rgba(76,175,80,0.15); }
+        .order-confirm-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 8px; color: #333; }
+        [data-theme="dark"] .order-confirm-title { color: #e8eaed; }
+        .order-confirm-subtitle { font-size: 0.9rem; color: #666; margin-bottom: 16px; }
+        [data-theme="dark"] .order-confirm-subtitle { color: #a5adc4; }
+        .order-confirm-id {
+            background: linear-gradient(135deg, #e3f2fd, #e8eaf6); border: 2px dashed #5c6bc0;
+            border-radius: 12px; padding: 14px; margin: 16px 0; direction: ltr;
+        }
+        [data-theme="dark"] .order-confirm-id { background: linear-gradient(135deg, #1e2240, #252a48); border-color: #5c6bc0; }
+        .order-confirm-id-label { font-size: 0.8rem; color: #5c6bc0; font-weight: 700; margin-bottom: 4px; }
+        .order-confirm-id-value {
+            font-size: 1.4rem; font-weight: 900; color: #1a237e; letter-spacing: 1px;
+            user-select: all; cursor: pointer;
+        }
+        [data-theme="dark"] .order-confirm-id-value { color: #7986cb; }
+        .order-confirm-tip { font-size: 0.78rem; color: #999; margin-top: 4px; }
+        .order-confirm-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .order-confirm-btn {
+            flex: 1; padding: 12px; border: none; border-radius: 12px; cursor: pointer;
+            font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 0.9rem; transition: all 0.2s;
+        }
+        .order-confirm-btn.primary { background: #1a237e; color: #fff; }
+        .order-confirm-btn.primary:hover { background: #283593; }
+        .order-confirm-btn.secondary { background: #e0e0e0; color: #333; }
+        [data-theme="dark"] .order-confirm-btn.secondary { background: #363c58; color: #dde0e6; }
+        .order-confirm-btn.secondary:hover { background: #d0d0d0; }
+
         /* ===== FLOATING BUTTONS ===== */
         .floating-btns { position: fixed; bottom: 24px; left: 24px; z-index: 9000; display: flex; flex-direction: column; gap: 12px; align-items: center; }
         .float-btn {
@@ -8274,7 +8320,7 @@ function updateProductsTable() {
                 console.log('📦 Saving order to Firestore...', orderId, JSON.stringify(payload));
                 await window.db.collection('orders').doc(orderId).set(payload);
                 console.log('✅ Order saved to Firestore:', orderId);
-                return true;
+                return orderId;
             } catch (e) {
                 console.error('❌ save order failed:', e.code, e.message, e);
                 return false;
@@ -8734,9 +8780,10 @@ const bind = (el, ev, fn, opts) => { if(el) el.addEventListener(ev, fn, opts); }
                 }
                 if (!validateCustomerInfo()) return;
 
+                let savedOrderId = null;
                 try { 
-                    const saved = await trySaveOrderForUser('whatsapp');
-                    if (!saved) console.warn('⚠️ Order was NOT saved to Firestore');
+                    savedOrderId = await trySaveOrderForUser('whatsapp');
+                    if (!savedOrderId) console.warn('⚠️ Order was NOT saved to Firestore');
                 } catch(e){ console.error('Order save error:', e); }
 
                 const orderMessage = createOrderMessage();
@@ -8750,7 +8797,11 @@ const bind = (el, ev, fn, opts) => { if(el) el.addEventListener(ev, fn, opts); }
                 elements.deliveryAddress.classList.remove('show');
                 elements.pickupOption.click();
 
-                showNotification('✅ تم فتح واتساب لإرسال الطلب. شكراً لشرائك!');
+                if (savedOrderId) {
+                    showOrderConfirmation(savedOrderId, 'شراء');
+                } else {
+                    showNotification('✅ تم فتح واتساب لإرسال الطلب. شكراً لشرائك!');
+                }
             });
 // إرسال الطلب بالبريد
             bind(elements.emailOrderBtn, 'click', async () => {
@@ -8760,9 +8811,10 @@ const bind = (el, ev, fn, opts) => { if(el) el.addEventListener(ev, fn, opts); }
                 }
                 if (!validateCustomerInfo()) return;
 
+                let savedOrderId = null;
                 try { 
-                    const saved = await trySaveOrderForUser('email');
-                    if (!saved) console.warn('⚠️ Order was NOT saved to Firestore');
+                    savedOrderId = await trySaveOrderForUser('email');
+                    if (!savedOrderId) console.warn('⚠️ Order was NOT saved to Firestore');
                 } catch(e){ console.error('Order save error:', e); }
 
                 const orderMessage = createOrderMessage();
@@ -8772,7 +8824,11 @@ const bind = (el, ev, fn, opts) => { if(el) el.addEventListener(ev, fn, opts); }
                 const mailtoUrl = `mailto:${emailAddress}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
                 window.location.href = mailtoUrl;
 
-                showNotification('✅ تم فتح بريدك الإلكتروني لإرسال الطلب');
+                if (savedOrderId) {
+                    showOrderConfirmation(savedOrderId, 'شراء');
+                } else {
+                    showNotification('✅ تم فتح بريدك الإلكتروني لإرسال الطلب');
+                }
             });
 
             // أزرار الحساب (مستخدم / أدمن)
@@ -9131,10 +9187,15 @@ if (elements.serviceRequestForm) {
         const wa = normalizeWaLink(state.storeSettings.whatsappLink || 'https://wa.me/962790781206');
         window.open(`${wa}?text=${encodeURIComponent(msg)}`, '_blank');
 
-        // reset form (keep link if you want? reset all)
+        // reset form
         elements.serviceRequestForm.reset();
         if (elements.srUploadStatus) elements.srUploadStatus.style.display = 'none';
         closeModal(elements.serviceRequestModal);
+
+        // Show order ID to customer
+        if (savedOk) {
+            showOrderConfirmation(requestId, 'صيانة');
+        }
 
         // refresh table if admin open
         if (state.isAdmin && elements.serviceRequestsTableBody) {
@@ -11097,6 +11158,63 @@ if (typeof origLoadProds === 'function') {
 setTimeout(enhanceProductCards, 2500);
 setTimeout(enhanceProductCards, 5000);
 setTimeout(() => { enableLazyLoading(); renderBestSellers(); }, 4000);
+
+// ===== 17. ORDER CONFIRMATION POPUP =====
+function showOrderConfirmation(orderId, type) {
+    const overlay = document.createElement('div');
+    overlay.className = 'order-confirm-overlay';
+    overlay.innerHTML = `
+        <div class="order-confirm-box">
+            <div class="order-confirm-icon success"><i class="fas fa-check-circle"></i></div>
+            <div class="order-confirm-title">تم إرسال طلب ${type === 'صيانة' ? 'الصيانة' : 'الشراء'} بنجاح!</div>
+            <div class="order-confirm-subtitle">احتفظ برقم الطلب لتتبع حالته لاحقاً</div>
+            <div class="order-confirm-id">
+                <div class="order-confirm-id-label">رقم الطلب الخاص بك</div>
+                <div class="order-confirm-id-value" id="confirmOrderId">${orderId}</div>
+                <div class="order-confirm-tip">اضغط على الرقم لنسخه</div>
+            </div>
+            <div class="order-confirm-btns">
+                <button class="order-confirm-btn primary" id="copyOrderIdBtn"><i class="fas fa-copy"></i> نسخ الرقم</button>
+                <button class="order-confirm-btn secondary" id="closeConfirmBtn">حسناً</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // نسخ رقم الطلب
+    const copyBtn = overlay.querySelector('#copyOrderIdBtn');
+    const idValue = overlay.querySelector('#confirmOrderId');
+    
+    function copyId() {
+        navigator.clipboard.writeText(orderId).then(() => {
+            copyBtn.innerHTML = '<i class="fas fa-check"></i> تم النسخ!';
+            copyBtn.style.background = '#4caf50';
+            setTimeout(() => {
+                copyBtn.innerHTML = '<i class="fas fa-copy"></i> نسخ الرقم';
+                copyBtn.style.background = '';
+            }, 2000);
+        }).catch(() => {
+            // fallback
+            const textArea = document.createElement('textarea');
+            textArea.value = orderId;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            copyBtn.innerHTML = '<i class="fas fa-check"></i> تم النسخ!';
+            setTimeout(() => { copyBtn.innerHTML = '<i class="fas fa-copy"></i> نسخ الرقم'; }, 2000);
+        });
+    }
+
+    copyBtn.addEventListener('click', copyId);
+    idValue.addEventListener('click', copyId);
+
+    // إغلاق
+    const closeBtn = overlay.querySelector('#closeConfirmBtn');
+    closeBtn.addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+}
+window.showOrderConfirmation = showOrderConfirmation;
 
 </script>
 </body>
