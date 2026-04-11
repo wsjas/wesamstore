@@ -10229,8 +10229,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 /* --- Skeleton mobile --- */
 @media (max-width: 768px) {
-  .skeleton-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .skeleton-img { height: 150px; }
+  .skeleton-grid { grid-template-columns: 1fr; gap: 12px; }
+  .skeleton-img { height: 180px; }
 }
 @media (max-width: 400px) {
   .skeleton-grid { grid-template-columns: 1fr; }
@@ -10238,11 +10238,13 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 /* --- Products grid mobile optimization --- */
 @media (max-width: 768px) {
-  .products-grid { gap: 12px !important; }
+  .products-grid { gap: 12px !important; grid-template-columns: 1fr !important; }
   .products-header h2 { font-size: 1.1rem !important; }
   .search-box { border-radius: 12px !important; }
   .search-box input { font-size: 0.9rem !important; }
   .sort-options select { font-size: 0.82rem !important; border-radius: 10px !important; }
+  .product-card { border-radius: 14px !important; }
+  .product-image img { max-height: 220px; object-fit: contain; }
 }
 
 /* --- Smooth transitions for theme switch --- */
