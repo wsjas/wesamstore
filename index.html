@@ -507,15 +507,37 @@
         }
         .filter-chip:hover, .filter-chip.active { background: var(--primary-color); color: #fff; border-color: var(--primary-color); }
 
+        /* ===== SUBSCRIBE BELL BUTTON ===== */
+        .float-btn.subscribe-bell {
+            background: linear-gradient(135deg, #ff6b35, #ff8c00);
+            box-shadow: 0 4px 16px rgba(255,107,53,0.35);
+            animation: bellPulse 2s infinite;
+        }
+        .float-btn.subscribe-bell:hover { 
+            background: linear-gradient(135deg, #ff8c00, #ffa733);
+            animation: none; transform: translateY(-3px) scale(1.05);
+        }
+        [data-theme="dark"] .float-btn.subscribe-bell {
+            background: linear-gradient(135deg, #e65100, #ff6d00);
+            box-shadow: 0 4px 16px rgba(230,81,0,0.35);
+        }
+        @keyframes bellPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 4px 16px rgba(255,107,53,0.35); }
+            15% { transform: scale(1.12) rotate(8deg); }
+            30% { transform: scale(1.12) rotate(-8deg); }
+            45% { transform: scale(1.12) rotate(5deg); }
+            60% { transform: scale(1); }
+        }
+
         /* ===== NOTIFICATION SUBSCRIBE POPUP ===== */
         .subscribe-popup {
-            position: fixed; bottom: 90px; left: 24px; z-index: 8999;
+            position: fixed; bottom: 220px; left: 24px; z-index: 8999;
             background: var(--card-bg, #fff); border-radius: 16px; padding: 20px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.15); max-width: 320px; width: calc(100% - 48px);
-            border: 1px solid var(--border-color); transform: translateY(20px); opacity: 0;
-            transition: all 0.4s ease; pointer-events: none;
+            border: 1px solid var(--border-color); transform: translateY(20px) scale(0.95); opacity: 0;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none;
         }
-        .subscribe-popup.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+        .subscribe-popup.show { transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; }
         .subscribe-popup h4 { margin-bottom: 8px; font-size: 1rem; }
         .subscribe-popup p { font-size: 0.82rem; color: #666; margin-bottom: 12px; }
         .subscribe-popup input { width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 8px; font-family: 'Cairo'; }
@@ -3133,7 +3155,19 @@ header{
   padding:14px;
   position:sticky;
   top:110px;
+  max-height:calc(100vh - 130px);
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
 }
+.shop-sidebar::-webkit-scrollbar{ width:5px; }
+.shop-sidebar::-webkit-scrollbar-track{ background:transparent; }
+.shop-sidebar::-webkit-scrollbar-thumb{ background:rgba(10,88,202,.15); border-radius:10px; }
+.shop-sidebar::-webkit-scrollbar-thumb:hover{ background:rgba(10,88,202,.3); }
+[data-theme="dark"] .shop-sidebar{ background:#282e48; border-color:#363c58; }
+[data-theme="dark"] .shop-sidebar::-webkit-scrollbar-thumb{ background:rgba(92,107,192,.25); }
+[data-theme="dark"] .shop-sidebar::-webkit-scrollbar-thumb:hover{ background:rgba(92,107,192,.45); }
 .sidebar-title{
   display:flex;
   align-items:center;
@@ -4049,6 +4083,7 @@ header.glass i {
 
 <!-- Floating Buttons -->
 <div class="floating-btns">
+  <button class="float-btn subscribe-bell" id="subscribeBell" title="اشترك في العروض" style="display:none;"><i class="fas fa-bell"></i></button>
   <button class="float-btn theme-toggle" id="themeToggle" title="الوضع الليلي"><i class="fas fa-moon"></i></button>
   <a class="float-btn whatsapp-float" id="whatsappFloat" href="https://wa.me/962790781206" target="_blank" title="تواصل واتساب"><i class="fab fa-whatsapp"></i></a>
   <button class="float-btn scroll-top" id="scrollTopBtn" title="العودة للأعلى"><i class="fas fa-arrow-up"></i></button>
@@ -4056,13 +4091,13 @@ header.glass i {
 
 <!-- Subscribe Popup -->
 <div class="subscribe-popup" id="subscribePopup">
-  <button class="close-sub" onclick="document.getElementById('subscribePopup').classList.remove('show');localStorage.setItem('subDismissed','1')"><i class="fas fa-times"></i></button>
+  <button class="close-sub" id="closeSubPopup"><i class="fas fa-times"></i></button>
   <h4><i class="fas fa-bell"></i> لا تفوّت العروض!</h4>
   <p>اشترك ليصلك إشعار فوري عند نزول عروض وخصومات جديدة</p>
   <input type="tel" id="subPhone" placeholder="رقم الواتساب (07XXXXXXXX)" />
   <div class="sub-btns">
     <button class="sub-btn primary" id="subBtn"><i class="fab fa-whatsapp"></i> اشتراك</button>
-    <button class="sub-btn secondary" onclick="document.getElementById('subscribePopup').classList.remove('show');localStorage.setItem('subDismissed','1')">لاحقاً</button>
+    <button class="sub-btn secondary" id="subLaterBtn">لاحقاً</button>
   </div>
 </div>
 <!-- Header Section -->
@@ -5751,15 +5786,22 @@ header.glass i {
         }
 
         async function deleteCategory(categoryId) {
-            if (!confirm(`هل أنت متأكد من حذف التصنيف "${categoryId}"؟ سيتم حذف جميع المنتجات في هذا التصنيف.`)) {
+            if (!confirm(`هل أنت متأكد من حذف التصنيف "${categoryId}"؟`)) {
                 return;
             }
             
             try {
-                // حذف جميع المنتجات في هذا التصنيف
-                const productsToDelete = state.products.filter(p => p.category === categoryId);
-                for (const product of productsToDelete) {
-                    await deleteProduct(product.id);
+                // حذف من Firebase - نبحث بالاسم أو بالـ docId
+                const db = window.db;
+                if (db) {
+                    const cat = state.categories.find(c => c.id === categoryId);
+                    if (cat && cat.docId) {
+                        await db.collection('categories').doc(cat.docId).delete();
+                    } else {
+                        // بحث بالاسم
+                        const snap = await db.collection('categories').where('name', '==', categoryId).limit(1).get();
+                        if (!snap.empty) await snap.docs[0].ref.delete();
+                    }
                 }
                 
                 // إزالة التصنيف من القائمة
@@ -5770,7 +5812,7 @@ header.glass i {
                 displayCategoriesList();
                 updateUI();
                 
-                showNotification(`✅ تم حذف التصنيف ${categoryId} وجميع منتجاته`);
+                showNotification(`✅ تم حذف التصنيف ${categoryId}`);
                 
             } catch (error) {
                 console.error('❌ خطأ في حذف التصنيف:', error);
@@ -5906,27 +5948,37 @@ header.glass i {
                     return;
                 }
                 
-                // إضافة التصنيف الجديد
-                const newCategory = {
-                    id: categoryName,
-                    name: categoryName,
-                    icon: icon
-                };
-                
-                state.categories.push(newCategory);
-                
-                // إضافة التصنيف إلى قائمة الترتيب
-                state.siteSettings.categoryOrder.push(categoryName);
-                
-                // حفظ في Firebase إذا كان متصلاً
+                // حفظ التصنيف في Firebase
+                let newDocId = null;
                 if (window.firebaseInitialized && window.db) {
                     const db = getDbSafe();
                     if (!db) throw new Error('قاعدة البيانات غير جاهزة');
+                    
+                    const docRef = await db.collection('categories').add({
+                        name: categoryName,
+                        icon: icon,
+                        createdAt: getServerTimestamp()
+                    });
+                    newDocId = docRef.id;
+                    
+                    // تحديث الترتيب
+                    state.siteSettings.categoryOrder.push(newDocId);
                     await db.collection('settings').doc('ordering').set({
                         categoryOrder: state.siteSettings.categoryOrder,
                         lastUpdated: getServerTimestamp()
                     }, { merge: true });
                 }
+                
+                // إضافة التصنيف الجديد محلياً
+                const newCategory = {
+                    id: categoryName,
+                    docId: newDocId,
+                    name: categoryName,
+                    icon: icon,
+                    count: 0
+                };
+                
+                state.categories.push(newCategory);
                 
                 // تحديث واجهة المستخدم
                 updateCategoryDropdown();
@@ -6326,12 +6378,16 @@ function updateSocialLinks() {
                     setTimeout(() => reject(new Error("انتهت مهلة الاتصال")), 10000)
                 );
                 
-                const queryPromise = db.collection('products').orderBy('createdAt', 'desc').get();
-                
-                const querySnapshot = await Promise.race([queryPromise, timeoutPromise]);
+                // تحميل المنتجات والتصنيفات معاً
+                const [querySnapshot, categoriesSnapshot] = await Promise.race([
+                    Promise.all([
+                        db.collection('products').orderBy('createdAt', 'desc').get(),
+                        db.collection('categories').get()
+                    ]),
+                    timeoutPromise
+                ]);
                 
                 const products = [];
-                
                 querySnapshot.forEach(doc => {
                     const product = doc.data();
                     product.id = doc.id;
@@ -6340,10 +6396,56 @@ function updateSocialLinks() {
                     products.push(product);
                 });
                 
+                // تحميل التصنيفات من Firebase ودمجها مع الثابتة
+                const firebaseCategories = [];
+                categoriesSnapshot.forEach(doc => {
+                    const cat = doc.data();
+                    const catName = cat.name || doc.id;
+                    firebaseCategories.push({
+                        id: catName,
+                        docId: doc.id,
+                        name: catName,
+                        icon: cat.icon || 'fas fa-box',
+                        count: 0
+                    });
+                });
+
+                // التصنيفات الثابتة (الكل، جديد، عروض)
+                const fixedCategories = [
+                    { id: "all", name: "المنتجات المختارة والأفضل", icon: "fas fa-star", count: 0 },
+                    { id: "new", name: "المنتجات الجديدة", icon: "fas fa-bolt", count: 0 },
+                    { id: "offers", name: "العروض والخصومات", icon: "fas fa-tags", count: 0 }
+                ];
+
+                // دمج: الثابتة أولاً ثم من Firebase (بدون تكرار)
+                const fixedIds = fixedCategories.map(c => c.id);
+                const mergedCategories = [...fixedCategories];
+                firebaseCategories.forEach(fc => {
+                    if (!fixedIds.includes(fc.id) && !mergedCategories.find(c => c.id === fc.id)) {
+                        mergedCategories.push(fc);
+                    }
+                });
+
+                // أيضاً أضف التصنيفات من المنتجات نفسها
+                products.forEach(p => {
+                    if (p.category && !mergedCategories.find(c => c.id === p.category)) {
+                        mergedCategories.push({
+                            id: p.category,
+                            name: p.category,
+                            icon: 'fas fa-box',
+                            count: 0
+                        });
+                    }
+                });
+
+                state.categories = mergedCategories;
+                // حفظ خريطة docId -> name للترتيب
+                window._categoryDocIdMap = {};
+                firebaseCategories.forEach(fc => { window._categoryDocIdMap[fc.docId] = fc.id; });
                 state.products = products;
                 state.filteredProducts = [...products];
                 
-                console.log(`✅ تم تحميل ${products.length} منتج من قاعدة البيانات`);
+                console.log(`✅ تم تحميل ${products.length} منتج و ${mergedCategories.length} تصنيف`);
                 showConnectionMessage('success', `تم تحميل ${products.length} منتج`);
                 
                 state.isFirebaseConnected = true;
@@ -6540,11 +6642,27 @@ productData.stock = parseInt(document.getElementById('productStock').value);
         function displayCategories() {
             elements.categoriesGrid.innerHTML = '';
             
-            const orderedCategories = [...state.categories].sort((a, b) => {
-                const indexA = state.siteSettings.categoryOrder.indexOf(a.id);
-                const indexB = state.siteSettings.categoryOrder.indexOf(b.id);
+            // التصنيفات الثابتة دائماً في الأعلى
+            const fixedIds = ['all', 'new', 'offers'];
+            const fixedCats = state.categories.filter(c => fixedIds.includes(c.id));
+            const dynamicCats = state.categories.filter(c => !fixedIds.includes(c.id));
+            
+            // ترتيب الثابتة حسب الترتيب المعروف
+            fixedCats.sort((a, b) => fixedIds.indexOf(a.id) - fixedIds.indexOf(b.id));
+            
+            // ترتيب الديناميكية حسب الترتيب المحفوظ
+            const order = state.siteSettings.categoryOrder || [];
+            dynamicCats.sort((a, b) => {
+                let indexA = order.indexOf(a.id);
+                if (indexA === -1 && a.docId) indexA = order.indexOf(a.docId);
+                let indexB = order.indexOf(b.id);
+                if (indexB === -1 && b.docId) indexB = order.indexOf(b.docId);
+                if (indexA === -1) indexA = 999;
+                if (indexB === -1) indexB = 999;
                 return indexA - indexB;
             });
+            
+            const orderedCategories = [...fixedCats, ...dynamicCats];
             
             orderedCategories.forEach(category => {
                 const categoryCard = document.createElement('div');
@@ -9973,6 +10091,169 @@ document.addEventListener('DOMContentLoaded', ()=>{
   100%{ transform: scale(1); }
 }
 </style>
+
+<style>
+/* ===== MOBILE PRO STYLES FOR ALL NEW FEATURES ===== */
+
+/* --- Floating buttons mobile --- */
+@media (max-width: 768px) {
+  .floating-btns {
+    bottom: 16px; left: 16px; gap: 10px;
+  }
+  .float-btn {
+    width: 46px; height: 46px; font-size: 1.15rem;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+  }
+  .float-btn.subscribe-bell { width: 46px; height: 46px; }
+}
+
+/* --- Subscribe popup mobile --- */
+@media (max-width: 768px) {
+  .subscribe-popup {
+    bottom: auto; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0; max-width: 340px; width: calc(100% - 32px);
+    border-radius: 20px; padding: 24px 20px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+  }
+  .subscribe-popup.show {
+    transform: translate(-50%, -50%) scale(1); opacity: 1;
+  }
+  .subscribe-popup h4 { font-size: 1.05rem; }
+  .subscribe-popup p { font-size: 0.8rem; }
+  .subscribe-popup input { padding: 12px; font-size: 0.95rem; border-radius: 12px; }
+  .subscribe-popup .sub-btn { padding: 10px; font-size: 0.85rem; border-radius: 12px; }
+}
+
+/* --- Deals banner mobile --- */
+@media (max-width: 768px) {
+  .deals-banner {
+    font-size: 0.78rem; padding: 8px 40px 8px 12px;
+    line-height: 1.5;
+  }
+  .deals-banner .countdown { gap: 4px; margin-right: 8px; }
+  .deals-banner .cd-box { padding: 2px 6px; font-size: 0.82rem; min-width: 28px; }
+  .deals-banner .close-banner { left: 8px; font-size: 0.95rem; }
+}
+
+/* --- Order confirmation popup mobile --- */
+@media (max-width: 768px) {
+  .order-confirm-overlay { padding: 16px; }
+  .order-confirm-box {
+    padding: 24px 20px; border-radius: 20px; max-width: 100%;
+  }
+  .order-confirm-icon { width: 60px; height: 60px; font-size: 1.7rem; }
+  .order-confirm-title { font-size: 1.15rem; }
+  .order-confirm-id-value { font-size: 1.2rem; }
+  .order-confirm-btns { flex-direction: column; gap: 8px; }
+  .order-confirm-btn { padding: 14px; font-size: 0.9rem; border-radius: 14px; }
+}
+
+/* --- Best sellers mobile --- */
+@media (max-width: 768px) {
+  .best-sellers-row { gap: 12px; padding: 8px 0 12px; }
+  .best-seller-card { min-width: 150px; max-width: 170px; }
+  .best-seller-card img { height: 120px; }
+  .best-seller-info { padding: 8px; }
+  .best-seller-info h4 { font-size: 0.78rem; }
+  .best-seller-rank { width: 22px; height: 22px; font-size: 0.65rem; }
+}
+
+/* --- Order tracking mobile --- */
+@media (max-width: 768px) {
+  .track-order-section { padding: 18px 14px; border-radius: 14px; margin: 14px 0; }
+  .track-order-section h3 { font-size: 1rem; }
+  .track-order-section > div:nth-child(2) { flex-direction: column; }
+  .track-order-section input { font-size: 0.9rem; }
+  .track-order-section button { width: 100%; padding: 12px; font-size: 0.9rem; }
+  .track-timeline { gap: 4px; }
+  .track-step .step-icon { width: 34px; height: 34px; font-size: 0.78rem; }
+  .track-step .step-label { font-size: 0.65rem; }
+}
+
+/* --- Filter chips mobile --- */
+@media (max-width: 768px) {
+  .filter-chips { gap: 6px; margin: 8px 0; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+  .filter-chips::-webkit-scrollbar { display: none; }
+  .filter-chip { padding: 5px 12px; font-size: 0.75rem; white-space: nowrap; flex-shrink: 0; }
+}
+
+/* --- Product cards mobile --- */
+@media (max-width: 768px) {
+  .product-card:hover { transform: none; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+  .wishlist-btn { width: 32px; height: 32px; font-size: 0.85rem; bottom: 8px; right: 8px; }
+  .product-badge-new { font-size: 0.65rem; padding: 2px 8px; top: 8px; left: 8px; }
+  .share-btn { font-size: 0.8rem; padding: 3px 6px; }
+  .rating-display { gap: 2px; margin: 2px 0; }
+  .rating-display .star { font-size: 0.7rem; }
+  .rating-display .rating-count { font-size: 0.68rem; }
+}
+
+/* --- Categories sidebar mobile (horizontal scroll) --- */
+@media (max-width: 992px) {
+  .shop-sidebar {
+    max-height: none !important; overflow-y: visible !important;
+    position: relative !important; top: auto !important;
+  }
+  .categories-grid.sidebar-list {
+    flex-direction: row !important; overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory;
+    padding-bottom: 6px !important;
+  }
+  .categories-grid.sidebar-list::-webkit-scrollbar { height: 3px; }
+  .categories-grid.sidebar-list::-webkit-scrollbar-thumb { background: rgba(10,88,202,.2); border-radius: 10px; }
+  .category-card {
+    flex-shrink: 0 !important; min-width: 130px !important;
+    scroll-snap-align: start;
+  }
+}
+
+/* --- Footer mobile --- */
+@media (max-width: 768px) {
+  .footer-content { grid-template-columns: 1fr !important; gap: 24px !important; }
+  .footer-section h3 { font-size: 1rem !important; }
+  .footer-section p, .footer-section li { font-size: 0.85rem !important; }
+  .copyright { padding: 14px 0; }
+  .copyright p { font-size: 0.78rem !important; }
+  .footer-social-links { justify-content: center; }
+}
+
+/* --- Dark mode mobile fixes --- */
+@media (max-width: 768px) {
+  [data-theme="dark"] .m-topbar { background: rgba(30,34,53,0.96) !important; border-color: #363c58 !important; }
+  [data-theme="dark"] .m-topbar.glass { background: linear-gradient(135deg, rgba(37,42,72,0.95), rgba(45,51,88,0.92)) !important; }
+  [data-theme="dark"] .m-brand, [data-theme="dark"] .m-brand-name { color: #dde0e6 !important; }
+  [data-theme="dark"] .m-icon-btn { background: #282e48 !important; border-color: #363c58 !important; color: #dde0e6 !important; }
+  [data-theme="dark"] .m-quickstrip { background: rgba(30,34,53,0.96) !important; border-color: #363c58 !important; }
+  [data-theme="dark"] .subscribe-popup { box-shadow: 0 16px 48px rgba(0,0,0,0.4) !important; }
+}
+
+/* --- Skeleton mobile --- */
+@media (max-width: 768px) {
+  .skeleton-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .skeleton-img { height: 150px; }
+}
+@media (max-width: 400px) {
+  .skeleton-grid { grid-template-columns: 1fr; }
+}
+
+/* --- Products grid mobile optimization --- */
+@media (max-width: 768px) {
+  .products-grid { gap: 12px !important; }
+  .products-header h2 { font-size: 1.1rem !important; }
+  .search-box { border-radius: 12px !important; }
+  .search-box input { font-size: 0.9rem !important; }
+  .sort-options select { font-size: 0.82rem !important; border-radius: 10px !important; }
+}
+
+/* --- Smooth transitions for theme switch --- */
+body, .product-card, .category-card, header, footer, .modal-content,
+.cart-modal-content, .search-box, input, select, textarea,
+.m-topbar, .m-drawer, .m-quickstrip, .shop-sidebar,
+.track-order-section, .best-seller-card, .subscribe-popup,
+.filter-chip, .nav-inner {
+  transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+}
+</style>
 <script>
 /* Auto apply Lottie-style animations */
 document.addEventListener('DOMContentLoaded', ()=>{
@@ -11034,24 +11315,60 @@ setTimeout(renderBestSellers, 3000);
 
 // ===== 11. SUBSCRIBE POPUP =====
 (function initSubscribe() {
-    if (localStorage.getItem('subDismissed') === '1') return;
-    setTimeout(() => {
-        const popup = document.getElementById('subscribePopup');
-        if (popup) popup.classList.add('show');
-    }, 15000); // Show after 15 seconds
-
+    const popup = document.getElementById('subscribePopup');
+    const bell = document.getElementById('subscribeBell');
+    const closeBtn = document.getElementById('closeSubPopup');
+    const laterBtn = document.getElementById('subLaterBtn');
     const subBtn = document.getElementById('subBtn');
+    
+    if (!popup || !bell) return;
+
+    function dismissPopup() {
+        popup.classList.remove('show');
+        // أظهر زر الجرس النابض
+        bell.style.display = 'flex';
+    }
+
+    function hideEverything() {
+        popup.classList.remove('show');
+        bell.style.display = 'none';
+        localStorage.setItem('subDismissed', '1');
+    }
+
+    // إذا لم يتم الإغلاق مسبقاً، أظهر النافذة بعد 15 ثانية
+    if (localStorage.getItem('subDismissed') !== '1') {
+        setTimeout(() => { popup.classList.add('show'); }, 15000);
+    } else {
+        // إذا تم الإغلاق مسبقاً، أظهر الجرس فقط (ما لم يكون مشترك)
+        if (localStorage.getItem('subDone') !== '1') {
+            bell.style.display = 'flex';
+        }
+    }
+
+    // زر الجرس يفتح/يغلق النافذة
+    bell.addEventListener('click', () => {
+        if (popup.classList.contains('show')) {
+            popup.classList.remove('show');
+        } else {
+            popup.classList.add('show');
+        }
+    });
+
+    // إغلاق النافذة (X) → تظهر الجرس
+    if (closeBtn) closeBtn.addEventListener('click', dismissPopup);
+    if (laterBtn) laterBtn.addEventListener('click', dismissPopup);
+
+    // الاشتراك
     if (subBtn) {
         subBtn.addEventListener('click', () => {
             const phone = document.getElementById('subPhone')?.value?.trim();
             if (!phone || !/^07\d{8}$/.test(phone)) { alert('أدخل رقم واتساب صحيح'); return; }
-            // Save to Firestore
             if (window.db) {
                 window.db.collection('subscribers').add({ phone, createdAt: new Date() })
                     .then(() => {
                         alert('✅ تم الاشتراك بنجاح! ستصلك العروض على واتساب');
-                        document.getElementById('subscribePopup').classList.remove('show');
-                        localStorage.setItem('subDismissed', '1');
+                        localStorage.setItem('subDone', '1');
+                        hideEverything();
                     }).catch(e => { console.warn(e); alert('حدث خطأ، حاول مرة أخرى'); });
             }
         });
