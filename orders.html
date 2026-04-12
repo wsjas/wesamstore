@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>الطلبات - وسام ستور</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo','Segoe UI',sans-serif;}
+:root{
+  --primary:#0f1b4c;--primary-light:#1a2d7a;
+  --accent:#ff8c00;--accent-light:#ffa733;
+  --success:#22c55e;--danger:#ef4444;--warning:#f59e0b;
+  --bg:#f0f2f8;--card:#fff;--text:#1e293b;--text-muted:#64748b;
+  --border:#e2e8f0;--shadow:0 4px 24px rgba(15,27,76,.08);--radius:16px;
+}
+body{background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+  position:fixed;top:0;right:0;width:260px;height:100vh;
+  background:linear-gradient(180deg,var(--primary) 0%,#0a1338 100%);
+  color:#fff;z-index:100;display:flex;flex-direction:column;transition:transform .3s ease;
+}
+.sidebar-header{padding:24px 20px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.08);}
+.sidebar-header img{width:44px;height:44px;border-radius:10px;background:#fff;padding:4px;object-fit:contain;}
+.sidebar-header .brand{font-size:1.1rem;font-weight:800;}
+.sidebar-header .brand span{color:var(--accent);font-size:.85rem;display:block;font-weight:400;}
+.sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto;}
+.sidebar-nav a{
+  display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;
+  color:rgba(255,255,255,.7);text-decoration:none;font-size:.92rem;font-weight:600;
+  transition:all .2s;margin-bottom:4px;
+}
+.sidebar-nav a:hover{background:rgba(255,255,255,.08);color:#fff;}
+.sidebar-nav a.active{background:rgba(255,140,0,.18);color:var(--accent);}
+.sidebar-nav a i{width:22px;text-align:center;font-size:1rem;}
+.sidebar-nav .nav-divider{height:1px;background:rgba(255,255,255,.06);margin:12px 8px;}
+
+/* ===== MAIN ===== */
+.main{margin-right:260px;padding:24px 32px 60px;min-height:100vh;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:12px;}
+.topbar h1{font-size:1.6rem;font-weight:800;color:var(--primary);}
+.topbar h1 i{color:var(--accent);margin-left:8px;}
+.topbar-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.topbar-btn{
+  padding:10px 18px;border-radius:10px;border:1px solid var(--border);
+  background:#fff;color:var(--text);font-weight:600;font-size:.88rem;
+  cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s;text-decoration:none;
+}
+.topbar-btn:hover{border-color:var(--accent);color:var(--accent);}
+.topbar-btn.danger{background:var(--danger);color:#fff;border-color:var(--danger);}
+
+/* ===== TABS ===== */
+.tabs{display:flex;gap:4px;background:var(--card);border-radius:var(--radius) var(--radius) 0 0;border:1px solid var(--border);border-bottom:none;padding:0 8px;}
+.tab{
+  padding:14px 22px;border:none;background:none;cursor:pointer;font-weight:700;
+  font-size:.9rem;color:var(--text-muted);border-bottom:3px solid transparent;
+  transition:all .2s;font-family:'Cairo',sans-serif;white-space:nowrap;
+}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab .count{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:22px;height:22px;border-radius:12px;font-size:.72rem;font-weight:800;
+  margin-right:6px;padding:0 6px;
+}
+.tab .count.blue{background:rgba(59,130,246,.12);color:#2563eb;}
+.tab .count.orange{background:rgba(255,140,0,.12);color:#ff8c00;}
+.tab .count.green{background:rgba(34,197,94,.12);color:#16a34a;}
+
+/* ===== SECTION CARD ===== */
+.section-card{
+  background:var(--card);border-radius:0 0 var(--radius) var(--radius);
+  box-shadow:var(--shadow);border:1px solid var(--border);border-top:none;margin-bottom:24px;overflow:hidden;
+}
+.section-body{padding:0;}
+
+/* ===== STATS ===== */
+.stats-row{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
+.stat-mini{
+  flex:1;min-width:160px;background:var(--card);border-radius:var(--radius);padding:18px 20px;
+  box-shadow:var(--shadow);border:1px solid var(--border);display:flex;align-items:center;gap:14px;
+}
+.stat-mini .icon{
+  width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+}
+.stat-mini .icon.blue{background:rgba(59,130,246,.1);color:#3b82f6;}
+.stat-mini .icon.green{background:rgba(34,197,94,.1);color:#22c55e;}
+.stat-mini .icon.orange{background:rgba(255,140,0,.1);color:#ff8c00;}
+.stat-mini .icon.red{background:rgba(239,68,68,.1);color:#ef4444;}
+.stat-mini h3{font-size:1.3rem;font-weight:800;line-height:1.1;}
+.stat-mini p{font-size:.78rem;color:var(--text-muted);font-weight:600;}
+
+/* ===== TABLE ===== */
+.data-table{width:100%;border-collapse:collapse;font-size:.88rem;}
+.data-table th{
+  text-align:right;padding:12px 16px;background:var(--bg);font-weight:700;
+  color:var(--text-muted);border-bottom:2px solid var(--border);font-size:.8rem;
+  text-transform:uppercase;letter-spacing:.3px;position:sticky;top:0;z-index:2;
+}
+.data-table td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.data-table tr:hover td{background:rgba(255,140,0,.02);}
+.data-table tbody{max-height:600px;}
+
+.badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:700;}
+.badge.new{background:#dbeafe;color:#1d4ed8;}
+.badge.contacted{background:#fef3c7;color:#b45309;}
+.badge.processing{background:#e0e7ff;color:#4338ca;}
+.badge.done{background:#d1fae5;color:#065f46;}
+.badge.delivered{background:#dcfce7;color:#166534;}
+.badge.cancelled{background:#fee2e2;color:#991b1b;}
+
+.status-select{
+  padding:8px 12px;border-radius:10px;border:1px solid var(--border);
+  font-family:'Cairo',sans-serif;font-size:.82rem;font-weight:600;
+  background:#fff;cursor:pointer;transition:border-color .2s;
+}
+.status-select:focus{border-color:var(--accent);outline:none;}
+
+.action-btn{
+  padding:6px 12px;border-radius:8px;border:none;cursor:pointer;
+  font-size:.8rem;font-weight:600;transition:all .2s;margin:2px;
+}
+.action-btn.view{background:rgba(34,197,94,.1);color:#16a34a;}
+.action-btn.view:hover{background:rgba(34,197,94,.2);}
+.action-btn.delete{background:rgba(239,68,68,.1);color:#dc2626;}
+.action-btn.delete:hover{background:rgba(239,68,68,.2);}
+.action-btn.whatsapp{background:rgba(37,211,102,.1);color:#25d366;}
+.action-btn.whatsapp:hover{background:rgba(37,211,102,.2);}
+
+/* ===== ORDER DETAIL MODAL ===== */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;
+  align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.show{display:flex;}
+.modal-box{
+  background:#fff;border-radius:20px;width:100%;max-width:580px;max-height:90vh;
+  overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);
+}
+.modal-header{
+  padding:20px 24px;background:var(--primary);color:#fff;border-radius:20px 20px 0 0;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.modal-header h3{font-size:1.1rem;}
+.modal-close{background:none;border:none;color:#fff;font-size:1.6rem;cursor:pointer;}
+.modal-body{padding:24px;}
+.detail-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.detail-row:last-child{border:none;}
+.detail-label{color:var(--text-muted);font-weight:600;font-size:.88rem;}
+.detail-value{font-weight:700;font-size:.9rem;}
+.items-list{margin-top:12px;}
+.item-row{display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg);border-radius:8px;margin-bottom:6px;}
+
+/* ===== LOGIN ===== */
+.login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,var(--primary),#0a1338);z-index:9999;display:flex;align-items:center;justify-content:center;}
+.login-box{background:#fff;border-radius:20px;padding:40px 36px;width:90%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center;}
+.login-box img{width:80px;height:80px;border-radius:16px;margin-bottom:16px;object-fit:contain;}
+.login-box h2{font-size:1.3rem;font-weight:800;color:var(--primary);margin-bottom:4px;}
+.login-box p{color:var(--text-muted);font-size:.88rem;margin-bottom:24px;}
+.form-group{margin-bottom:16px;text-align:right;}
+.form-group label{display:block;margin-bottom:6px;font-weight:600;font-size:.88rem;}
+.form-group input{width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-size:.9rem;font-family:'Cairo',sans-serif;}
+.form-group input:focus{border-color:var(--accent);outline:none;}
+.login-btn{width:100%;padding:12px;border-radius:10px;background:var(--primary);color:#fff;border:none;font-weight:700;font-size:1rem;cursor:pointer;}
+.login-error{color:var(--danger);font-size:.85rem;margin-top:10px;display:none;}
+
+/* ===== TOAST ===== */
+.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-120%);background:var(--primary);color:#fff;padding:14px 28px;border-radius:12px;font-weight:600;font-size:.9rem;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,.2);transition:transform .4s cubic-bezier(.4,0,.2,1);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.success{background:var(--success);}
+.toast.error{background:var(--danger);}
+
+/* ===== MOBILE ===== */
+.mobile-toggle{display:none;position:fixed;top:16px;right:16px;z-index:101;width:44px;height:44px;border-radius:12px;background:var(--primary);color:#fff;border:none;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);}
+.mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99;}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted);}
+.empty-state i{font-size:3rem;margin-bottom:16px;opacity:.4;}
+.empty-state p{font-size:1rem;font-weight:600;}
+
+@media(max-width:900px){
+  .sidebar{transform:translateX(100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-right:0;padding:20px 16px 80px;}
+  .mobile-toggle{display:flex;align-items:center;justify-content:center;}
+  .mobile-overlay.show{display:block;}
+  .stats-row{flex-direction:column;}
+  .topbar h1{font-size:1.2rem;}
+}
+</style>
+<script src="shared-admin-auth.js"></script>
+<script src="shared-firebase.js"></script>
+<script src="shared-utils.js"></script>
+</head>
+<body>
+
+<!-- Login Overlay -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <img src="wesam-logo.png" alt="وسام"/>
+    <h2>إدارة الطلبات</h2>
+    <p>تسجيل الدخول كمدير المتجر</p>
+    <div class="form-group"><label>البريد الإلكتروني</label><input id="adminEmail" type="email" placeholder="example@email.com"/></div>
+    <div class="form-group"><label>كلمة المرور</label><input id="adminPassword" type="password" placeholder="••••••••"/></div>
+    <button class="login-btn" id="loginBtn">تسجيل الدخول</button>
+    <p class="login-error" id="loginError"></p>
+  </div>
+</div>
+
+<button class="mobile-toggle" id="mobileToggle"><i class="fas fa-bars"></i></button>
+<div class="mobile-overlay" id="mobileOverlay"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <img src="wesam-logo.png" alt="وسام"/>
+    <div class="brand">Wesam Store<span>إدارة الطلبات</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="admin.html"><i class="fas fa-chart-pie"></i> لوحة التحكم</a>
+    <a href="#" class="active"><i class="fas fa-shopping-bag"></i> الطلبات</a>
+    <a href="add-product.html"><i class="fas fa-plus-circle"></i> إضافة منتج</a>
+    <a href="accounting.html"><i class="fas fa-calculator"></i> نظام المحاسبة</a>
+    <div class="nav-divider"></div>
+    <a href="index.html"><i class="fas fa-store"></i> المتجر</a>
+  </nav>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <h1><i class="fas fa-shopping-bag"></i> إدارة الطلبات</h1>
+    <div class="topbar-actions">
+      <button class="topbar-btn" id="refreshBtn"><i class="fas fa-sync"></i> تحديث</button>
+      <button class="topbar-btn danger" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> خروج</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row" id="statsRow">
+    <div class="stat-mini"><div class="icon blue"><i class="fas fa-shopping-cart"></i></div><div><h3 id="statOrders">-</h3><p>طلبات الشراء</p></div></div>
+    <div class="stat-mini"><div class="icon orange"><i class="fas fa-tools"></i></div><div><h3 id="statService">-</h3><p>طلبات الصيانة</p></div></div>
+    <div class="stat-mini"><div class="icon green"><i class="fas fa-check-circle"></i></div><div><h3 id="statDelivered">-</h3><p>تم التسليم</p></div></div>
+    <div class="stat-mini"><div class="icon red"><i class="fas fa-clock"></i></div><div><h3 id="statPending">-</h3><p>قيد الانتظار</p></div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="orders"><i class="fas fa-shopping-cart"></i> طلبات الشراء <span class="count blue" id="ordersCount">0</span></button>
+    <button class="tab" data-tab="service"><i class="fas fa-tools"></i> طلبات الصيانة <span class="count orange" id="serviceCount">0</span></button>
+  </div>
+
+  <!-- Orders Tab -->
+  <div class="section-card tab-content active" id="ordersTab">
+    <div class="section-body" style="overflow-x:auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>رقم الطلب</th>
+            <th>التاريخ</th>
+            <th>العميل</th>
+            <th>الهاتف</th>
+            <th>الشحن</th>
+            <th>المجموع</th>
+            <th>القناة</th>
+            <th>الحالة</th>
+            <th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="ordersBody">
+          <tr><td colspan="9"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Service Tab -->
+  <div class="section-card tab-content" id="serviceTab" style="display:none;">
+    <div class="section-body" style="overflow-x:auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>رقم الطلب</th>
+            <th>التاريخ</th>
+            <th>العميل</th>
+            <th>الهاتف</th>
+            <th>الجهاز</th>
+            <th>الحجم</th>
+            <th>المشكلة</th>
+            <th>الحالة</th>
+            <th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="serviceBody">
+          <tr><td colspan="9"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Order Detail Modal -->
+<div class="modal-overlay" id="orderModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3><i class="fas fa-receipt"></i> تفاصيل الطلب</h3>
+      <button class="modal-close" id="closeModal">&times;</button>
+    </div>
+    <div class="modal-body" id="orderModalBody"></div>
+  </div>
+</div>
+
+<!-- Service Detail Modal -->
+<div class="modal-overlay" id="serviceModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3><i class="fas fa-tools"></i> تفاصيل طلب الصيانة</h3>
+      <button class="modal-close" id="closeServiceModal">&times;</button>
+    </div>
+    <div class="modal-body" id="serviceModalBody"></div>
+  </div>
+</div>
+
+<!-- Print Styles -->
+<style>
+@media print {
+  body * { visibility: hidden; }
+  #printArea, #printArea * { visibility: visible; }
+  #printArea { position: absolute; top: 0; right: 0; left: 0; padding: 20px; font-family: 'Cairo', sans-serif; direction: rtl; }
+  #printArea h2 { text-align: center; margin-bottom: 16px; font-size: 1.3rem; }
+  #printArea .print-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+  #printArea .print-row .label { font-weight: 700; color: #333; }
+  #printArea .print-items { margin: 12px 0; }
+  #printArea .print-item { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.85rem; }
+  #printArea .print-total { margin-top: 12px; padding-top: 12px; border-top: 2px solid #333; display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 800; }
+  #printArea .print-footer { text-align: center; margin-top: 20px; font-size: 0.8rem; color: #999; }
+  .no-print { display: none !important; }
+}
+.print-btn { 
+  display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; margin-top: 16px;
+  background: var(--primary); color: #fff; border: none; border-radius: 10px; cursor: pointer;
+  font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 0.9rem; width: 100%; justify-content: center;
+  transition: background 0.2s;
+}
+.print-btn:hover { opacity: 0.9; }
+</style>
+
+<div id="printArea" style="display:none;"></div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Alert Banner -->
+<div id="alertBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;padding:14px 24px;font-weight:700;font-size:1rem;text-align:center;box-shadow:0 4px 20px rgba(239,68,68,.4);animation:pulseAlert 1.5s infinite;cursor:pointer;">
+  <span id="alertText"></span>
+  <button onclick="dismissAlert()" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1.1rem;">&times;</button>
+</div>
+<style>
+@keyframes pulseAlert{0%,100%{opacity:1}50%{opacity:.8}}
+.alert-badge{position:relative;}
+.alert-badge::after{content:'';position:absolute;top:-2px;right:-2px;width:10px;height:10px;background:#ef4444;border-radius:50%;animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+
+<script>
+window.WesamFirebase.init();
+const db = window.WesamFirebase.db, auth = window.WesamFirebase.auth;
+const ADMIN_EMAILS=['wesam@store.store'];
+const $=id=>document.getElementById(id);
+const escapeHtml = window.WesamUtils.escapeHtml;
+function showToast(msg,type=''){const t=$('toast');t.textContent=msg;t.className='toast show'+(type?' '+type:'');setTimeout(()=>t.classList.remove('show'),3500);}
+const getServerTimestamp = window.WesamFirebase.getServerTimestamp;
+
+let storeSettings = { whatsappLink: 'https://wa.me/962790781206' };
+
+// Auth
+const adminAuth = window.WesamAdminAuth.build({ auth, db, adminEmails: ADMIN_EMAILS });
+let ordersBooted = false;
+
+// تعريف loadAllWithListeners قبل auth listener
+async function loadAllWithListeners() {
+  try {
+    await loadAll();
+  } catch(e) {
+    console.error('❌ loadAll failed:', e);
+  }
+  try {
+    startRealtimeListeners();
+  } catch(e) {
+    console.error('❌ startRealtimeListeners failed:', e);
+  }
+}
+
+adminAuth.bindSimpleUI({
+  loginButton: $('loginBtn'),
+  emailInput: $('adminEmail'),
+  passwordInput: $('adminPassword'),
+  errorBox: $('loginError'),
+  overlay: $('loginOverlay'),
+  logoutButton: $('logoutBtn'),
+  onAuthorized: async (user, firstTime) => {
+    console.log('✅ Admin logged in, starting...', user ? user.email : '');
+    if (!ordersBooted) {
+      ordersBooted = true;
+      await loadAllWithListeners();
+    }
+  },
+  onUnauthorized: async (user) => {
+    console.log('🔑 Auth state changed:', user ? user.email : 'no user');
+  }
+});
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(x=>x.style.display='none');
+    const target = t.dataset.tab === 'orders' ? 'ordersTab' : 'serviceTab';
+    $(target).style.display = 'block';
+  });
+});
+
+// Mobile
+$('mobileToggle').addEventListener('click',()=>{$('sidebar').classList.toggle('open');$('mobileOverlay').classList.toggle('show');});
+$('mobileOverlay').addEventListener('click',()=>{$('sidebar').classList.remove('open');$('mobileOverlay').classList.remove('show');});
+
+// Load
+async function loadAll(){
+  await loadStoreSettings();
+  await Promise.all([loadOrders(), loadServiceRequests()]);
+}
+
+async function loadStoreSettings() {
+  try {
+    const doc = await db.collection('settings').doc('store').get();
+    if (doc.exists) storeSettings = doc.data();
+  } catch(e) {}
+}
+
+$('refreshBtn').addEventListener('click', loadAll);
+
+// ===== ORDERS =====
+const ORDER_STATUSES = ['جديد','تم التواصل','قيد التجهيز','تم التسليم','ملغي'];
+
+async function loadOrders(){
+  const body=$('ordersBody');
+  try{
+    let docs=[];
+    try{const s=await db.collection('orders').orderBy('createdAt','desc').limit(200).get();s.forEach(d=>docs.push({id:d.id,data:d.data()}));}
+    catch(e){const s=await db.collection('orders').limit(200).get();s.forEach(d=>docs.push({id:d.id,data:d.data()}));}
+
+    $('statOrders').textContent=docs.length;
+    $('ordersCount').textContent=docs.length;
+    $('statDelivered').textContent=docs.filter(d=>(d.data.status||'')==='تم التسليم').length;
+    $('statPending').textContent=docs.filter(d=>['جديد','قيد التجهيز'].includes(d.data.status||'جديد')).length;
+
+    if(!docs.length){body.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد طلبات شراء</p></div></td></tr>';return;}
+
+    docs=docs.map(x=>{
+      const d=x.data;
+      const c=d.createdAt&&d.createdAt.toDate?d.createdAt.toDate():(d.createdAt?new Date(d.createdAt):null);
+      return{...x,created:c};
+    }).sort((a,b)=>(b.created?b.created.getTime():0)-(a.created?a.created.getTime():0));
+
+    body.innerHTML=docs.map(item=>{
+      const d=item.data;
+      const date=item.created?item.created.toLocaleString('ar-JO'):'-';
+      const status=d.status||'جديد';
+      const statusClass={جديد:'new','تم التواصل':'contacted','قيد التجهيز':'processing','تم التسليم':'delivered',ملغي:'cancelled'}[status]||'new';
+      return `<tr data-id="${escapeHtml(d.orderId||item.id)}">
+        <td style="font-weight:700;font-size:.82rem;">${escapeHtml(d.orderId||item.id)}</td>
+        <td style="font-size:.82rem;">${date}</td>
+        <td style="font-weight:600;">${escapeHtml(d.customerName||'')}</td>
+        <td>${escapeHtml(d.customerPhone||'')}</td>
+        <td><span class="badge ${d.shippingMethod==='delivery'?'new':'done'}">${d.shippingMethod==='delivery'?'توصيل':'استلام'}</span></td>
+        <td style="font-weight:800;color:var(--success);">${d.total||0} د.أ</td>
+        <td>${escapeHtml(d.channel||'')}</td>
+        <td><select class="status-select" data-id="${escapeHtml(d.orderId||item.id)}" data-collection="orders">
+          ${ORDER_STATUSES.map(s=>`<option value="${s}" ${s===status?'selected':''}>${s}</option>`).join('')}
+        </select></td>
+        <td>
+          <button class="action-btn view" onclick="viewOrder('${item.id}')"><i class="fas fa-eye"></i></button>
+          <button class="action-btn whatsapp" onclick="whatsappOrder('${item.id}')"><i class="fab fa-whatsapp"></i></button>
+          <button class="action-btn delete" onclick="deleteDoc('orders','${item.id}')"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>`;
+    }).join('');
+    bindStatusSelects();
+  }catch(e){console.error(e);body.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>خطأ في تحميل الطلبات</p></div></td></tr>';}
+}
+
+// ===== SERVICE REQUESTS =====
+const SERVICE_STATUSES=['جديد','تم التواصل','قيد التجهيز','تم الإصلاح','تم التسليم','ملغي'];
+
+async function loadServiceRequests(){
+  const body=$('serviceBody');
+  try{
+    let docs=[];
+    try{const s=await db.collection('service_requests').orderBy('createdAt','desc').limit(200).get();s.forEach(d=>docs.push({id:d.id,data:d.data()}));}
+    catch(e){const s=await db.collection('service_requests').limit(200).get();s.forEach(d=>docs.push({id:d.id,data:d.data()}));}
+
+    $('statService').textContent=docs.length;
+    $('serviceCount').textContent=docs.length;
+
+    if(!docs.length){body.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد طلبات صيانة</p></div></td></tr>';return;}
+
+    docs=docs.map(x=>{
+      const d=x.data;
+      const c=d.createdAt&&d.createdAt.toDate?d.createdAt.toDate():(d.createdAt?new Date(d.createdAt):null);
+      return{...x,created:c};
+    }).sort((a,b)=>(b.created?b.created.getTime():0)-(a.created?a.created.getTime():0));
+
+    body.innerHTML=docs.map(item=>{
+      const d=item.data;
+      const date=item.created?item.created.toLocaleString('ar-JO'):'-';
+      const status=d.status||'جديد';
+      const problem=(d.faultDesc||d.problemDescription||d.problem||'').substring(0,50);
+      return `<tr data-id="${escapeHtml(d.requestId||item.id)}">
+        <td style="font-weight:700;color:var(--primary);font-size:.82rem;direction:ltr;">${escapeHtml(d.requestId||item.id)}</td>
+        <td style="font-size:.82rem;">${date}</td>
+        <td style="font-weight:600;">${escapeHtml(d.customerName||'')}</td>
+        <td>${escapeHtml(d.customerPhone||'')}</td>
+        <td>${escapeHtml(d.deviceType||'')}</td>
+        <td>${escapeHtml(d.deviceSize||'')}</td>
+        <td style="font-size:.8rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(d.problemDescription||d.problem||'')}">${escapeHtml(problem)}</td>
+        <td><select class="status-select" data-id="${escapeHtml(d.requestId||item.id)}" data-collection="service_requests">
+          ${SERVICE_STATUSES.map(s=>`<option value="${s}" ${s===status?'selected':''}>${s}</option>`).join('')}
+        </select></td>
+        <td>
+          <button class="action-btn view" onclick="viewService('${item.id}')"><i class="fas fa-eye"></i></button>
+          <button class="action-btn whatsapp" onclick="whatsappService('${item.id}')"><i class="fab fa-whatsapp"></i></button>
+          <button class="action-btn delete" onclick="deleteDoc('service_requests','${item.id}')"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>`;
+    }).join('');
+    bindStatusSelects();
+  }catch(e){console.error(e);body.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>خطأ في التحميل</p></div></td></tr>';}
+}
+
+// Status change
+function bindStatusSelects(){
+  document.querySelectorAll('.status-select').forEach(sel=>{
+    sel.addEventListener('change',async()=>{
+      const id=sel.dataset.id, col=sel.dataset.collection, val=sel.value;
+      try{await db.collection(col).doc(id).set({status:val,updatedAt:getServerTimestamp()},{merge:true});showToast('✅ تم تحديث الحالة','success');}
+      catch(e){showToast('❌ خطأ في التحديث','error');}
+    });
+  });
+}
+
+// View order
+window.viewOrder=async function(id){
+  try{
+    const doc=await db.collection('orders').doc(id).get();
+    if(!doc.exists)return;
+    const d=doc.data();
+    const date=d.createdAt&&d.createdAt.toDate?d.createdAt.toDate().toLocaleString('ar-JO'):'-';
+    let items='';
+    if(d.items&&d.items.length){
+      items=d.items.map(i=>`<div class="item-row"><span>${escapeHtml(i.name)} × ${i.quantity}</span><span style="font-weight:700;">${((i.price||0)*i.quantity).toFixed(2)} د.أ</span></div>`).join('');
+    }
+    const subtotal = d.subtotal || (d.items ? d.items.reduce((s,i)=>(s + (i.price||0)*i.quantity), 0) : 0);
+    const shippingFee = d.shippingFee || 0;
+    const total = d.total || (subtotal + shippingFee);
+
+    $('orderModalBody').innerHTML=`
+      <div class="detail-row"><span class="detail-label">رقم الطلب</span><span class="detail-value" style="direction:ltr;font-weight:800;">${escapeHtml(d.orderId||id)}</span></div>
+      <div class="detail-row"><span class="detail-label">التاريخ</span><span class="detail-value">${date}</span></div>
+      <div class="detail-row"><span class="detail-label">العميل</span><span class="detail-value">${escapeHtml(d.customerName||'')}</span></div>
+      <div class="detail-row"><span class="detail-label">الهاتف</span><span class="detail-value">${escapeHtml(d.customerPhone||'')}</span></div>
+      <div class="detail-row"><span class="detail-label">الشحن</span><span class="detail-value">${d.shippingMethod==='delivery'?'توصيل':'استلام من المتجر'}</span></div>
+      ${d.customerAddress?`<div class="detail-row"><span class="detail-label">العنوان</span><span class="detail-value">${escapeHtml(d.customerAddress)}</span></div>`:''}
+      <div class="detail-row"><span class="detail-label">القناة</span><span class="detail-value">${escapeHtml(d.channel||'-')}</span></div>
+      <div class="detail-row"><span class="detail-label">الحالة</span><span class="detail-value"><span class="badge new">${escapeHtml(d.status||'جديد')}</span></span></div>
+      <h4 style="margin:16px 0 8px;font-size:.95rem;">المنتجات:</h4>
+      <div class="items-list">${items||'<p style="color:var(--text-muted);">لا توجد تفاصيل</p>'}</div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>سعر المنتجات</span><span style="font-weight:600;">${subtotal.toFixed(2)} د.أ</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span>رسوم التوصيل</span><span style="font-weight:600;">${shippingFee.toFixed(2)} د.أ</span></div>
+      </div>
+      <div style="margin-top:8px;padding-top:10px;border-top:2px solid var(--border);display:flex;justify-content:space-between;">
+        <span style="font-weight:700;">المجموع الكلي</span>
+        <span style="font-weight:800;font-size:1.1rem;color:var(--success);">${total.toFixed(2)} د.أ</span>
+      </div>
+      <button class="print-btn no-print" onclick="printOrder('${id}','order')"><i class="fas fa-print"></i> طباعة تفاصيل الطلب</button>
+    `;
+    $('orderModal').classList.add('show');
+  }catch(e){showToast('❌ خطأ في عرض التفاصيل','error');}
+};
+
+$('closeModal').addEventListener('click',()=>$('orderModal').classList.remove('show'));
+$('orderModal').addEventListener('click',e=>{if(e.target===$('orderModal'))$('orderModal').classList.remove('show');});
+
+// WhatsApp
+function normalizeWaLink(link){
+  if(!link) return 'https://wa.me/962790781206';
+  return link.includes('wa.me') ? link.replace(/\/+$/,'') : 'https://wa.me/962790781206';
+}
+
+window.whatsappOrder=async function(id){
+  try{
+    const doc=await db.collection('orders').doc(id).get();
+    if(!doc.exists)return;
+    const d=doc.data();
+    let msg=`🛒 *طلب شراء جديد*\n`;
+    msg+=`📋 رقم الطلب: ${d.orderId||id}\n`;
+    msg+=`👤 العميل: ${d.customerName||''}\n`;
+    msg+=`📞 الهاتف: ${d.customerPhone||''}\n`;
+    msg+=`🚚 الشحن: ${d.shippingMethod==='delivery'?'توصيل':'استلام'}\n`;
+    if(d.customerAddress) msg+=`📍 العنوان: ${d.customerAddress}\n`;
+    if(d.items&&d.items.length){
+      msg+=`\n📦 *المنتجات:*\n`;
+      d.items.forEach(i=>msg+=`  - ${i.name} × ${i.quantity} = ${(i.price*i.quantity).toFixed(2)} د.أ\n`);
+    }
+    msg+=`\n💰 *المجموع: ${d.total||0} د.أ*`;
+    const wa = normalizeWaLink(storeSettings.whatsappLink);
+    window.open(`${wa}?text=${encodeURIComponent(msg)}`,'_blank');
+  }catch(e){showToast('❌ خطأ','error');}
+};
+
+window.whatsappService=async function(id){
+  try{
+    const doc=await db.collection('service_requests').doc(id).get();
+    if(!doc.exists)return;
+    const d=doc.data();
+    let msg=`🔧 *طلب صيانة*\n`;
+    msg+=`👤 العميل: ${d.customerName||''}\n`;
+    msg+=`📞 الهاتف: ${d.customerPhone||''}\n`;
+    msg+=`📺 الجهاز: ${d.deviceType||''}\n`;
+    msg+=`📏 الحجم: ${d.deviceSize||''}\n`;
+    if(d.problemDescription||d.problem) msg+=`🔍 المشكلة: ${d.problemDescription||d.problem}\n`;
+    if(d.location) msg+=`📍 الموقع: ${d.location}\n`;
+    msg+=`📊 الحالة: ${d.status||'جديد'}`;
+    const wa = normalizeWaLink(storeSettings.whatsappLink);
+    window.open(`${wa}?text=${encodeURIComponent(msg)}`,'_blank');
+  }catch(e){showToast('❌ خطأ','error');}
+};
+
+// Delete
+window.deleteDoc=async function(col,id){
+  if(!confirm('هل تريد حذف هذا الطلب؟'))return;
+  try{await db.collection(col).doc(id).delete();showToast('✅ تم الحذف','success');
+    if(col==='orders')loadOrders();else loadServiceRequests();
+  }catch(e){showToast('❌ خطأ في الحذف','error');}
+};
+
+// View service request
+window.viewService=async function(id){
+  try{
+    const doc=await db.collection('service_requests').doc(id).get();
+    if(!doc.exists)return;
+    const d=doc.data();
+    const date=d.createdAt&&d.createdAt.toDate?d.createdAt.toDate().toLocaleString('ar-JO'):(d.createdAt?new Date(d.createdAt).toLocaleString('ar-JO'):'-');
+    const currentWarranty = d.warranty || '';
+    const currentCost = d.repairCost || '';
+    const warrantyOptions = [
+      {value:'', label:'-- اختر مدة الكفالة --'},
+      {value:'no_warranty', label:'لا يوجد كفالة'},
+      {value:'1_month', label:'شهر واحد'},
+      {value:'3_months', label:'3 شهور'},
+      {value:'6_months', label:'6 شهور'},
+      {value:'1_year', label:'سنة كاملة'}
+    ];
+
+    $('serviceModalBody').innerHTML=`
+      <div class="detail-row"><span class="detail-label">رقم الطلب</span><span class="detail-value" style="direction:ltr;font-weight:800;">${escapeHtml(d.requestId||id)}</span></div>
+      <div class="detail-row"><span class="detail-label">التاريخ</span><span class="detail-value">${date}</span></div>
+      <div class="detail-row"><span class="detail-label">العميل</span><span class="detail-value">${escapeHtml(d.customerName||'')}</span></div>
+      <div class="detail-row"><span class="detail-label">الهاتف</span><span class="detail-value">${escapeHtml(d.customerPhone||'')}</span></div>
+      <div class="detail-row"><span class="detail-label">الجهاز</span><span class="detail-value">${escapeHtml(d.deviceType||'')}</span></div>
+      <div class="detail-row"><span class="detail-label">الحجم</span><span class="detail-value">${escapeHtml(d.deviceSize||'')}</span></div>
+      <div class="detail-row"><span class="detail-label">الحالة</span><span class="detail-value"><span class="badge new">${escapeHtml(d.status||'جديد')}</span></span></div>
+      ${d.addressText?`<div class="detail-row"><span class="detail-label">العنوان</span><span class="detail-value">${escapeHtml(d.addressText)}</span></div>`:''}
+      ${d.locationLink?`<div class="detail-row"><span class="detail-label">الموقع</span><span class="detail-value"><a href="${escapeHtml(d.locationLink)}" target="_blank" style="color:var(--primary);">فتح الخريطة</a></span></div>`:''}
+      <div class="detail-row">
+        <span class="detail-label">تكلفة الصيانة</span>
+        <span class="detail-value">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input id="repairCostInput" type="number" min="0" step="0.5" value="${currentCost}" placeholder="0.00" style="width:120px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-family:'Cairo',sans-serif;font-size:.95rem;font-weight:700;text-align:center;" />
+            <span style="font-weight:600;font-size:.9rem;">د.أ</span>
+          </div>
+        </span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">مدة الكفالة</span>
+        <span class="detail-value">
+          <select id="warrantySelect" style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Cairo',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;min-width:160px;">
+            ${warrantyOptions.map(w=>`<option value="${w.value}" ${w.value===currentWarranty?'selected':''}>${w.label}</option>`).join('')}
+          </select>
+        </span>
+      </div>
+      <h4 style="margin:16px 0 8px;font-size:.95rem;">وصف العطل:</h4>
+      <div style="background:var(--bg);padding:12px;border-radius:10px;font-size:.9rem;line-height:1.7;border:1px solid var(--border);">${escapeHtml(d.faultDesc||d.problemDescription||d.problem||'لا يوجد وصف')}</div>
+      ${d.imageLink?`<div style="margin-top:12px;"><h4 style="font-size:.9rem;margin-bottom:6px;">صورة العطل:</h4><a href="${escapeHtml(d.imageLink)}" target="_blank"><img src="${escapeHtml(d.imageLink)}" style="max-width:100%;max-height:200px;border-radius:10px;border:1px solid var(--border);" onerror="this.style.display='none'" /></a></div>`:''}
+      <div style="display:flex;gap:8px;margin-top:16px;" class="no-print">
+        <button class="print-btn" style="flex:1;" onclick="saveServiceDataAndPrint('${id}')"><i class="fas fa-print"></i> طباعة طلب الصيانة</button>
+      </div>
+    `;
+
+    // حفظ تلقائي عند التغيير
+    const sel = $('warrantySelect');
+    const costInput = $('repairCostInput');
+    
+    if(sel){
+      sel.addEventListener('change', async ()=>{
+        try{
+          await db.collection('service_requests').doc(id).set({warranty: sel.value, updatedAt: getServerTimestamp()},{merge:true});
+          showToast('✅ تم حفظ مدة الكفالة','success');
+        }catch(e){ showToast('❌ خطأ في الحفظ','error'); }
+      });
+    }
+    if(costInput){
+      let costTimer;
+      costInput.addEventListener('input', ()=>{
+        clearTimeout(costTimer);
+        costTimer = setTimeout(async ()=>{
+          try{
+            const cost = parseFloat(costInput.value) || 0;
+            await db.collection('service_requests').doc(id).set({repairCost: cost, updatedAt: getServerTimestamp()},{merge:true});
+            showToast('✅ تم حفظ تكلفة الصيانة','success');
+          }catch(e){ showToast('❌ خطأ في الحفظ','error'); }
+        }, 800);
+      });
+    }
+
+    $('serviceModal').classList.add('show');
+  }catch(e){showToast('❌ خطأ في عرض التفاصيل','error');}
+};
+
+// حفظ البيانات ثم الطباعة
+window.saveServiceDataAndPrint = async function(id){
+  const sel = $('warrantySelect');
+  const costInput = $('repairCostInput');
+  const updates = { updatedAt: getServerTimestamp() };
+  if(sel && sel.value) updates.warranty = sel.value;
+  if(costInput) updates.repairCost = parseFloat(costInput.value) || 0;
+  try{
+    await db.collection('service_requests').doc(id).set(updates, {merge:true});
+  }catch(e){}
+  printOrder(id, 'service');
+};
+
+// Close service modal
+$('closeServiceModal').addEventListener('click',()=>$('serviceModal').classList.remove('show'));
+$('serviceModal').addEventListener('click',e=>{if(e.target===$('serviceModal'))$('serviceModal').classList.remove('show');});
+
+// Print order / service request
+window.printOrder=async function(id, type){
+  try{
+    const col = type === 'service' ? 'service_requests' : 'orders';
+    const doc = await db.collection(col).doc(id).get();
+    if(!doc.exists) return;
+    const d = doc.data();
+    const date = d.createdAt&&d.createdAt.toDate ? d.createdAt.toDate().toLocaleString('ar-JO') : (d.createdAt ? new Date(d.createdAt).toLocaleString('ar-JO') : '-');
+    const printArea = $('printArea');
+
+    if(type === 'order'){
+      const subtotal = d.subtotal || (d.items ? d.items.reduce((s,i)=>s+(i.price||0)*i.quantity, 0) : 0);
+      const shippingFee = d.shippingFee || 0;
+      const total = d.total || (subtotal + shippingFee);
+      let itemsHtml = '';
+      if(d.items && d.items.length){
+        itemsHtml = d.items.map(i=>`<div class="print-item"><span>${escapeHtml(i.name)} × ${i.quantity}</span><span>${((i.price||0)*i.quantity).toFixed(2)} د.أ</span></div>`).join('');
+      }
+      printArea.innerHTML = `
+        <h2>🧾 فاتورة طلب شراء - وسام للإلكترونيات</h2>
+        <div class="print-row"><span class="label">رقم الطلب:</span><span>${escapeHtml(d.orderId||id)}</span></div>
+        <div class="print-row"><span class="label">التاريخ:</span><span>${date}</span></div>
+        <div class="print-row"><span class="label">العميل:</span><span>${escapeHtml(d.customerName||'')}</span></div>
+        <div class="print-row"><span class="label">الهاتف:</span><span>${escapeHtml(d.customerPhone||'')}</span></div>
+        <div class="print-row"><span class="label">الشحن:</span><span>${d.shippingMethod==='delivery'?'توصيل':'استلام'}</span></div>
+        ${d.customerAddress?`<div class="print-row"><span class="label">العنوان:</span><span>${escapeHtml(d.customerAddress)}</span></div>`:''}
+        <div class="print-row"><span class="label">الحالة:</span><span>${escapeHtml(d.status||'جديد')}</span></div>
+        <h3 style="margin:14px 0 6px;font-size:1rem;">المنتجات:</h3>
+        <div class="print-items">${itemsHtml}</div>
+        <div class="print-row"><span class="label">سعر المنتجات:</span><span>${subtotal.toFixed(2)} د.أ</span></div>
+        <div class="print-row"><span class="label">رسوم التوصيل:</span><span>${shippingFee.toFixed(2)} د.أ</span></div>
+        <div class="print-total"><span>المجموع الكلي:</span><span>${total.toFixed(2)} د.أ</span></div>
+        <div class="print-footer">وسام للإلكترونيات - عمان، الأردن | هاتف: 0790781206</div>
+      `;
+    } else {
+      const warrantyMap = {'no_warranty':'لا يوجد كفالة','1_month':'شهر واحد','3_months':'3 شهور','6_months':'6 شهور','1_year':'سنة كاملة'};
+      const warrantyText = warrantyMap[d.warranty] || d.warranty || 'لم يتم التحديد';
+      const repairCost = d.repairCost || 0;
+      const warrantyEndDate = (()=>{
+        if(!d.warranty || d.warranty === 'no_warranty') return '';
+        const start = d.createdAt&&d.createdAt.toDate ? d.createdAt.toDate() : (d.createdAt ? new Date(d.createdAt) : new Date());
+        const end = new Date(start);
+        if(d.warranty==='1_month') end.setMonth(end.getMonth()+1);
+        else if(d.warranty==='3_months') end.setMonth(end.getMonth()+3);
+        else if(d.warranty==='6_months') end.setMonth(end.getMonth()+6);
+        else if(d.warranty==='1_year') end.setFullYear(end.getFullYear()+1);
+        return end.toLocaleDateString('ar-JO');
+      })();
+
+      printArea.innerHTML = `
+        <h2>🔧 طلب صيانة - وسام للإلكترونيات</h2>
+        <div class="print-row"><span class="label">رقم الطلب:</span><span>${escapeHtml(d.requestId||id)}</span></div>
+        <div class="print-row"><span class="label">التاريخ:</span><span>${date}</span></div>
+        <div class="print-row"><span class="label">العميل:</span><span>${escapeHtml(d.customerName||'')}</span></div>
+        <div class="print-row"><span class="label">الهاتف:</span><span>${escapeHtml(d.customerPhone||'')}</span></div>
+        <div class="print-row"><span class="label">الجهاز:</span><span>${escapeHtml(d.deviceType||'')}</span></div>
+        <div class="print-row"><span class="label">الحجم:</span><span>${escapeHtml(d.deviceSize||'')}</span></div>
+        <div class="print-row"><span class="label">الحالة:</span><span>${escapeHtml(d.status||'جديد')}</span></div>
+        ${d.addressText?`<div class="print-row"><span class="label">العنوان:</span><span>${escapeHtml(d.addressText)}</span></div>`:''}
+        <h3 style="margin:14px 0 6px;font-size:1rem;">وصف العطل:</h3>
+        <div style="padding:10px;border:1px solid #ddd;border-radius:8px;font-size:.9rem;line-height:1.7;">${escapeHtml(d.faultDesc||d.problemDescription||d.problem||'لا يوجد وصف')}</div>
+        <div style="margin:16px 0;padding:14px;border:2px solid #333;border-radius:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:1px solid #ddd;margin-bottom:8px;">
+            <span style="font-weight:800;font-size:1rem;">💰 تكلفة الصيانة:</span>
+            <span style="font-weight:900;font-size:1.2rem;color:#1a237e;">${repairCost > 0 ? repairCost.toFixed(2) + ' د.أ' : 'مجاني'}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-weight:800;font-size:1rem;">🛡️ مدة الكفالة:</span>
+            <span style="font-weight:800;font-size:1.1rem;">${warrantyText}</span>
+          </div>
+          ${warrantyEndDate ? `<div style="display:flex;justify-content:space-between;margin-top:6px;font-size:.9rem;color:#555;">
+            <span>تنتهي بتاريخ:</span>
+            <span style="font-weight:700;">${warrantyEndDate}</span>
+          </div>` : ''}
+        </div>
+        <div style="margin-top:24px;padding-top:14px;border-top:1px solid #ddd;display:flex;justify-content:space-between;font-size:.8rem;color:#999;">
+          <span>توقيع العميل: ________________</span>
+          <span>توقيع المتجر: ________________</span>
+        </div>
+        <div class="print-footer">وسام للإلكترونيات - عمان، الأردن | هاتف: 0790781206</div>
+      `;
+    }
+
+    printArea.style.display = 'block';
+    window.print();
+    setTimeout(()=>{ printArea.style.display = 'none'; }, 1000);
+  }catch(e){ showToast('❌ خطأ في الطباعة','error'); console.error(e); }
+};
+
+// =============================================
+// نظام التنبيهات الصوتية + مراقبة الطلبات الجديدة
+// =============================================
+
+// --- توليد صوت تنبيه باستخدام Web Audio API ---
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function ensureAudioCtx() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playAlertSound() {
+  try {
+    const ctx = ensureAudioCtx();
+    const now = ctx.currentTime;
+
+    // نغمة 1
+    const o1 = ctx.createOscillator();
+    const g1 = ctx.createGain();
+    o1.type = 'sine';
+    o1.frequency.setValueAtTime(880, now);
+    g1.gain.setValueAtTime(0.3, now);
+    g1.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+    o1.connect(g1); g1.connect(ctx.destination);
+    o1.start(now); o1.stop(now + 0.3);
+
+    // نغمة 2
+    const o2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    o2.type = 'sine';
+    o2.frequency.setValueAtTime(1100, now + 0.15);
+    g2.gain.setValueAtTime(0.3, now + 0.15);
+    g2.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+    o2.connect(g2); g2.connect(ctx.destination);
+    o2.start(now + 0.15); o2.stop(now + 0.5);
+
+    // نغمة 3
+    const o3 = ctx.createOscillator();
+    const g3 = ctx.createGain();
+    o3.type = 'sine';
+    o3.frequency.setValueAtTime(1320, now + 0.35);
+    g3.gain.setValueAtTime(0.35, now + 0.35);
+    g3.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+    o3.connect(g3); g3.connect(ctx.destination);
+    o3.start(now + 0.35); o3.stop(now + 0.7);
+  } catch (e) {
+    console.warn('Audio alert failed:', e);
+  }
+}
+
+// --- تنبيه المتصفح (Browser Notification) ---
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function showBrowserNotification(title, body) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    const n = new Notification(title, {
+      body: body,
+      icon: 'wesam-logo.png',
+      requireInteraction: true,
+      tag: 'wesam-order-alert'
+    });
+    n.onclick = () => { window.focus(); n.close(); };
+  }
+}
+
+// --- إظهار/إخفاء بانر التنبيه ---
+let alertDismissed = false;
+
+function showAlertBanner(text) {
+  alertDismissed = false;
+  const banner = $('alertBanner');
+  const alertText = $('alertText');
+  if (banner && alertText) {
+    alertText.textContent = text;
+    banner.style.display = 'block';
+  }
+  // تحريك العنوان
+  document.title = '🔴 ' + text + ' - وسام ستور';
+}
+
+function dismissAlert() {
+  alertDismissed = true;
+  const banner = $('alertBanner');
+  if (banner) banner.style.display = 'none';
+  document.title = 'الطلبات - وسام ستور';
+}
+window.dismissAlert = dismissAlert;
+
+// --- إرسال تنبيه واتساب للأدمن ---
+function sendWhatsAppAlert(type, data) {
+  const adminPhone = (storeSettings.whatsappLink || 'https://wa.me/962790781206').replace(/.*wa\.me\//, '').replace(/\D/g, '');
+  let msg = '';
+
+  if (type === 'order') {
+    msg = `🚨 *طلب شراء جديد!*\n\n`;
+    msg += `📋 رقم الطلب: ${data.orderId || ''}\n`;
+    msg += `👤 العميل: ${data.customerName || ''}\n`;
+    msg += `📞 الهاتف: ${data.customerPhone || ''}\n`;
+    msg += `💰 المجموع: ${data.total || 0} د.أ\n`;
+    msg += `🚚 الشحن: ${data.shippingMethod === 'delivery' ? 'توصيل' : 'استلام'}\n`;
+    if (data.customerAddress) msg += `📍 العنوان: ${data.customerAddress}\n`;
+    msg += `\n⏰ ${new Date().toLocaleString('ar-JO')}`;
+  } else {
+    msg = `🚨 *طلب صيانة جديد!*\n\n`;
+    msg += `👤 العميل: ${data.customerName || ''}\n`;
+    msg += `📞 الهاتف: ${data.customerPhone || ''}\n`;
+    msg += `📺 الجهاز: ${data.deviceType || ''}\n`;
+    msg += `📏 الحجم: ${data.deviceSize || ''}\n`;
+    if (data.faultDesc || data.problemDescription || data.problem) {
+      msg += `🔍 المشكلة: ${data.faultDesc || data.problemDescription || data.problem}\n`;
+    }
+    msg += `\n⏰ ${new Date().toLocaleString('ar-JO')}`;
+  }
+
+  // فتح رابط واتساب مباشرة
+  const waUrl = `https://wa.me/${adminPhone}?text=${encodeURIComponent(msg)}`;
+  window.open(waUrl, '_blank');
+}
+
+// --- إرسال تنبيه بريد إلكتروني ---
+function sendEmailAlert(type, data) {
+  let subject = '';
+  let body = '';
+
+  if (type === 'order') {
+    subject = `🛒 طلب شراء جديد #${data.orderId || ''}`;
+    body = `طلب شراء جديد\n\n`;
+    body += `رقم الطلب: ${data.orderId || ''}\n`;
+    body += `العميل: ${data.customerName || ''}\n`;
+    body += `الهاتف: ${data.customerPhone || ''}\n`;
+    body += `المجموع: ${data.total || 0} د.أ\n`;
+    body += `الشحن: ${data.shippingMethod === 'delivery' ? 'توصيل' : 'استلام'}\n`;
+    if (data.customerAddress) body += `العنوان: ${data.customerAddress}\n`;
+  } else {
+    subject = `🔧 طلب صيانة جديد - ${data.deviceType || ''}`;
+    body = `طلب صيانة جديد\n\n`;
+    body += `العميل: ${data.customerName || ''}\n`;
+    body += `الهاتف: ${data.customerPhone || ''}\n`;
+    body += `الجهاز: ${data.deviceType || ''}\n`;
+    body += `الحجم: ${data.deviceSize || ''}\n`;
+    body += `المشكلة: ${data.faultDesc || data.problemDescription || data.problem || ''}\n`;
+  }
+
+  body += `\nالتاريخ: ${new Date().toLocaleString('ar-JO')}`;
+  window.open(`mailto:${ADMIN_EMAILS[0]}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+}
+
+// --- مراقبة الطلبات الجديدة (Real-time) ---
+let knownOrderIds = new Set();
+let knownServiceIds = new Set();
+let firstLoadDone = { orders: false, service: false };
+let pendingAlerts = []; // طلبات لم يتم إغلاقها بعد
+let repeatInterval = null;
+
+let listenersStarted = false;
+
+function startRealtimeListeners() {
+  if (listenersStarted) return;
+  listenersStarted = true;
+  console.log('🔔 Starting realtime listeners...');
+
+  // مراقبة طلبات الشراء
+  try {
+    db.collection('orders').limit(100)
+      .onSnapshot(snapshot => {
+        console.log('📦 Orders snapshot:', snapshot.size, 'docs, firstLoad:', !firstLoadDone.orders);
+        if (!firstLoadDone.orders) {
+          snapshot.docs.forEach(doc => knownOrderIds.add(doc.id));
+          snapshot.docs.forEach(doc => {
+            const d = doc.data();
+            if (d.status === 'جديد') {
+              pendingAlerts.push({ id: doc.id, type: 'order', data: d });
+            }
+          });
+          firstLoadDone.orders = true;
+          updatePendingCount();
+          return;
+        }
+
+        snapshot.docChanges().forEach(change => {
+          if (change.type === 'added' && !knownOrderIds.has(change.doc.id)) {
+            knownOrderIds.add(change.doc.id);
+            const d = change.doc.data();
+            triggerNewOrderAlert('order', d, change.doc.id);
+          }
+          if (change.type === 'modified') {
+            const d = change.doc.data();
+            if (d.status !== 'جديد') {
+              pendingAlerts = pendingAlerts.filter(a => a.id !== change.doc.id);
+              updatePendingCount();
+            }
+          }
+          if (change.type === 'removed') {
+            pendingAlerts = pendingAlerts.filter(a => a.id !== change.doc.id);
+            updatePendingCount();
+          }
+        });
+        loadOrders();
+      }, err => {
+        console.error('❌ Orders listener error:', err);
+        listenersStarted = false;
+        setTimeout(() => startRealtimeListeners(), 10000);
+      });
+  } catch(e) { console.error('Orders listener setup failed:', e); }
+
+  // مراقبة طلبات الصيانة
+  try {
+    db.collection('service_requests').limit(100)
+      .onSnapshot(snapshot => {
+        console.log('🔧 Service snapshot:', snapshot.size, 'docs, firstLoad:', !firstLoadDone.service);
+        if (!firstLoadDone.service) {
+          snapshot.docs.forEach(doc => knownServiceIds.add(doc.id));
+          snapshot.docs.forEach(doc => {
+            const d = doc.data();
+            if (d.status === 'جديد') {
+              pendingAlerts.push({ id: doc.id, type: 'service', data: d });
+            }
+          });
+          firstLoadDone.service = true;
+          updatePendingCount();
+          return;
+        }
+
+        snapshot.docChanges().forEach(change => {
+          if (change.type === 'added' && !knownServiceIds.has(change.doc.id)) {
+            knownServiceIds.add(change.doc.id);
+            const d = change.doc.data();
+            triggerNewOrderAlert('service', d, change.doc.id);
+          }
+          if (change.type === 'modified') {
+            const d = change.doc.data();
+            if (d.status !== 'جديد') {
+              pendingAlerts = pendingAlerts.filter(a => a.id !== change.doc.id);
+              updatePendingCount();
+            }
+          }
+          if (change.type === 'removed') {
+            pendingAlerts = pendingAlerts.filter(a => a.id !== change.doc.id);
+            updatePendingCount();
+          }
+        });
+        loadServiceRequests();
+      }, err => {
+        console.error('❌ Service listener error:', err);
+        listenersStarted = false;
+        setTimeout(() => startRealtimeListeners(), 10000);
+      });
+  } catch(e) { console.error('Service listener setup failed:', e); }
+
+  // بدء التنبيه المتكرر كل 30 دقيقة
+  startRepeatAlerts();
+}
+
+function triggerNewOrderAlert(type, data, docId) {
+  const label = type === 'order' ? 'طلب شراء' : 'طلب صيانة';
+  const name = data.customerName || 'عميل';
+  console.log(`🚨🚨🚨 NEW ALERT: ${label} from ${name}, docId: ${docId}`);
+
+  // 1. صوت
+  playAlertSound();
+
+  // 2. بانر
+  showAlertBanner(`🚨 ${label} جديد من ${name}!`);
+
+  // 3. إشعار المتصفح
+  showBrowserNotification(`${label} جديد!`, `من: ${name}\nالهاتف: ${data.customerPhone || ''}`);
+
+  // 4. Toast
+  showToast(`🚨 ${label} جديد من ${name}!`, 'success');
+
+  // 5. إضافة للتنبيهات المعلقة
+  pendingAlerts.push({ id: docId, type, data, alertedAt: Date.now() });
+  updatePendingCount();
+}
+
+function updatePendingCount() {
+  const count = pendingAlerts.length;
+  if (count > 0 && !alertDismissed) {
+    showAlertBanner(`🔴 يوجد ${count} طلب/طلبات جديدة بحاجة لمراجعة!`);
+  } else if (count === 0) {
+    dismissAlert();
+  }
+}
+
+// --- تنبيه متكرر كل 30 دقيقة للطلبات المفتوحة ---
+function startRepeatAlerts() {
+  if (repeatInterval) clearInterval(repeatInterval);
+  repeatInterval = setInterval(() => {
+    if (pendingAlerts.length > 0) {
+      playAlertSound();
+      showAlertBanner(`🔴 تذكير: يوجد ${pendingAlerts.length} طلب/طلبات جديدة لم تتم معالجتها!`);
+      showBrowserNotification(
+        '⏰ تذكير - طلبات معلّقة!',
+        `يوجد ${pendingAlerts.length} طلب/طلبات جديدة بحاجة لمراجعة`
+      );
+      document.title = `🔴 (${pendingAlerts.length}) تذكير - طلبات جديدة!`;
+    }
+  }, 30 * 60 * 1000); // 30 دقيقة
+}
+
+// --- تفعيل الصوت عند أول تفاعل ---
+function activateAudioOnInteraction() {
+  const handler = () => {
+    ensureAudioCtx();
+    requestNotificationPermission();
+    document.removeEventListener('click', handler);
+    document.removeEventListener('keydown', handler);
+  };
+  document.addEventListener('click', handler);
+  document.addEventListener('keydown', handler);
+}
+activateAudioOnInteraction();
+
+// التنبيهات تبدأ من loadAllWithListeners المعرّفة أعلاه
+
+</script>
+
+</body>
+</html>

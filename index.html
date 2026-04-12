@@ -10,175 +10,71 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+<script src="shared-firebase.js"></script>
+<script src="shared-utils.js"></script>
 <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBDlQYnTunZMDwIFsysgPbmovHkPj0f3M8",
-            authDomain: "wesamstorenew.firebaseapp.com",
-            projectId: "wesamstorenew",
-            storageBucket: "wesamstorenew.appspot.com",
-            messagingSenderId: "956353010212",
-            appId: "1:956353010212:web:2e5ee949fa8f4ea713d6b1",
-            measurementId: "G-EDLFXHCPBB"
-        };
+        window.WesamFirebase.init();
+        let firebaseInitialized = window.WesamFirebase.isReady();
+        let firebaseError = window.WesamFirebase.getError();
+        let db = window.WesamFirebase.db;
+        let auth = window.WesamFirebase.auth;
+        let storage = window.WesamFirebase.storage;
 
-        // تهيئة Firebase مع معالجة الأخطاء
-        let firebaseInitialized = false;
-        let firebaseError = null;
-        let db, auth, storage;
-
-        try {
-            // التحقق مما إذا تم التهيئة مسبقاً
-            if (!firebase.apps.length) {
-                const app = firebase.initializeApp(firebaseConfig);
-                console.log("✅ Firebase App initialized:", app.name);
-            } else {
-                console.log("✅ Firebase App already initialized");
-            }
-            
-            // تهيئة الخدمات
-            db = firebase.firestore();
-            auth = firebase.auth();
-            try { storage = firebase.storage(); } catch(e){ console.warn("Storage init failed", e); storage = null; }
-// إعداد إعدادات CORS للتخزين
-            if (storage) {
-                console.log("✅ Firebase Storage initialized");
-            }
-            
-            firebaseInitialized = true;
-            firebaseInitialized = true;
-            window.db = db;
-            window.auth = auth;
-            window.storage = storage;
-
-            console.log("✅ Firebase services initialized successfully");
-            
-            // اختبار الاتصال
-            testFirebaseConnection();
-            
-        } catch (error) {
-            console.error("❌ Firebase initialization error:", error);
-            firebaseInitialized = false;
-            window.firebaseInitialized = false;
-            firebaseError = error.message;
-            
-            setTimeout(() => {
-                showConnectionMessage('error', `خطأ في الاتصال: ${error.message}`);
-            }, 1000);
-        }
-        
-        // اختبار اتصال Firebase
         async function testFirebaseConnection() {
             console.log("=== Testing Firebase Connection ===");
-            
-            if (!firebaseInitialized) {
+            if (!firebaseInitialized || !db) {
                 console.error("❌ Firebase not initialized");
                 showConnectionMessage('error', 'Firebase لم يتم تهيئته');
                 return { success: false };
             }
-            
             try {
-                // اختبار Firestore
                 const productsRef = db.collection('products');
                 const snapshot = await productsRef.limit(1).get();
-                
                 console.log("✅ Firestore connection successful");
-                console.log(`📊 Total products: ${snapshot.size}`);
-                
-                // اختبار Authentication (بدون تسجيل دخول)
-                const authState = auth.currentUser;
-                console.log("✅ Auth service working");
-                
-                // اختبار Storage
-                try {
-                    const storageRef = storage.ref();
-                    console.log("✅ Storage service working");
-                } catch (storageError) {
-                    console.warn("⚠️ Storage may have CORS issues:", storageError);
-                }
-                
+                try { if (storage) storage.ref(); } catch (storageError) { console.warn("⚠️ Storage may have CORS issues:", storageError); }
                 showConnectionMessage('success', 'تم الاتصال بنجاح بقاعدة البيانات');
                 return { success: true, hasProducts: snapshot.size > 0 };
-                
             } catch (error) {
                 console.error("❌ Firebase connection test failed:", error);
-                
                 let errorMessage = "فشل الاتصال بقاعدة البيانات";
                 if (error.code) {
                     switch (error.code) {
-                        case 'failed-precondition':
-                            errorMessage = "يرجى تميز Firestore في لوحة تحكم Firebase";
-                            break;
-                        case 'permission-denied':
-                            errorMessage = "خطأ في صلاحيات الوصول";
-                            break;
-                        case 'unavailable':
-                            errorMessage = "الخدمة غير متاحة حالياً";
-                            break;
-                        default:
-                            errorMessage = `خطأ: ${error.code}`;
+                        case 'failed-precondition': errorMessage = "يرجى تميز Firestore في لوحة تحكم Firebase"; break;
+                        case 'permission-denied': errorMessage = "خطأ في صلاحيات الوصول"; break;
+                        case 'unavailable': errorMessage = "الخدمة غير متاحة حالياً"; break;
+                        default: errorMessage = `خطأ: ${error.code}`;
                     }
                 }
-                
                 showConnectionMessage('error', errorMessage);
                 return { success: false, error: error.message };
             }
         }
-        
-        // دالة عرض رسائل الاتصال
+
         function showConnectionMessage(type, message) {
             const statusDiv = document.getElementById('connectionStatus');
             if (!statusDiv) return;
-            
-            const icon = type === 'success' ? 'fa-check-circle' : 
-                        type === 'warning' ? 'fa-exclamation-triangle' : 
-                        'fa-times-circle';
-            
+            const icon = type === 'success' ? 'fa-check-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-times-circle';
             statusDiv.innerHTML = `<i class="fas ${icon}"></i> ${message}`;
             statusDiv.className = `connection-status ${type}`;
             statusDiv.style.display = 'flex';
-            
-            // إخفاء الرسالة بعد 5 ثوانٍ
             setTimeout(() => {
                 statusDiv.style.opacity = '0';
-                setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                    statusDiv.style.opacity = '1';
-                }, 1000);
+                setTimeout(() => { statusDiv.style.display = 'none'; statusDiv.style.opacity = '1'; }, 1000);
             }, 5000);
         }
-        
-        // تعيين المتغيرات للوصول العالمي
+
         window.firebase = firebase;
         window.db = db;
         window.auth = auth;
         window.storage = storage;
-        window.firebaseInitialized = true;
+        window.firebaseInitialized = firebaseInitialized;
         window.firebaseError = firebaseError;
 
-        // ===== مساعدات Firebase =====
-        function getDbSafe() {
-            if (window.db) return window.db;
-            try {
-                if (window.firebase && window.firebase.firestore) {
-                    window.db = window.firebase.firestore();
-                    return window.db;
-                }
-            } catch (e) {}
-            return null;
-        }
+        function getDbSafe() { return window.WesamFirebase.db || null; }
+        function getServerTimestamp() { return window.WesamFirebase.getServerTimestamp(); }
 
-        
-    
-
-        // ===== Timestamp helper (prevents FieldValue errors if Firebase partially fails) =====
-        function getServerTimestamp() {
-            try {
-                const st = firebase?.firestore?.FieldValue?.serverTimestamp;
-                return (typeof st === 'function') ? st() : new Date();
-            } catch (e) {
-                return new Date();
-            }
-        }
+        if (firebaseInitialized) { testFirebaseConnection(); }
+        else { setTimeout(() => showConnectionMessage('error', `خطأ في الاتصال: ${firebaseError || 'غير معروف'}`), 1000); }
 </script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&amp;display=swap" rel="stylesheet"/>
@@ -3962,6 +3858,7 @@ header.glass i {
 }
 </style>
 
+<script src="shared-admin-auth.js"></script>
 </head>
 <body>
 <!-- ===== Mobile Top Bar (Professional) ===== -->
@@ -7438,15 +7335,7 @@ async function saveServiceRequestToFirestore(docData) {
 
 
 // ===== أدوات مساعدة (لمنع أخطاء HTML) =====
-function escapeHtml(input) {
-    if (input === null || input === undefined) return '';
-    return String(input)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
+function escapeHtml(input) { return window.WesamUtils.escapeHtml(input); }
 
 async function refreshServiceRequests() {
     if (!elements.serviceRequestsTableBody) return;
@@ -7546,7 +7435,7 @@ async function refreshServiceRequests() {
                 statusSel.addEventListener('change', async () => {
                     const newStatus = statusSel.value;
                     try {
-                        await db.collection('service_requests').doc(id).set({ status: newStatus, updatedAt: new Date() }, { merge: true });
+                        await db.collection('service_requests').doc(id).set({ status: newStatus, updatedAt: getServerTimestamp() }, { merge: true });
                     } catch (e) {
                         alert('تعذر تحديث الحالة. تأكد من الاتصال.');
                         console.error(e);
@@ -8232,6 +8121,7 @@ function updateProductsTable() {
         // ✅ أدمن عبر Firebase Auth + تحكم بالواجهة ورسائل احترافية
         // ضع إيميلات الأدمن هنا (بدون كلمات مرور)
         const ADMIN_EMAILS = ['wesam@store.store']; // عدّلها إذا لزم
+        const adminAuth = window.WesamAdminAuth.build({ auth: window.auth, db: window.db, adminEmails: ADMIN_EMAILS, mapAuthError });
 
         let _authObserverAttached = false;
         let _authObserverFirstRun = true;
@@ -8271,37 +8161,6 @@ function updateProductsTable() {
                 default:
                     return (err && err.message) ? 'فشل تسجيل الدخول: ' + err.message : 'فشل تسجيل الدخول';
             }
-        }
-
-        function emailInAdminList(email) {
-            const e = (email || '').trim().toLowerCase();
-            return ADMIN_EMAILS.map(x => String(x).trim().toLowerCase()).includes(e);
-        }
-
-        async function checkAdminByAdminsDoc(user) {
-            // هذه الخطوة تساعدك إذا كنت تستخدم rules تعتمد على /admins/{uid}
-            // إذا كان الـ rules يمنع قراءة admins، سيتم تجاوز الفحص بدون كسر تسجيل الدخول
-            try {
-                if (!user || !window.db) return null;
-                const snap = await window.db.collection('admins').doc(user.uid).get();
-                return !!snap.exists;
-            } catch (e) {
-                console.warn('admins doc check failed:', e);
-                return null;
-            }
-        }
-
-        async function isFirebaseAdmin(user) {
-            if (!user) return false;
-
-            // 1) أولاً: تحقق من قائمة الإيميلات (سريع)
-            if (emailInAdminList(user.email)) return true;
-
-            // 2) ثانياً: تحقق من وجود مستند admins (إن أمكن)
-            const exists = await checkAdminByAdminsDoc(user);
-            if (exists === true) return true;
-
-            return false;
         }
 
         async function applyAdminMode(isAdmin, options = {}) {
@@ -8431,8 +8290,8 @@ function updateProductsTable() {
                     total,
                     channel,
                     status: 'جديد',
-                    createdAt: new Date(),
-                    updatedAt: new Date()
+                    createdAt: getServerTimestamp(),
+                    updatedAt: getServerTimestamp()
                 };
 
                 console.log('📦 Saving order to Firestore...', orderId, JSON.stringify(payload));
@@ -8574,7 +8433,7 @@ function updateProductsTable() {
                         return;
                     }
 
-                    const ok = await isFirebaseAdmin(user);
+                    const ok = await adminAuth.isAdmin(user);
                     if (ok) {
                         await applyAdminMode(true, { announce: !_authObserverFirstRun });
                         await applyUserState(user, { announce: false });
@@ -8612,10 +8471,10 @@ function updateProductsTable() {
                 const cred = await window.auth.signInWithEmailAndPassword(email, password);
                 const user = cred && cred.user;
 
-                const ok = await isFirebaseAdmin(user);
+                const ok = await adminAuth.isAdmin(user);
 
                 // ملاحظة مهمة: إذا كنت تعتمد في rules على /admins/{uid} لازم تنشئ المستند يدوياً مرة واحدة
-                const adminsDocExists = await checkAdminByAdminsDoc(user);
+                const adminsDocExists = await adminAuth.checkAdminByAdminsDoc(user);
                 if (adminsDocExists === false) {
                     // إذا أمكن قراءة المستند وثبت أنه غير موجود -> لا نسمح بالدخول كأدمن
                     await window.auth.signOut();
@@ -8693,7 +8552,7 @@ async function handleUserLogin() {
 
         // ✅ إذا كان المستخدم أدمن افتح لوحة التحكم مباشرة من هنا
         let adminOk = false;
-        try { adminOk = await isFirebaseAdmin(user); } catch (e) { console.warn(e); adminOk = false; }
+        try { adminOk = await adminAuth.isAdmin(user); } catch (e) { console.warn(e); adminOk = false; }
 
         if (adminOk) {
             showNotification('✅ تم تسجيل الدخول كمدير');
@@ -9293,8 +9152,8 @@ if (elements.serviceRequestForm) {
             locationLink,
             addressText,
             status: 'جديد',
-            createdAt: new Date(),
-            updatedAt: new Date()
+            createdAt: getServerTimestamp(),
+            updatedAt: getServerTimestamp()
         };
 
         const savedOk = await saveServiceRequestToFirestore(docData);
@@ -10849,12 +10708,7 @@ function initSlider(forceReset){
     $('jsonImportResult') && ($('jsonImportResult').style.display = 'none');
   }
 
-  function escapeHtml(str){
-    if(!str) return '';
-    const d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
-  }
+  function escapeHtml(str){ return window.WesamUtils.escapeHtml(str); }
 
   async function startJsonImport(){
     // Collect selected indices
@@ -10977,11 +10831,7 @@ function initSlider(forceReset){
     }
   }
 
-  function getServerTimestamp(){
-    try {
-      const st = firebase && firebase.firestore && firebase.firestore.FieldValue && firebase.firestore.FieldValue.serverTimestamp;
-      return (typeof st === 'function') ? st() : new Date();
-    } catch(e){
+  function getServerTimestamp(){ return window.WesamFirebase.getServerTimestamp(); } catch(e){
       return new Date();
     }
   }
@@ -11399,7 +11249,7 @@ setTimeout(renderBestSellers, 3000);
             const phone = document.getElementById('subPhone')?.value?.trim();
             if (!phone || !/^07\d{8}$/.test(phone)) { alert('أدخل رقم واتساب صحيح'); return; }
             if (window.db) {
-                window.db.collection('subscribers').add({ phone, createdAt: new Date() })
+                window.db.collection('subscribers').add({ phone, createdAt: getServerTimestamp() })
                     .then(() => {
                         alert('✅ تم الاشتراك بنجاح! ستصلك العروض على واتساب');
                         localStorage.setItem('subDone', '1');
@@ -11569,5 +11419,6 @@ function showOrderConfirmation(orderId, type) {
 window.showOrderConfirmation = showOrderConfirmation;
 
 </script>
+
 </body>
 </html>
