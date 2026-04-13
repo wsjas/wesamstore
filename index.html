@@ -976,6 +976,78 @@
             display: block;
         }
 
+
+/* ===== أزرار التنقل بين الصفحات الإدارية ===== */
+.admin-quick-links{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin:14px 0 18px;
+}
+
+.admin-quick-link{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:12px 16px;
+    border-radius:12px;
+    text-decoration:none;
+    font-weight:800;
+    font-size:0.95rem;
+    border:1px solid var(--border-color);
+    background:#fff;
+    color:var(--primary-color);
+    transition:all .25s ease;
+    box-shadow:0 4px 12px rgba(0,0,0,.06);
+}
+
+.admin-quick-link:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 20px rgba(0,0,0,.10);
+    border-color:var(--accent-color);
+}
+
+.admin-quick-link.dashboard{
+    background:linear-gradient(135deg,#1a237e,#283593);
+    color:#fff;
+    border:none;
+}
+
+.admin-quick-link.products{
+    background:linear-gradient(135deg,#0A58CA,#1976d2);
+    color:#fff;
+    border:none;
+}
+
+.admin-quick-link.orders{
+    background:linear-gradient(135deg,#2e7d32,#43a047);
+    color:#fff;
+    border:none;
+}
+
+.admin-quick-link.accounting{
+    background:linear-gradient(135deg,#ef6c00,#fb8c00);
+    color:#fff;
+    border:none;
+}
+
+[data-theme="dark"] .admin-quick-link{
+    box-shadow:0 4px 12px rgba(0,0,0,.22);
+}
+
+@media (max-width:768px){
+    .admin-quick-links{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+    }
+    .admin-quick-link{
+        width:100%;
+    }
+}
+
+
+        
         /* JSON Upload Section */
         .json-upload-wrapper {
             padding: 10px 0;
@@ -4265,6 +4337,27 @@ header.glass i {
 <button class="admin-tab" data-tab="jsonUpload" onclick="return switchAdminTab('jsonUpload')" type="button"><i class="fas fa-file-import"></i> رفع منتجات JSON</button>
 </div>
 <div class="admin-content">
+
+<div class="admin-quick-links">
+<a class="admin-quick-link dashboard" href="admin.html">
+<i class="fas fa-gauge-high"></i>
+<span>لوحة التحكم</span>
+</a>
+<a class="admin-quick-link products" href="add-product.html">
+<i class="fas fa-box-open"></i>
+<span>إضافة المنتجات</span>
+</a>
+<a class="admin-quick-link orders" href="orders.html">
+<i class="fas fa-cart-shopping"></i>
+<span>الطلبات</span>
+</a>
+<a class="admin-quick-link accounting" href="accounting.html">
+<i class="fas fa-calculator"></i>
+<span>المحاسبة</span>
+</a>
+</div>
+
+
 <!-- Add Product Section -->
 <div class="admin-section active" id="addProductSection">
 <h3><i class="fas fa-plus-circle"></i> إضافة منتج جديد</h3>
@@ -11104,35 +11197,55 @@ setTimeout(renderBestSellers, 3000);
     if (!btn || !input) return;
 
     btn.addEventListener('click', async () => {
-        const orderId = input.value.trim();
-        if (!orderId) { alert('أدخل رقم الطلب'); return; }
+        const trackingId = input.value.trim();
+        if (!trackingId) { alert('أدخل رقم الطلب'); return; }
+        if (!window.db) { alert('قاعدة البيانات غير متصلة حالياً'); return; }
 
-        btn.disabled = true; btn.textContent = 'جاري البحث...';
+        btn.disabled = true;
+        btn.textContent = 'جاري البحث...';
+
         try {
             let doc = null;
-            let collection = 'orders';
+            let collection = null;
 
-            // Try orders first
-            const orderSnap = await window.db.collection('orders').where('orderId', '==', orderId).limit(1).get();
-            if (!orderSnap.empty) { doc = orderSnap.docs[0].data(); collection = 'orders'; }
-
-            // Try service_requests
-            if (!doc) {
-                const serviceSnap = await window.db.collection('service_requests').where('requestId', '==', orderId).limit(1).get();
-                if (!serviceSnap.empty) { doc = serviceSnap.docs[0].data(); collection = 'service_requests'; }
+            if (trackingId.startsWith('OR-')) {
+                const snap = await window.db.collection('orders').doc(trackingId).get();
+                if (snap.exists) {
+                    doc = snap.data();
+                    collection = 'orders';
+                }
             }
 
-            // Try by doc ID
+            if (!doc && trackingId.startsWith('SR-')) {
+                const snap = await window.db.collection('service_requests').doc(trackingId).get();
+                if (snap.exists) {
+                    doc = snap.data();
+                    collection = 'service_requests';
+                }
+            }
+
             if (!doc) {
-                const directSnap = await window.db.collection('orders').doc(orderId).get();
-                if (directSnap.exists) { doc = directSnap.data(); collection = 'orders'; }
+                const orderSnap = await window.db.collection('orders').doc(trackingId).get();
+                if (orderSnap.exists) {
+                    doc = orderSnap.data();
+                    collection = 'orders';
+                }
+            }
+
+            if (!doc) {
+                const serviceSnap = await window.db.collection('service_requests').doc(trackingId).get();
+                if (serviceSnap.exists) {
+                    doc = serviceSnap.data();
+                    collection = 'service_requests';
+                }
             }
 
             if (!doc) {
                 document.getElementById('trackResult').style.display = 'block';
                 document.getElementById('trackTimeline').innerHTML = '';
                 document.getElementById('trackDetails').innerHTML = '<p style="color:var(--danger-color);text-align:center;">لم يتم العثور على طلب بهذا الرقم</p>';
-                btn.disabled = false; btn.textContent = 'تتبع';
+                btn.disabled = false;
+                btn.textContent = 'تتبع';
                 return;
             }
 
@@ -11160,12 +11273,14 @@ setTimeout(renderBestSellers, 3000);
                 <p><strong>الحالة الحالية:</strong> <span style="color:var(--success-color);font-weight:700;">${status}</span></p>
             `;
             document.getElementById('trackResult').style.display = 'block';
-        } catch(e) {
+        } catch (e) {
             console.error('Track error:', e);
             document.getElementById('trackDetails').innerHTML = '<p style="color:var(--danger-color);">حدث خطأ أثناء البحث</p>';
             document.getElementById('trackResult').style.display = 'block';
         }
-        btn.disabled = false; btn.textContent = 'تتبع';
+
+        btn.disabled = false;
+        btn.textContent = 'تتبع';
     });
 
     input.addEventListener('keydown', e => { if (e.key === 'Enter') btn.click(); });
