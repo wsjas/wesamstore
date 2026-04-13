@@ -3212,7 +3212,7 @@ header{
   color:var(--brand-orange);
 }
 
-/* Featured image categories (New / Offers) */
+/* Featured image categories (New / Offers / Service + Electronics Store) */
 .featured-categories-row{
   display:grid;
   grid-template-columns: repeat(3, 1fr);
@@ -3276,6 +3276,34 @@ header{
   font-size:12px;
 }
 .featured-cat-badge i{ color:var(--brand-orange); }
+
+.featured-categories-row-single{
+  grid-template-columns: 1fr;
+  margin-top: 0;
+}
+
+.featured-cat-card-wide{
+  min-height: 140px;
+}
+
+.featured-cat-card-electronics{
+  background: linear-gradient(135deg, rgba(8,36,105,.96), rgba(10,88,202,.92) 45%, rgba(255,140,0,.92));
+}
+
+.featured-cat-card-electronics .featured-cat-overlay{
+  align-items: flex-start;
+}
+
+.featured-cat-card-electronics .featured-cat-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.featured-cat-card-electronics .featured-cat-title i{
+  color:#ffd166;
+  font-size: 22px;
+}
 
 /* Main products area */
 .shop-main{
@@ -5162,6 +5190,16 @@ header.glass i {
 
     </div>
 
+    <div class="featured-categories-row featured-categories-row-single">
+      <button class="featured-cat-card featured-cat-card-wide featured-cat-card-electronics" id="featuredCatElectronics" type="button" data-action="electronics-store" aria-label="متجر القطع والالكترونيات">
+        <div class="featured-cat-overlay">
+          <div class="featured-cat-title" id="featuredElectronicsTitleText"><i class="fas fa-microchip"></i> متجر القطع والالكترونيات</div>
+          <div class="featured-cat-sub" id="featuredElectronicsSubText">تسوق القطع الإلكترونية والإكسسوارات والمنتجات المتخصصة</div>
+          <div class="featured-cat-badge"><i class="fas fa-store"></i> ادخل الآن</div>
+        </div>
+      </button>
+    </div>
+
     <div class="shop-grid">
       <aside class="shop-sidebar">
         <div class="sidebar-title"><span><i class="fas fa-list"></i> القائمة الجانبية</span></div>
@@ -6156,6 +6194,7 @@ header.glass i {
             const newCard = document.getElementById('featuredCatNew');
             const offersCard = document.getElementById('featuredCatOffers');
             const serviceCard = document.getElementById('featuredCatService');
+            const electronicsCard = document.getElementById('featuredCatElectronics');
 
             const setCard = (card, cfg) => {
                 if (!card) return;
@@ -6163,8 +6202,10 @@ header.glass i {
                 // النص
                 const titleEl = card.querySelector('.featured-cat-title');
                 const subEl = card.querySelector('.featured-cat-sub');
-                if (titleEl) titleEl.textContent = cfg.title || '';
+                const badgeEl = card.querySelector('.featured-cat-badge');
+                if (titleEl) titleEl.innerHTML = cfg.titleHtml || cfg.title || '';
                 if (subEl) subEl.textContent = cfg.sub || '';
+                if (badgeEl && cfg.badgeHtml) badgeEl.innerHTML = cfg.badgeHtml;
 
                 // صورة خلفية
                 const url = (cfg.image || '').trim();
@@ -6174,19 +6215,31 @@ header.glass i {
                     card.style.backgroundImage = '';
                 }
 
+                // خزّن الإعداد الحالي ليستعمله مستمع النقر الدائم
+                card.__featuredCfg = cfg;
+
                 // ربط النقر مرة واحدة
                 if (!card.dataset.bound) {
                     card.addEventListener('click', (e) => {
                         e.preventDefault();
+                        const liveCfg = card.__featuredCfg || {};
 
-                        if (cfg.type === 'category') {
-                            state.currentCategory = cfg.categoryId || 'all';
+                        if (liveCfg.type === 'category') {
+                            state.currentCategory = liveCfg.categoryId || 'all';
                             try { displayCategories(); } catch (_) {}
                             try { filterProducts(); } catch (_) {}
                             try {
                                 const target = document.getElementById('productsSectionTitle');
                                 if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                             } catch (_) {}
+                            return;
+                        }
+
+                        if (liveCfg.type === 'link') {
+                            const href = (liveCfg.href || '').trim();
+                            if (href) {
+                                window.location.href = href;
+                            }
                             return;
                         }
 
@@ -6229,6 +6282,15 @@ header.glass i {
                 title: (state.pageContent.featuredServiceTitle || 'قسم الصيانة'),
                 sub: (state.pageContent.featuredServiceSub || 'قدّم طلبك خلال دقيقة'),
                 image: (state.pageContent.featuredServiceImage || '')
+            });
+
+            setCard(electronicsCard, {
+                type: 'link',
+                href: 'electronics-store.html',
+                titleHtml: '<i class="fas fa-microchip"></i> متجر القطع والالكترونيات',
+                sub: 'تسوق القطع الإلكترونية والإكسسوارات والمنتجات المتخصصة',
+                badgeHtml: '<i class="fas fa-store"></i> ادخل الآن',
+                image: ''
             });
         }
 
