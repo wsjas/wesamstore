@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدارة المنتجات — Aielectronics</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import{getFirestore,collection,doc,setDoc,deleteDoc,getDocs,onSnapshot,query,orderBy,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const CFG={
+  apiKey:"AIzaSyCd5vSGalgRS5Kyip-8W5D0mcUcvcLumYA",
+  authDomain:"wesamarduino.firebaseapp.com",
+  projectId:"wesamarduino",
+  storageBucket:"wesamarduino.firebasestorage.app",
+  messagingSenderId:"884969345682",
+  appId:"1:884969345682:web:a6192a02ccb1153c600c4b"
+};
+
+const app=initializeApp(CFG);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+window._db=db; window._auth=auth;
+
+/* ── Auth ── */
+window.doLogin=async()=>{
+  const e=document.getElementById('em').value.trim();
+  const p=document.getElementById('pw').value;
+  if(!e||!p){window.t('أدخل البريد وكلمة المرور','w');return;}
+  try{
+    document.getElementById('loginBtn').disabled=true;
+    document.getElementById('loginBtn').textContent='⏳ جاري الدخول...';
+    await signInWithEmailAndPassword(auth,e,p);
+  }catch(err){
+    const m=err.code==='auth/invalid-credential'?'بريد أو كلمة مرور خاطئة':err.code==='auth/too-many-requests'?'محاولات كثيرة — انتظر':'خطأ: '+err.message;
+    window.t('❌ '+m,'e');
+  }finally{
+    document.getElementById('loginBtn').disabled=false;
+    document.getElementById('loginBtn').textContent='🔐 دخول';
+  }
+};
+window.doLogout=()=>signOut(auth);
+
+onAuthStateChanged(auth,user=>{
+  document.getElementById('auth-wall').style.display=user?'none':'flex';
+  document.getElementById('main-app').style.display=user?'block':'none';
+  if(user){
+    document.getElementById('userBadge').textContent=user.email;
+    window.loadProducts();
+  }
+});
+
+/* ── Products CRUD ── */
+window.loadProducts=()=>{
+  try{
+    onSnapshot(query(collection(db,'products'),orderBy('id')),snap=>{
+      window._prods=[];
+      snap.forEach(d=>{const data=d.data();data._docId=d.id;window._prods.push(data);});
+      window.renderTable();
+    },err=>{
+      onSnapshot(collection(db,'products'),snap=>{
+        window._prods=[];
+        snap.forEach(d=>{const data=d.data();data._docId=d.id;window._prods.push(data);});
+        window._prods.sort((a,b)=>(a.id||0)-(b.id||0));
+        window.renderTable();
+      });
+    });
+  }catch(e){window.t('خطأ في التحميل','e');}
+};
+
+window.saveProd=async(data,docId)=>{
+  await setDoc(doc(db,'products',docId),{...data,updatedAt:serverTimestamp(),uploadedBy:auth.currentUser.uid},{merge:true});
+};
+
+window.deleteProd=async(docId)=>{
+  await deleteDoc(doc(db,'products',docId));
+};
+</script>
+<style>
+:root{
+  --bg:#0b0f19;--bg2:#111827;--bg3:#1a2236;--bg4:#243049;
+  --t:#e2e8f0;--t2:#94a3b8;--t3:#64748b;
+  --o:#f97316;--od:#ea6c0a;--ol:rgba(249,115,22,.08);--om:rgba(249,115,22,.15);
+  --gr:#22c55e;--grl:rgba(34,197,94,.1);
+  --re:#ef4444;--rel:rgba(239,68,68,.08);
+  --ye:#eab308;--yel:rgba(234,179,8,.08);
+  --b:#3b82f6;--bl:rgba(59,130,246,.08);
+  --pu:#a855f7;--pul:rgba(168,85,247,.08);
+  --cy:#06b6d4;--cyl:rgba(6,182,212,.08);
+  --brd:#1e293b;--r:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--t);min-height:100vh}
+
+/* AUTH */
+#auth-wall{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
+.login-box{background:var(--bg2);border:1px solid var(--brd);border-radius:16px;padding:2.5rem;width:100%;max-width:380px;text-align:center}
+.login-box h2{font-size:1.3rem;margin-bottom:.3rem;display:flex;align-items:center;justify-content:center;gap:.4rem}
+.login-box p{color:var(--t3);font-size:.78rem;margin-bottom:1.5rem}
+.lin{width:100%;padding:.7rem 1rem;background:var(--bg3);border:1.5px solid var(--brd);border-radius:10px;color:var(--t);font-family:'Cairo',sans-serif;font-size:.85rem;outline:none;margin-bottom:.7rem;transition:border-color .2s}
+.lin:focus{border-color:var(--o)}
+.lbtn{width:100%;padding:.7rem;background:var(--o);color:#fff;border:none;border-radius:10px;font-family:'Cairo',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;transition:background .2s}
+.lbtn:hover{background:var(--od)}
+.lbtn:disabled{opacity:.5}
+
+/* MAIN */
+#main-app{display:none}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--brd);padding:.6rem 1.5rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:100}
+.topbar h1{font-size:1rem;font-weight:800;flex:1;display:flex;align-items:center;gap:.4rem}
+.topbar h1 .lo{color:var(--o)}.topbar h1 .lb{color:var(--b)}
+.user-badge{font-size:.7rem;color:var(--t3);background:var(--bg3);padding:.25rem .65rem;border-radius:20px;border:1px solid var(--brd)}
+.logout-btn{background:none;border:1px solid var(--brd);color:var(--t3);padding:.3rem .7rem;border-radius:8px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:.75rem;transition:all .2s}
+.logout-btn:hover{border-color:var(--re);color:var(--re)}
+
+.container{max-width:1200px;margin:0 auto;padding:1.2rem 1.5rem}
+
+/* TABS */
+.tabs{display:flex;gap:0;margin-bottom:1.2rem;background:var(--bg2);border:1px solid var(--brd);border-radius:12px;overflow:hidden}
+.tab{flex:1;padding:.7rem 1rem;text-align:center;cursor:pointer;font-weight:700;font-size:.84rem;transition:all .2s;color:var(--t3);border-bottom:3px solid transparent;display:flex;align-items:center;justify-content:center;gap:.4rem}
+.tab:hover{color:var(--t);background:var(--bg3)}
+.tab.on{color:var(--o);border-bottom-color:var(--o);background:var(--bg3)}
+.tab-page{display:none}
+.tab-page.on{display:block}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.7rem;margin-bottom:1.2rem}
+.stat{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r);padding:.85rem 1rem;display:flex;align-items:center;gap:.7rem}
+.stat-ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.stat-v{font-family:'Space Mono',monospace;font-size:1.15rem;font-weight:700;line-height:1}
+.stat-l{font-size:.68rem;color:var(--t3);margin-top:.15rem}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.srch{flex:1;min-width:200px;position:relative}
+.srch input{width:100%;padding:.55rem 1rem .55rem 2.5rem;background:var(--bg2);border:1.5px solid var(--brd);border-radius:10px;color:var(--t);font-family:'Cairo',sans-serif;font-size:.82rem;outline:none;transition:border-color .2s}
+.srch input:focus{border-color:var(--o)}
+.srch-i{position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:var(--t3);pointer-events:none}
+.flt{padding:.55rem .85rem;background:var(--bg2);border:1.5px solid var(--brd);border-radius:10px;color:var(--t);font-family:'Cairo',sans-serif;font-size:.8rem;cursor:pointer;outline:none}
+.flt:focus{border-color:var(--o)}
+.add-btn{padding:.55rem 1.2rem;background:var(--o);color:#fff;border:none;border-radius:10px;font-family:'Cairo',sans-serif;font-weight:700;font-size:.84rem;cursor:pointer;display:flex;align-items:center;gap:.3rem;transition:all .2s;white-space:nowrap}
+.add-btn:hover{background:var(--od);transform:translateY(-1px)}
+
+/* TABLE */
+.tbl-wrap{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{background:var(--bg3);padding:.65rem .8rem;font-size:.72rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.3px;text-align:right;border-bottom:1px solid var(--brd);white-space:nowrap}
+td{padding:.6rem .8rem;font-size:.82rem;border-bottom:1px solid var(--brd);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover{background:rgba(249,115,22,.03)}
+.td-img{width:40px;height:40px;border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.td-img img{width:100%;height:100%;object-fit:contain;padding:3px}
+.td-name{font-weight:700;font-size:.82rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.td-sku{font-family:'Space Mono',monospace;font-size:.7rem;color:var(--t3)}
+.td-pr{font-family:'Space Mono',monospace;font-weight:700;color:var(--o)}
+.td-old{font-size:.65rem;color:var(--t3);text-decoration:line-through}
+.tag{font-size:.65rem;font-weight:700;padding:.2rem .55rem;border-radius:20px;white-space:nowrap}
+.t-in{background:var(--grl);color:var(--gr)}.t-low{background:var(--yel);color:var(--ye)}.t-out{background:var(--rel);color:var(--re)}
+.t-new{background:var(--grl);color:var(--gr)}.t-sale{background:var(--rel);color:var(--re)}.t-hot{background:var(--yel);color:var(--ye)}
+.acts{display:flex;gap:.3rem}
+.ab{width:30px;height:30px;border-radius:8px;border:1px solid var(--brd);background:var(--bg3);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;transition:all .15s}
+.ab:hover{border-color:var(--o);color:var(--o)}
+.ab.del:hover{border-color:var(--re);color:var(--re)}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--t3)}
+.empty-state .ei{font-size:3rem;margin-bottom:.5rem}
+
+/* SCRAPER SECTION */
+.scraper-box{background:var(--bg2);border:1px solid var(--brd);border-radius:16px;padding:1.5rem;margin-bottom:1rem}
+.scraper-box h3{font-size:.95rem;font-weight:800;margin-bottom:.8rem;display:flex;align-items:center;gap:.4rem}
+.scraper-box h3::before{content:'';width:4px;height:18px;background:var(--cy);border-radius:2px}
+.scraper-input-row{display:flex;gap:.5rem;margin-bottom:.7rem}
+.scraper-input-row input{flex:1;padding:.6rem 1rem;background:var(--bg3);border:1.5px solid var(--brd);border-radius:10px;color:var(--t);font-family:'Cairo',sans-serif;font-size:.84rem;outline:none;direction:ltr;text-align:left;transition:border-color .2s}
+.scraper-input-row input:focus{border-color:var(--cy)}
+.scrape-btn{padding:.6rem 1.5rem;background:linear-gradient(135deg,var(--cy),var(--b));color:#fff;border:none;border-radius:10px;font-family:'Cairo',sans-serif;font-weight:700;font-size:.84rem;cursor:pointer;display:flex;align-items:center;gap:.4rem;transition:all .2s;white-space:nowrap}
+.scrape-btn:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(6,182,212,.3)}
+.scrape-btn:disabled{opacity:.5;transform:none;box-shadow:none}
+
+.scraper-hint{font-size:.72rem;color:var(--t3);margin-bottom:1rem;line-height:1.6;padding:.6rem .8rem;background:var(--bg3);border-radius:8px;border-right:3px solid var(--cy)}
+.ql{background:var(--bg3);border:1px solid var(--brd);color:var(--cy);padding:.25rem .6rem;border-radius:6px;font-family:'Cairo',sans-serif;font-size:.68rem;cursor:pointer;transition:all .15s;white-space:nowrap}
+.ql:hover{border-color:var(--cy);background:var(--cyl)}
+
+/* SCRAPE PROGRESS */
+.scrape-progress{display:none;margin:.8rem 0}
+.scrape-progress.on{display:block}
+.sp-bar{width:100%;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-bottom:.4rem}
+.sp-fill{height:100%;background:linear-gradient(90deg,var(--cy),var(--b));width:0%;transition:width .4s ease;border-radius:3px}
+.sp-status{font-size:.76rem;color:var(--t2);display:flex;align-items:center;gap:.3rem}
+.sp-spinner{width:14px;height:14px;border:2px solid var(--brd);border-top-color:var(--cy);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SCRAPED RESULTS */
+.scraped-results{display:none;margin-top:1rem}
+.scraped-results.on{display:block}
+.sr-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem}
+.sr-header h4{font-size:.88rem;font-weight:800;display:flex;align-items:center;gap:.3rem}
+.sr-count{font-size:.7rem;color:var(--t3);background:var(--bg3);padding:.2rem .5rem;border-radius:10px}
+.sr-actions{display:flex;gap:.4rem}
+.sr-btn{padding:.4rem .8rem;border-radius:8px;font-family:'Cairo',sans-serif;font-size:.76rem;font-weight:700;cursor:pointer;transition:all .2s;border:none}
+.sr-btn.primary{background:var(--gr);color:#fff}
+.sr-btn.primary:hover{opacity:.85}
+.sr-btn.outline{background:transparent;border:1px solid var(--brd);color:var(--t2)}
+.sr-btn.outline:hover{border-color:var(--o);color:var(--o)}
+
+.sr-card{background:var(--bg3);border:1.5px solid var(--brd);border-radius:12px;padding:.9rem;margin-bottom:.5rem;display:flex;gap:.8rem;align-items:flex-start;transition:border-color .2s}
+.sr-card:hover{border-color:var(--cy)}
+.sr-card.selected{border-color:var(--gr);background:rgba(34,197,94,.04)}
+.sr-chk{margin-top:.2rem;flex-shrink:0}
+.sr-chk input{width:16px;height:16px;accent-color:var(--gr);cursor:pointer}
+.sr-img{width:55px;height:55px;border-radius:8px;background:var(--bg4);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sr-img img{width:100%;height:100%;object-fit:contain;padding:3px}
+.sr-info{flex:1;min-width:0}
+.sr-name{font-weight:700;font-size:.84rem;margin-bottom:.2rem;line-height:1.3}
+.sr-meta{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:.2rem}
+.sr-price{font-family:'Space Mono',monospace;font-weight:700;color:var(--o);font-size:.85rem}
+.sr-sku{font-family:'Space Mono',monospace;font-size:.68rem;color:var(--t3);background:var(--bg2);padding:.1rem .4rem;border-radius:6px}
+.sr-cat{font-size:.66rem;color:var(--cy);background:var(--cyl);padding:.15rem .45rem;border-radius:10px;font-weight:700}
+.sr-desc{font-size:.74rem;color:var(--t3);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sr-edit-btn{background:none;border:1px solid var(--brd);color:var(--t3);width:28px;height:28px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;transition:all .15s;flex-shrink:0;margin-top:.2rem}
+.sr-edit-btn:hover{border-color:var(--o);color:var(--o)}
+
+/* MODAL */
+.mo-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto;backdrop-filter:blur(4px)}
+.mo-bg.on{display:flex}
+.mo{background:var(--bg2);border:1px solid var(--brd);border-radius:16px;width:100%;max-width:700px;animation:mSlide .25s ease}
+@keyframes mSlide{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+.mo-hd{padding:1rem 1.3rem;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between}
+.mo-hd h3{font-size:.95rem;font-weight:800;display:flex;align-items:center;gap:.4rem}
+.mx{background:var(--bg3);border:none;width:30px;height:30px;border-radius:8px;cursor:pointer;color:var(--t2);font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.mx:hover{background:var(--re);color:#fff}
+.mo-bd{padding:1.2rem 1.3rem;max-height:70vh;overflow-y:auto}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.ff{display:flex;flex-direction:column;gap:.3rem}
+.ff.full{grid-column:1/-1}
+.ff label{font-size:.74rem;font-weight:700;color:var(--t2)}
+.ff input,.ff select,.ff textarea{padding:.55rem .75rem;background:var(--bg3);border:1.5px solid var(--brd);border-radius:8px;color:var(--t);font-family:'Cairo',sans-serif;font-size:.82rem;outline:none;transition:border-color .2s}
+.ff input:focus,.ff select:focus,.ff textarea:focus{border-color:var(--o)}
+.ff textarea{min-height:65px;resize:vertical}
+.mo-ft{padding:.8rem 1.3rem;border-top:1px solid var(--brd);display:flex;gap:.5rem;justify-content:flex-end}
+.btn-save{padding:.55rem 1.5rem;background:var(--o);color:#fff;border:none;border-radius:10px;font-family:'Cairo',sans-serif;font-weight:700;font-size:.84rem;cursor:pointer;transition:all .2s}
+.btn-save:hover{background:var(--od)}
+.btn-save:disabled{opacity:.5}
+.btn-cancel{padding:.55rem 1.2rem;background:var(--bg3);color:var(--t2);border:1px solid var(--brd);border-radius:10px;font-family:'Cairo',sans-serif;font-size:.82rem;cursor:pointer;transition:all .15s}
+.btn-cancel:hover{border-color:var(--t3)}
+
+/* TOAST */
+.toast-wrap{position:fixed;top:1rem;left:50%;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;gap:.4rem;align-items:center}
+.toast{padding:.55rem 1.2rem;border-radius:10px;font-size:.8rem;font-weight:600;animation:tIn .3s ease;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.toast.s{background:#065f46;color:#a7f3d0}.toast.e{background:#7f1d1d;color:#fca5a5}.toast.w{background:#78350f;color:#fde68a}.toast.i{background:#1e3a5f;color:#93c5fd}
+@keyframes tIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+/* CONFIRM */
+.cf-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.cf-bg.on{display:flex}
+.cf{background:var(--bg2);border:1px solid var(--brd);border-radius:16px;padding:2rem;text-align:center;max-width:360px;width:90%}
+.cf .ci{font-size:2.5rem;margin-bottom:.6rem}
+.cf h4{font-size:.95rem;margin-bottom:.3rem}
+.cf p{font-size:.8rem;color:var(--t2);margin-bottom:1.2rem}
+.cf-btns{display:flex;gap:.5rem;justify-content:center}
+
+/* PAGINATION */
+.pag{display:flex;align-items:center;justify-content:center;gap:.3rem;padding:1rem 0}
+.pg{width:34px;height:34px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;transition:all .15s;font-family:'Cairo',sans-serif}
+.pg:hover,.pg.on{border-color:var(--o);color:var(--o);background:var(--ol)}
+.pg:disabled{opacity:.3;cursor:default}
+.pg-info{font-size:.72rem;color:var(--t3);margin:0 .5rem}
+
+@media(max-width:768px){
+  .fg{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .toolbar{flex-direction:column;align-items:stretch}
+  .topbar h1{font-size:.85rem}
+  td,th{padding:.45rem .5rem;font-size:.75rem}
+  .scraper-input-row{flex-direction:column}
+  .sr-card{flex-direction:column}
+  .tabs{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-wall">
+  <div class="login-box">
+    <h2>📦 إدارة المنتجات</h2>
+    <p>Aielectronics — Firebase Firestore</p>
+    <input class="lin" type="email" id="em" placeholder="📧 البريد الإلكتروني" onkeydown="if(event.key==='Enter')doLogin()">
+    <input class="lin" type="password" id="pw" placeholder="🔑 كلمة المرور" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="lbtn" id="loginBtn" onclick="doLogin()">🔐 دخول</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app">
+  <div class="topbar">
+    <h1>📦 <span class="lo">Ai</span><span class="lb">Electronics</span> — إدارة المنتجات</h1>
+    <span class="user-badge" id="userBadge"></span>
+    <button class="logout-btn" onclick="doLogout()">خروج ↩</button>
+  </div>
+
+  <div class="container">
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab on" onclick="switchTab('products',this)">📦 المنتجات</div>
+      <div class="tab" onclick="switchTab('scraper',this)">🌐 سحب من موقع</div>
+    </div>
+
+    <!-- ═══ TAB 1: PRODUCTS ═══ -->
+    <div class="tab-page on" id="page-products">
+      <div class="stats-row">
+        <div class="stat"><div class="stat-ic" style="background:var(--ol);color:var(--o)">📦</div><div><div class="stat-v" id="s-total">0</div><div class="stat-l">إجمالي المنتجات</div></div></div>
+        <div class="stat"><div class="stat-ic" style="background:var(--grl);color:var(--gr)">✅</div><div><div class="stat-v" id="s-in">0</div><div class="stat-l">متوفر</div></div></div>
+        <div class="stat"><div class="stat-ic" style="background:var(--yel);color:var(--ye)">⚠️</div><div><div class="stat-v" id="s-low">0</div><div class="stat-l">كمية محدودة</div></div></div>
+        <div class="stat"><div class="stat-ic" style="background:var(--rel);color:var(--re)">❌</div><div><div class="stat-v" id="s-out">0</div><div class="stat-l">غير متوفر</div></div></div>
+      </div>
+      <div class="toolbar">
+        <div class="srch"><span class="srch-i">🔍</span><input id="srch" placeholder="ابحث بالاسم أو SKU..." oninput="renderTable()"></div>
+        <select class="flt" id="catFlt" onchange="renderTable()"><option value="">كل التصنيفات</option><option value="arduino">Arduino</option><option value="raspberry">Raspberry Pi</option><option value="esp">ESP32/ESP8266</option><option value="sensors">حساسات</option><option value="displays">شاشات</option><option value="motors">موتورات</option><option value="power">طاقة</option><option value="wireless">لاسلكي</option><option value="tools">أدوات</option><option value="3dprint">طباعة 3D</option></select>
+        <select class="flt" id="stFlt" onchange="renderTable()"><option value="">كل الحالات</option><option value="in-stock">متوفر</option><option value="low-stock">محدود</option><option value="out-of-stock">غير متوفر</option></select>
+        <button class="add-btn" onclick="openModal()">+ منتج جديد</button>
+      </div>
+      <div class="tbl-wrap">
+        <table><thead><tr><th>#</th><th>المنتج</th><th>SKU</th><th>التصنيف</th><th>السعر</th><th>الحالة</th><th>الشارة</th><th>التقييم</th><th>إجراءات</th></tr></thead><tbody id="tbody"></tbody></table>
+      </div>
+      <div class="pag" id="pag"></div>
+    </div>
+
+    <!-- ═══ TAB 2: SCRAPER ═══ -->
+    <div class="tab-page" id="page-scraper">
+      <div class="scraper-box">
+        <h3>سحب المنتجات من موقع خارجي</h3>
+        <div class="scraper-hint">
+          🔹 <strong>الطريقة 1 — بالذكاء الاصطناعي (أدق):</strong> أدخل مفتاح Anthropic API وسيتم تحليل الصفحة بـ Claude AI + بحث الويب<br>
+          🔹 <strong>الطريقة 2 — بدون مفتاح (مجانية):</strong> يتم جلب الصفحة وتحليلها محلياً — تعمل مع أغلب المتاجر<br>
+          🔹 يمكنك مراجعة المنتجات المستخرجة وتعديلها قبل حفظها في Firebase
+        </div>
+
+        <!-- API Key (optional) -->
+        <div style="margin-bottom:.7rem">
+          <label style="font-size:.74rem;font-weight:700;color:var(--t3);display:flex;align-items:center;gap:.3rem;margin-bottom:.3rem">🔑 مفتاح Anthropic API <span style="font-size:.65rem;color:var(--t3);font-weight:400">(اختياري — للنتائج الأدق)</span></label>
+          <input type="password" id="apiKey" placeholder="sk-ant-api03-..." style="width:100%;padding:.55rem .85rem;background:var(--bg3);border:1.5px solid var(--brd);border-radius:10px;color:var(--t);font-family:'Space Mono',monospace;font-size:.78rem;outline:none;direction:ltr;text-align:left" oninput="localStorage.setItem('_scraper_api_key',this.value)">
+        </div>
+
+        <div class="scraper-input-row">
+          <input type="url" id="scrapeUrl" placeholder="https://www.sparkfun.com/categories/300" dir="ltr">
+          <button class="scrape-btn" id="scrapeBtn" onclick="startScrape()">🌐 سحب المنتجات</button>
+        </div>
+
+        <!-- Quick Links -->
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.8rem">
+          <span style="font-size:.7rem;color:var(--t3);align-self:center">روابط سريعة:</span>
+          <button class="ql" onclick="setUrl('https://www.sparkfun.com/categories/300')">SparkFun Arduino</button>
+          <button class="ql" onclick="setUrl('https://www.adafruit.com/category/17')">Adafruit Arduino</button>
+          <button class="ql" onclick="setUrl('https://thepihut.com/collections/raspberry-pi-store')">Pi Hut RPi</button>
+          <button class="ql" onclick="setUrl('https://circuit.rocks/arduino')">CircuitRocks</button>
+          <button class="ql" onclick="setUrl('https://www.ram-e-shop.com/sc/arduino')">RAM Egypt</button>
+          <button class="ql" onclick="setUrl('https://botland.store/arduino-boards/74-arduino-uno-rev3-7630049200050.html')">Botland</button>
+        </div>
+
+        <!-- Progress -->
+        <div class="scrape-progress" id="scrapeProgress">
+          <div class="sp-bar"><div class="sp-fill" id="spFill"></div></div>
+          <div class="sp-status"><div class="sp-spinner"></div><span id="spStatus">جاري التحليل...</span></div>
+        </div>
+
+        <!-- Results -->
+        <div class="scraped-results" id="scrapedResults">
+          <div class="sr-header">
+            <h4>📋 المنتجات المستخرجة <span class="sr-count" id="srCount">0</span></h4>
+            <div class="sr-actions">
+              <button class="sr-btn outline" onclick="selectAllScraped()">☑ تحديد الكل</button>
+              <button class="sr-btn outline" onclick="deselectAllScraped()">☐ إلغاء الكل</button>
+              <button class="sr-btn primary" onclick="importSelected()">💾 استيراد المحددة إلى Firebase</button>
+            </div>
+          </div>
+          <div id="srList"></div>
+        </div>
+      </div>
+
+      <!-- Manual JSON Import -->
+      <div class="scraper-box" style="margin-top:1rem">
+        <h3>📋 استيراد يدوي (JSON)</h3>
+        <div class="scraper-hint">
+          إذا فشل السحب التلقائي، يمكنك لصق بيانات المنتجات كـ JSON يدوياً
+        </div>
+        <textarea id="manualJson" style="width:100%;min-height:120px;padding:.7rem;background:var(--bg3);border:1.5px solid var(--brd);border-radius:10px;color:var(--t);font-family:'Space Mono',monospace;font-size:.76rem;outline:none;direction:ltr;text-align:left;resize:vertical" placeholder='[{"name":"Arduino Uno","price":8.5,"sku":"ARD-UNO","category":"arduino"}]'></textarea>
+        <button class="scrape-btn" style="margin-top:.5rem;width:100%" onclick="importManualJson()">📥 تحليل واستيراد</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="mo-bg" id="prodModal">
+  <div class="mo">
+    <div class="mo-hd"><h3 id="modalTitle">➕ إضافة منتج</h3><button class="mx" onclick="closeModal()">✕</button></div>
+    <div class="mo-bd">
+      <div class="fg">
+        <div class="ff"><label>اسم المنتج *</label><input id="f-n" placeholder="مثال: Arduino Uno R3"></div>
+        <div class="ff"><label>SKU *</label><input id="f-sku" placeholder="ARD-UNO-R3" style="font-family:'Space Mono',monospace;direction:ltr;text-align:left"></div>
+        <div class="ff"><label>السعر (JD) *</label><input type="number" id="f-p" step="0.01" min="0" placeholder="0.00"></div>
+        <div class="ff"><label>السعر القديم</label><input type="number" id="f-op" step="0.01" min="0"></div>
+        <div class="ff"><label>التصنيف</label>
+          <select id="f-cat"><option value="arduino">Arduino & AVR</option><option value="raspberry">Raspberry Pi</option><option value="esp">ESP32/ESP8266</option><option value="sensors">حساسات</option><option value="displays">شاشات</option><option value="motors">موتورات</option><option value="power">طاقة</option><option value="wireless">لاسلكي</option><option value="tools">أدوات</option><option value="3dprint">طباعة 3D</option></select>
+        </div>
+        <div class="ff"><label>الحالة</label>
+          <select id="f-st"><option value="in-stock">✅ متوفر</option><option value="low-stock">⚠️ كمية محدودة</option><option value="out-of-stock">❌ غير متوفر</option></select>
+        </div>
+        <div class="ff"><label>الشارة</label>
+          <select id="f-b"><option value="">بدون</option><option value="new">✨ جديد</option><option value="sale">💰 خصم</option><option value="hot">🔥 رائج</option></select>
+        </div>
+        <div class="ff"><label>الأيقونة</label><input id="f-ic" placeholder="📦" maxlength="4"></div>
+        <div class="ff"><label>التقييم</label><input type="number" id="f-rat" min="1" max="5" step="0.1" value="5"></div>
+        <div class="ff"><label>عدد التقييمات</label><input type="number" id="f-rcnt" min="0" value="0"></div>
+        <div class="ff full"><label>الوصف</label><textarea id="f-desc"></textarea></div>
+        <div class="ff full"><label>المميزات (سطر لكل ميزة)</label><textarea id="f-feat"></textarea></div>
+        <div class="ff full"><label>المواصفات (مفتاح: قيمة)</label><textarea id="f-sp"></textarea></div>
+        <div class="ff full"><label>الاستخدامات (فاصلة)</label><input id="f-uc"></div>
+        <div class="ff full"><label>صور (سطر لكل رابط)</label><textarea id="f-imgs"></textarea></div>
+      </div>
+    </div>
+    <div class="mo-ft">
+      <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+      <button class="btn-save" id="saveBtn" onclick="saveProduct()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="cf-bg" id="cfModal">
+  <div class="cf"><div class="ci">🗑️</div><h4>تأكيد الحذف</h4><p id="cfMsg"></p>
+    <div class="cf-btns"><button class="btn-cancel" onclick="closeCf()">إلغاء</button><button class="btn-save" id="cfYes" style="background:var(--re)">🗑️ حذف</button></div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+/* ── TOAST ── */
+window.t=function(msg,type='i'){const d=document.createElement('div');d.className='toast '+type;d.textContent=msg;document.getElementById('toasts').appendChild(d);setTimeout(()=>d.remove(),4000);};
+
+/* ── STATE ── */
+window._prods=[];
+let editDocId=null, curPage=1, scrapedProducts=[];
+const PER_PAGE=15;
+const CAT_NAMES={arduino:'Arduino',raspberry:'Raspberry Pi',esp:'ESP32',sensors:'حساسات',displays:'شاشات',motors:'موتورات',power:'طاقة',wireless:'لاسلكي',tools:'أدوات','3dprint':'طباعة 3D'};
+const ST_NAMES={'in-stock':'متوفر','low-stock':'محدود','out-of-stock':'غير متوفر','out-stock':'غير متوفر'};
+const BADGE_NAMES={new:'جديد',sale:'خصم',hot:'رائج'};
+
+/* ── TABS ── */
+window.switchTab=function(tab,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('page-'+tab).classList.add('on');
+};
+
+/* ── NORMALIZE ── */
+function norm(raw){
+  if(raw.n&&raw.p!==undefined) return raw;
+  const catMap={'Arduino & AVR':'arduino','Raspberry Pi':'raspberry','ESP32/ESP8266':'esp','حساسات':'sensors','شاشات':'displays','موتورات':'motors','طاقة':'power','لاسلكي':'wireless','أدوات':'tools','طباعة 3D':'3dprint'};
+  const stMap={'متوفر':'in-stock','كمية محدودة':'low-stock','غير متوفر':'out-of-stock'};
+  const bMap={'جديد':'new','خصم':'sale','رائج 🔥':'hot','رائج':'hot'};
+  return{id:raw.id||Date.now(),n:raw.name||raw.n||'',sku:raw.sku||'',p:parseFloat(raw.price)||raw.p||0,op:raw.oldPrice?parseFloat(raw.oldPrice):(raw.op||null),cat:catMap[raw.category]||raw.cat||raw.category||'arduino',ic:raw.ic||'📦',b:bMap[raw.badge]||raw.b||raw.badge||'',st:stMap[raw.status]||raw.st||raw.status||'in-stock',stx:raw.status||raw.stx||ST_NAMES[stMap[raw.status]||raw.st]||'متوفر',rat:parseFloat(raw.rating)||raw.rat||5,rcnt:raw.rcnt||0,imgs:raw.images||raw.imgs||[],desc:raw.description||raw.desc||'',features:raw.features||[],useCases:raw.useCases||[],sp:raw.sp||(Array.isArray(raw.specs)?Object.fromEntries(raw.specs.map(s=>{const[k,...v]=s.split(':');return[k.trim(),(v.join(':')).trim()];})):{}),reviews:raw.reviews||[],_docId:raw._docId||''};
+}
+
+/* ══════════════════════════════
+   RENDER TABLE
+══════════════════════════════ */
+window.renderTable=function(){
+  const q=(document.getElementById('srch')?.value||'').toLowerCase();
+  const cf=document.getElementById('catFlt')?.value||'';
+  const sf=document.getElementById('stFlt')?.value||'';
+  const all=window._prods.map(norm);
+  const filtered=all.filter(p=>(!q||(p.n||'').toLowerCase().includes(q)||(p.sku||'').toLowerCase().includes(q))&&(!cf||p.cat===cf)&&(!sf||p.st===sf));
+  document.getElementById('s-total').textContent=all.length;
+  document.getElementById('s-in').textContent=all.filter(p=>p.st==='in-stock').length;
+  document.getElementById('s-low').textContent=all.filter(p=>p.st==='low-stock').length;
+  document.getElementById('s-out').textContent=all.filter(p=>p.st==='out-of-stock'||p.st==='out-stock').length;
+  const totalPages=Math.max(1,Math.ceil(filtered.length/PER_PAGE));
+  if(curPage>totalPages)curPage=totalPages;
+  const start=(curPage-1)*PER_PAGE;
+  const page=filtered.slice(start,start+PER_PAGE);
+  const tbody=document.getElementById('tbody');
+  if(!filtered.length){tbody.innerHTML=`<tr><td colspan="9"><div class="empty-state"><div class="ei">📭</div><p>لا توجد منتجات${q||cf||sf?' تطابق الفلاتر':''}</p></div></td></tr>`;document.getElementById('pag').innerHTML='';return;}
+  tbody.innerHTML=page.map((p,i)=>{const stClass=p.st==='in-stock'?'t-in':p.st==='low-stock'?'t-low':'t-out';const bClass=p.b==='new'?'t-new':p.b==='sale'?'t-sale':p.b==='hot'?'t-hot':'';const imgSrc=(p.imgs&&p.imgs[0])||'';return`<tr><td style="color:var(--t3);font-family:'Space Mono',monospace;font-size:.72rem">${start+i+1}</td><td><div style="display:flex;align-items:center;gap:.6rem"><div class="td-img">${imgSrc?`<img src="${imgSrc}" alt="" onerror="this.style.display='none';this.parentNode.textContent='${p.ic||'📦'}'">`:p.ic||'📦'}</div><div><div class="td-name">${p.n}</div></div></div></td><td class="td-sku">${p.sku}</td><td><span class="tag" style="background:var(--bl);color:var(--b)">${CAT_NAMES[p.cat]||p.cat}</span></td><td><span class="td-pr">${(p.p||0).toFixed(2)}</span>${p.op?`<div class="td-old">${p.op.toFixed(2)}</div>`:''}</td><td><span class="tag ${stClass}">${ST_NAMES[p.st]||p.stx||p.st}</span></td><td>${p.b?`<span class="tag ${bClass}">${BADGE_NAMES[p.b]||p.b}</span>`:'—'}</td><td style="color:#f59e0b;font-size:.8rem">${p.rat||5}★</td><td><div class="acts"><button class="ab" onclick="openModal('${p._docId}')" title="تعديل">✏️</button><button class="ab del" onclick="confirmDel('${p._docId}','${(p.n||'').replace(/'/g,"\\'")}')">🗑️</button></div></td></tr>`;}).join('');
+  let pagH='';if(totalPages>1){pagH+=`<button class="pg" onclick="goPage(${curPage-1})" ${curPage===1?'disabled':''}>→</button>`;for(let i=1;i<=totalPages;i++){if(i===1||i===totalPages||Math.abs(i-curPage)<=2)pagH+=`<button class="pg${i===curPage?' on':''}" onclick="goPage(${i})">${i}</button>`;else if(Math.abs(i-curPage)===3)pagH+=`<span class="pg-info">...</span>`;}pagH+=`<button class="pg" onclick="goPage(${curPage+1})" ${curPage===totalPages?'disabled':''}>←</button><span class="pg-info">${filtered.length} منتج</span>`;}
+  document.getElementById('pag').innerHTML=pagH;
+};
+window.goPage=function(p){curPage=p;renderTable();window.scrollTo({top:200,behavior:'smooth'});};
+
+/* ══════════════════════════════
+   MODAL (ADD/EDIT)
+══════════════════════════════ */
+window.openModal=function(docId){
+  editDocId=docId||null;
+  document.getElementById('modalTitle').textContent=docId?'✏️ تعديل المنتج':'➕ إضافة منتج';
+  if(docId){const raw=window._prods.find(p=>p._docId===docId);if(!raw)return;const p=norm(raw);document.getElementById('f-n').value=p.n;document.getElementById('f-sku').value=p.sku;document.getElementById('f-p').value=p.p;document.getElementById('f-op').value=p.op||'';document.getElementById('f-cat').value=p.cat;document.getElementById('f-st').value=p.st;document.getElementById('f-b').value=p.b;document.getElementById('f-ic').value=p.ic;document.getElementById('f-rat').value=p.rat;document.getElementById('f-rcnt').value=p.rcnt;document.getElementById('f-desc').value=p.desc;document.getElementById('f-feat').value=(p.features||[]).join('\n');document.getElementById('f-sp').value=p.sp?Object.entries(p.sp).map(([k,v])=>k+': '+v).join('\n'):'';document.getElementById('f-uc').value=(p.useCases||[]).join(', ');document.getElementById('f-imgs').value=(p.imgs||[]).join('\n');
+  }else{['f-n','f-sku','f-p','f-op','f-desc','f-feat','f-sp','f-uc','f-imgs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('f-cat').value='arduino';document.getElementById('f-st').value='in-stock';document.getElementById('f-b').value='';document.getElementById('f-ic').value='📦';document.getElementById('f-rat').value=5;document.getElementById('f-rcnt').value=0;}
+  document.getElementById('prodModal').classList.add('on');document.body.style.overflow='hidden';
+};
+window.closeModal=function(){document.getElementById('prodModal').classList.remove('on');document.body.style.overflow='';editDocId=null;};
+
+window.saveProduct=async function(){
+  const n=document.getElementById('f-n').value.trim();const sku=document.getElementById('f-sku').value.trim().toUpperCase();const p=parseFloat(document.getElementById('f-p').value);
+  if(!n||!sku||isNaN(p)){t('⚠️ الاسم و SKU والسعر مطلوبة','w');return;}
+  if(!editDocId){const exists=window._prods.find(x=>(x.sku||'').toUpperCase()===sku);if(exists){t('❌ SKU مكرر!','e');return;}}
+  const stVal=document.getElementById('f-st').value;
+  const product={id:editDocId?((window._prods.find(x=>x._docId===editDocId)||{}).id||Date.now()):Date.now(),n,sku,p,op:parseFloat(document.getElementById('f-op').value)||null,cat:document.getElementById('f-cat').value,st:stVal,stx:ST_NAMES[stVal]||stVal,b:document.getElementById('f-b').value,ic:document.getElementById('f-ic').value||'📦',rat:parseFloat(document.getElementById('f-rat').value)||5,rcnt:parseInt(document.getElementById('f-rcnt').value)||0,desc:document.getElementById('f-desc').value.trim(),features:document.getElementById('f-feat').value.trim().split('\n').filter(x=>x.trim()),sp:Object.fromEntries(document.getElementById('f-sp').value.trim().split('\n').filter(x=>x.includes(':')).map(s=>{const[k,...v]=s.split(':');return[k.trim(),(v.join(':')).trim()];})),useCases:document.getElementById('f-uc').value.trim().split(',').map(x=>x.trim()).filter(x=>x),imgs:document.getElementById('f-imgs').value.trim().split('\n').filter(x=>x.trim()),reviews:(window._prods.find(x=>x._docId===editDocId)||{}).reviews||[]};
+  const btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='⏳ جاري الحفظ...';
+  try{await window.saveProd(product,editDocId||sku);t(editDocId?'✅ تم تحديث المنتج':'✅ تم إضافة المنتج','s');closeModal();}catch(e){t('❌ خطأ: '+e.message,'e');}finally{btn.disabled=false;btn.textContent='💾 حفظ';}
+};
+
+/* ── DELETE ── */
+let delDocId=null;
+window.confirmDel=function(docId,name){delDocId=docId;document.getElementById('cfMsg').textContent=`حذف "${name}"؟`;document.getElementById('cfModal').classList.add('on');};
+window.closeCf=function(){document.getElementById('cfModal').classList.remove('on');delDocId=null;};
+document.getElementById('cfYes').onclick=async()=>{if(!delDocId)return;try{await window.deleteProd(delDocId);t('✅ تم الحذف','s');closeCf();}catch(e){t('❌ '+e.message,'e');}};
+
+/* ══════════════════════════════
+   🌐 WEB SCRAPER
+══════════════════════════════ */
+
+// Load saved API key
+(function(){const k=localStorage.getItem('_scraper_api_key');if(k)document.getElementById('apiKey').value=k;})();
+
+window.setUrl=function(u){document.getElementById('scrapeUrl').value=u;};
+
+const PROXIES=[
+  'https://api.allorigins.win/raw?url=',
+  'https://corsproxy.io/?',
+  'https://api.codetabs.com/v1/proxy?quest='
+];
+
+async function fetchViaProxy(url){
+  for(const proxy of PROXIES){
+    try{
+      const r=await fetch(proxy+encodeURIComponent(url),{signal:AbortSignal.timeout(15000)});
+      if(r.ok)return await r.text();
+    }catch(e){console.warn('Proxy failed:',proxy,e);}
+  }
+  throw new Error('جميع طرق جلب الصفحة فشلت — جرب نسخ المنتجات يدوياً');
+}
+
+function parseHTMLProducts(html,sourceUrl){
+  const doc=new DOMParser().parseFromString(html,'text/html');
+  const products=[];
+  
+  // Generic selectors that work across many e-commerce platforms
+  const selectors=[
+    // Shopify / generic
+    '.product-card, .product-item, .product-grid-item, .product',
+    // WooCommerce
+    '.woocommerce-loop-product__link, li.product',
+    // Generic grid items
+    '[class*="product"][class*="card"], [class*="product"][class*="item"]',
+    // Data attributes
+    '[data-product], [data-product-id], [data-item]',
+    // Common patterns
+    '.grid-item, .collection-item, .catalog-item',
+    // Fallback: any card-like structure with price
+    '.card, article'
+  ];
+
+  let items=[];
+  for(const sel of selectors){
+    items=doc.querySelectorAll(sel);
+    if(items.length>=2)break;
+  }
+
+  if(items.length<2){
+    // Ultra fallback: find anything with price patterns
+    const all=doc.querySelectorAll('*');
+    const withPrice=[];
+    all.forEach(el=>{
+      const txt=el.textContent||'';
+      if(/[\$€£¥][\d,.]+|[\d,.]+\s*(JD|USD|EUR|SAR|EGP|AED)/i.test(txt)&&el.children.length<20&&el.children.length>0){
+        withPrice.push(el);
+      }
+    });
+    items=withPrice.slice(0,50);
+  }
+
+  items.forEach((el,idx)=>{
+    try{
+      const getText=(selArr)=>{
+        for(const s of selArr){
+          const found=el.querySelector(s);
+          if(found)return found.textContent.trim();
+        }
+        return '';
+      };
+
+      const getImg=(selArr)=>{
+        for(const s of selArr){
+          const found=el.querySelector(s);
+          if(found){
+            const src=found.src||found.dataset.src||found.getAttribute('data-lazy-src')||found.getAttribute('data-original')||'';
+            if(src)return src.startsWith('http')?src:(src.startsWith('//')? 'https:'+src : (src.startsWith('/')?new URL(sourceUrl).origin+src:src));
+          }
+        }
+        return '';
+      };
+
+      const getPrice=(text)=>{
+        if(!text)return 0;
+        const m=text.match(/([\d,]+\.?\d*)/);
+        return m?parseFloat(m[1].replace(/,/g,'')):0;
+      };
+
+      const name=getText([
+        'h2','h3','h4','.product-title','.product-name','.title','[class*="name"]','[class*="title"]','a[href]'
+      ]);
+      
+      if(!name||name.length<3||name.length>200)return;
+
+      const priceText=getText([
+        '.price','[class*="price"]','[class*="Price"]','.amount','[class*="cost"]','span[class*="money"]'
+      ]);
+
+      const img=getImg(['img','[class*="image"] img','[class*="img"] img','picture img']);
+
+      const link=el.querySelector('a[href]');
+      const href=link?link.getAttribute('href'):'';
+
+      const price=getPrice(priceText);
+      if(!price&&!img&&name.length<5)return;
+
+      // Check for duplicate names
+      if(products.some(p=>p.name===name))return;
+
+      products.push({
+        name,
+        sku:name.substring(0,3).toUpperCase().replace(/[^A-Z]/g,'X')+'-'+String(Date.now()).slice(-4)+'-'+idx,
+        price:price||0,
+        oldPrice:null,
+        category:guessCategory(name),
+        description:getText(['.description','[class*="desc"]','p'])||'',
+        features:[],
+        specs:{},
+        images:img?[img]:[],
+        rating:5,
+        status:'in-stock',
+        _sourceUrl:href?(href.startsWith('http')?href:new URL(sourceUrl).origin+href):''
+      });
+    }catch(e){}
+  });
+
+  return products;
+}
+
+function guessCategory(name){
+  const n=(name||'').toLowerCase();
+  if(/arduino|uno|mega|nano|leonardo/.test(n))return 'arduino';
+  if(/raspberry|rpi|raspi|pi\s?\d/.test(n))return 'raspberry';
+  if(/esp32|esp8266|nodemcu|wemos/.test(n))return 'esp';
+  if(/sensor|dht|bmp|mpu|ultrasonic|pir|hc-sr|حساس/.test(n))return 'sensors';
+  if(/lcd|oled|tft|display|screen|شاشة/.test(n))return 'displays';
+  if(/motor|servo|stepper|driver|l298|موتور/.test(n))return 'motors';
+  if(/battery|power|solar|charger|regulator|طاقة/.test(n))return 'power';
+  if(/wifi|bluetooth|rf|nrf|lora|zigbee|لاسلكي/.test(n))return 'wireless';
+  if(/solder|tool|multimeter|wire|breadboard|أدوات/.test(n))return 'tools';
+  if(/3d|print|filament|pla|abs|طباعة/.test(n))return '3dprint';
+  return 'arduino';
+}
+
+window.startScrape=async function(){
+  const url=document.getElementById('scrapeUrl').value.trim();
+  if(!url){t('⚠️ أدخل رابط الموقع','w');return;}
+  try{new URL(url);}catch{t('❌ الرابط غير صالح','e');return;}
+
+  const apiKey=(document.getElementById('apiKey').value||'').trim();
+  const btn=document.getElementById('scrapeBtn');
+  const progress=document.getElementById('scrapeProgress');
+  const fill=document.getElementById('spFill');
+  const status=document.getElementById('spStatus');
+  const results=document.getElementById('scrapedResults');
+
+  btn.disabled=true;btn.textContent='⏳ جاري السحب...';
+  progress.classList.add('on');results.classList.remove('on');
+  scrapedProducts=[];
+  fill.style.width='10%';fill.style.background='';
+  status.textContent='🔍 جاري جلب الصفحة...';
+
+  try{
+    if(apiKey&&apiKey.startsWith('sk-')){
+      // ═══ METHOD 1: Claude API with web_search ═══
+      fill.style.width='25%';status.textContent='🤖 الذكاء الاصطناعي يحلل الصفحة...';
+
+      const response=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':apiKey,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',
+          max_tokens:4000,
+          tools:[{type:'web_search_20250305',name:'web_search'}],
+          messages:[{role:'user',content:`Visit this URL and extract ALL products listed on the page: ${url}
+
+Return ONLY a JSON array with NO other text, NO markdown, NO backticks:
+[{"name":"Product Name","sku":"SKU-001","price":9.99,"oldPrice":null,"category":"arduino","description":"Short desc","features":["feature1"],"specs":{"key":"val"},"images":["https://img.url"],"rating":5,"status":"in-stock"}]
+
+Categories to use: arduino, raspberry, esp, sensors, displays, motors, power, wireless, tools, 3dprint
+IMPORTANT: Return ONLY the JSON array, nothing else.`}]
+        })
+      });
+
+      fill.style.width='65%';status.textContent='📦 جاري استخراج البيانات...';
+      const data=await response.json();
+
+      if(data.error)throw new Error(data.error.message||'خطأ من API');
+
+      let text='';
+      if(data.content){for(const block of data.content){if(block.type==='text')text+=block.text;}}
+
+      fill.style.width='85%';status.textContent='🔧 جاري معالجة النتائج...';
+
+      let products=[];
+      try{
+        products=JSON.parse(text.replace(/```json|```/g,'').trim());
+      }catch{
+        const match=text.match(/\[[\s\S]*\]/);
+        if(match)try{products=JSON.parse(match[0]);}catch{}
+      }
+
+      if(!Array.isArray(products)||!products.length)throw new Error('لم يتم استخراج منتجات — جرب الطريقة بدون API Key');
+
+      scrapedProducts=products.map((p,i)=>({
+        ...p,_selected:true,_idx:i,
+        sku:p.sku||(p.name||'P').substring(0,3).toUpperCase()+'-'+String(Date.now()).slice(-4)+'-'+i,
+        price:parseFloat(p.price)||0,oldPrice:p.oldPrice?parseFloat(p.oldPrice):null,
+        rating:parseFloat(p.rating)||5,status:p.status||'in-stock',
+        category:p.category||'arduino',features:Array.isArray(p.features)?p.features:[],
+        images:Array.isArray(p.images)?p.images:[],specs:p.specs||{}
+      }));
+
+    }else{
+      // ═══ METHOD 2: Proxy + HTML Parsing (no API key) ═══
+      fill.style.width='25%';status.textContent='🌐 جاري جلب الصفحة عبر Proxy...';
+
+      const html=await fetchViaProxy(url);
+
+      fill.style.width='60%';status.textContent='🔧 جاري تحليل HTML...';
+
+      const products=parseHTMLProducts(html,url);
+
+      if(!products.length)throw new Error('لم يتم العثور على منتجات — جرب إضافة API Key للنتائج الأدق أو استخدم الاستيراد اليدوي');
+
+      scrapedProducts=products.map((p,i)=>({...p,_selected:true,_idx:i}));
+    }
+
+    fill.style.width='100%';status.textContent=`✅ تم استخراج ${scrapedProducts.length} منتج!`;
+    t(`✅ تم استخراج ${scrapedProducts.length} منتج من الموقع`,'s');
+    renderScrapedResults();
+
+  }catch(e){
+    console.error('Scrape error:',e);
+    fill.style.width='100%';fill.style.background='var(--re)';
+    status.textContent='❌ '+e.message;
+    t('❌ '+e.message,'e');
+  }finally{
+    btn.disabled=false;btn.textContent='🌐 سحب المنتجات';
+    setTimeout(()=>{fill.style.background='';},3000);
+  }
+};
+
+/* ── Manual JSON Import ── */
+window.importManualJson=function(){
+  const text=document.getElementById('manualJson').value.trim();
+  if(!text){t('⚠️ الصق بيانات JSON أولاً','w');return;}
+  try{
+    let products=JSON.parse(text.replace(/```json|```/g,'').trim());
+    if(!Array.isArray(products))products=[products];
+    if(!products.length){t('❌ لا توجد منتجات','e');return;}
+    scrapedProducts=products.map((p,i)=>({
+      name:p.name||p.n||'منتج',sku:p.sku||('MAN-'+Date.now()+'-'+i),
+      price:parseFloat(p.price||p.p)||0,oldPrice:p.oldPrice||p.op||null,
+      category:p.category||p.cat||'arduino',description:p.description||p.desc||'',
+      features:p.features||[],specs:p.specs||p.sp||{},
+      images:p.images||p.imgs||[],rating:parseFloat(p.rating||p.rat)||5,
+      status:p.status||p.st||'in-stock',_selected:true,_idx:i
+    }));
+    renderScrapedResults();
+    // Switch view to show results
+    document.querySelectorAll('.tab')[1].click();
+    t(`✅ تم تحليل ${scrapedProducts.length} منتج — اختر ما تريد استيراده`,'s');
+  }catch(e){t('❌ JSON غير صالح: '+e.message,'e');}
+};
+
+/* ── Render scraped results ── */
+function renderScrapedResults(){
+  const container=document.getElementById('scrapedResults');
+  const list=document.getElementById('srList');
+  const count=document.getElementById('srCount');
+
+  if(!scrapedProducts.length){container.classList.remove('on');return;}
+  container.classList.add('on');
+  count.textContent=scrapedProducts.length;
+
+  list.innerHTML=scrapedProducts.map((p,i)=>{
+    const imgSrc=(p.images&&p.images[0])||'';
+    return`<div class="sr-card${p._selected?' selected':''}" id="sr-${i}">
+      <div class="sr-chk"><input type="checkbox" ${p._selected?'checked':''} onchange="toggleScraped(${i},this.checked)"></div>
+      <div class="sr-img">${imgSrc?`<img src="${imgSrc}" onerror="this.style.display='none';this.parentNode.textContent='📦'">`:'📦'}</div>
+      <div class="sr-info">
+        <div class="sr-name">${p.name||'بدون اسم'}</div>
+        <div class="sr-meta">
+          <span class="sr-price">${(p.price||0).toFixed(2)} JD</span>
+          ${p.oldPrice?`<span style="text-decoration:line-through;color:var(--t3);font-size:.72rem">${p.oldPrice.toFixed(2)}</span>`:''}
+          <span class="sr-sku">${p.sku||'—'}</span>
+          <span class="sr-cat">${CAT_NAMES[p.category]||p.category||'—'}</span>
+        </div>
+        ${p.description?`<div class="sr-desc">${p.description}</div>`:''}
+      </div>
+      <button class="sr-edit-btn" onclick="editScraped(${i})" title="تعديل قبل الاستيراد">✏️</button>
+    </div>`;
+  }).join('');
+}
+
+window.toggleScraped=function(i,checked){
+  scrapedProducts[i]._selected=checked;
+  const card=document.getElementById('sr-'+i);
+  if(card)card.classList.toggle('selected',checked);
+};
+
+window.selectAllScraped=function(){scrapedProducts.forEach((p,i)=>{p._selected=true;});renderScrapedResults();};
+window.deselectAllScraped=function(){scrapedProducts.forEach((p,i)=>{p._selected=false;});renderScrapedResults();};
+
+/* ── Edit scraped product before import ── */
+window.editScraped=function(i){
+  const p=scrapedProducts[i];
+  document.getElementById('f-n').value=p.name||'';
+  document.getElementById('f-sku').value=p.sku||'';
+  document.getElementById('f-p').value=p.price||'';
+  document.getElementById('f-op').value=p.oldPrice||'';
+  document.getElementById('f-cat').value=p.category||'arduino';
+  document.getElementById('f-st').value=p.status||'in-stock';
+  document.getElementById('f-b').value='new';
+  document.getElementById('f-ic').value='📦';
+  document.getElementById('f-rat').value=p.rating||5;
+  document.getElementById('f-rcnt').value=0;
+  document.getElementById('f-desc').value=p.description||'';
+  document.getElementById('f-feat').value=(p.features||[]).join('\n');
+  document.getElementById('f-sp').value=p.specs?Object.entries(p.specs).map(([k,v])=>k+': '+v).join('\n'):'';
+  document.getElementById('f-uc').value='';
+  document.getElementById('f-imgs').value=(p.images||[]).join('\n');
+  editDocId=null;
+  document.getElementById('modalTitle').textContent='✏️ تعديل منتج مستخرج — ثم احفظ';
+  document.getElementById('prodModal').classList.add('on');document.body.style.overflow='hidden';
+};
+
+/* ── Import selected to Firebase ── */
+window.importSelected=async function(){
+  const selected=scrapedProducts.filter(p=>p._selected);
+  if(!selected.length){t('⚠️ لم يتم تحديد أي منتج','w');return;}
+
+  const btn=document.querySelector('.sr-btn.primary');
+  btn.disabled=true;btn.textContent='⏳ جاري الاستيراد...';
+  let success=0,failed=0;
+
+  for(const p of selected){
+    try{
+      const stVal=p.status||'in-stock';
+      const product={
+        id:Date.now()+Math.floor(Math.random()*1000),
+        n:p.name||'منتج مستورد',
+        sku:(p.sku||'IMP-'+Date.now()).toUpperCase(),
+        p:p.price||0,
+        op:p.oldPrice||null,
+        cat:p.category||'arduino',
+        st:stVal,
+        stx:ST_NAMES[stVal]||'متوفر',
+        b:'new',
+        ic:'📦',
+        rat:p.rating||5,
+        rcnt:0,
+        desc:p.description||'',
+        features:p.features||[],
+        sp:p.specs||{},
+        useCases:[],
+        imgs:p.images||[],
+        reviews:[]
+      };
+      await window.saveProd(product,product.sku);
+      success++;
+    }catch(e){
+      console.error('Import error for',p.name,e);
+      failed++;
+    }
+    // Small delay between writes
+    await new Promise(r=>setTimeout(r,200));
+  }
+
+  btn.disabled=false;btn.textContent='💾 استيراد المحددة إلى Firebase';
+
+  if(success>0){
+    t(`✅ تم استيراد ${success} منتج بنجاح!${failed>0?' (فشل '+failed+')':''}`,failed>0?'w':'s');
+    // Switch to products tab
+    document.querySelectorAll('.tab')[0].click();
+  }else{
+    t('❌ فشل استيراد جميع المنتجات','e');
+  }
+};
+
+/* ── KEYBOARD ── */
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeCf();}});
+</script>
+</body>
+</html>

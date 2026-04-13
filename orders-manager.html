@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الطلبات الواردة — Aielectronics</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import{getFirestore,collection,doc,updateDoc,deleteDoc,onSnapshot,query,orderBy,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const CFG={
+  apiKey:"AIzaSyCd5vSGalgRS5Kyip-8W5D0mcUcvcLumYA",
+  authDomain:"wesamarduino.firebaseapp.com",
+  projectId:"wesamarduino",
+  storageBucket:"wesamarduino.firebasestorage.app",
+  messagingSenderId:"884969345682",
+  appId:"1:884969345682:web:a6192a02ccb1153c600c4b"
+};
+
+const app=initializeApp(CFG);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+/* ── Auth ── */
+window.doLogin=async()=>{
+  const e=document.getElementById('em').value.trim();
+  const p=document.getElementById('pw').value;
+  if(!e||!p){window.t('أدخل البريد وكلمة المرور','w');return;}
+  try{
+    document.getElementById('loginBtn').disabled=true;
+    document.getElementById('loginBtn').textContent='⏳ جاري الدخول...';
+    await signInWithEmailAndPassword(auth,e,p);
+  }catch(err){
+    const m=err.code==='auth/invalid-credential'?'بريد أو كلمة مرور خاطئة':err.code==='auth/too-many-requests'?'محاولات كثيرة — انتظر':'خطأ: '+err.message;
+    window.t('❌ '+m,'e');
+  }finally{
+    document.getElementById('loginBtn').disabled=false;
+    document.getElementById('loginBtn').textContent='🔐 دخول';
+  }
+};
+window.doLogout=()=>signOut(auth);
+
+let ordersUnsub=null;
+let refreshInterval=null;
+
+onAuthStateChanged(auth,user=>{
+  document.getElementById('auth-wall').style.display=user?'none':'flex';
+  document.getElementById('main-app').style.display=user?'block':'none';
+  if(user){
+    document.getElementById('userBadge').textContent=user.email;
+    startListening();
+    // تحديث كل 30 دقيقة
+    if(refreshInterval)clearInterval(refreshInterval);
+    refreshInterval=setInterval(()=>{
+      if(ordersUnsub){ordersUnsub();ordersUnsub=null;}
+      startListening();
+      updateRefreshTimer();
+      window.t('🔄 تم تحديث الطلبات تلقائياً','i');
+    },30*60*1000);
+    updateRefreshTimer();
+  }else{
+    if(ordersUnsub){ordersUnsub();ordersUnsub=null;}
+    if(refreshInterval){clearInterval(refreshInterval);refreshInterval=null;}
+  }
+});
+
+function startListening(){
+  try{
+    ordersUnsub=onSnapshot(query(collection(db,'orders'),orderBy('date','desc')),snap=>{
+      window._orders=[];
+      snap.forEach(d=>{const data=d.data();data._docId=d.id;window._orders.push(data);});
+      window.renderOrders();
+    },err=>{
+      console.warn('orders orderBy failed, fallback:',err);
+      ordersUnsub=onSnapshot(collection(db,'orders'),snap=>{
+        window._orders=[];
+        snap.forEach(d=>{const data=d.data();data._docId=d.id;window._orders.push(data);});
+        window._orders.sort((a,b)=>new Date(b.date||b.createdAt||0)-new Date(a.date||a.createdAt||0));
+        window.renderOrders();
+      },err2=>console.warn('orders fallback error:',err2));
+    });
+  }catch(e){window.t('خطأ في تحميل الطلبات','e');}
+}
+
+function updateRefreshTimer(){
+  window._lastRefresh=Date.now();
+  const el=document.getElementById('lastRefresh');
+  if(el)el.textContent=new Date().toLocaleTimeString('ar-JO');
+}
+
+/* ── Update order status ── */
+window.updateStatus=async(docId,status)=>{
+  try{
+    await updateDoc(doc(db,'orders',docId),{status,updatedAt:serverTimestamp()});
+    window.t('✅ تم تحديث حالة الطلب','s');
+  }catch(e){window.t('❌ '+e.message,'e');}
+};
+
+/* ── Delete order ── */
+window.deleteOrder=async(docId)=>{
+  try{
+    await deleteDoc(doc(db,'orders',docId));
+    window.t('✅ تم حذف الطلب','s');
+  }catch(e){window.t('❌ '+e.message,'e');}
+};
+</script>
+<style>
+:root{
+  --bg:#0b0f19;--bg2:#111827;--bg3:#1a2236;--bg4:#243049;
+  --t:#e2e8f0;--t2:#94a3b8;--t3:#64748b;
+  --o:#f97316;--od:#ea6c0a;--ol:rgba(249,115,22,.08);
+  --gr:#22c55e;--grl:rgba(34,197,94,.1);
+  --re:#ef4444;--rel:rgba(239,68,68,.08);
+  --ye:#eab308;--yel:rgba(234,179,8,.08);
+  --b:#3b82f6;--bl:rgba(59,130,246,.08);
+  --pu:#a855f7;--pul:rgba(168,85,247,.08);
+  --cy:#06b6d4;--cyl:rgba(6,182,212,.08);
+  --brd:#1e293b;--r:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--t);min-height:100vh}
+
+/* AUTH */
+#auth-wall{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
+.login-box{background:var(--bg2);border:1px solid var(--brd);border-radius:16px;padding:2.5rem;width:100%;max-width:380px;text-align:center}
+.login-box h2{font-size:1.3rem;margin-bottom:.3rem;display:flex;align-items:center;justify-content:center;gap:.4rem}
+.login-box p{color:var(--t3);font-size:.78rem;margin-bottom:1.5rem}
+.lin{width:100%;padding:.7rem 1rem;background:var(--bg3);border:1.5px solid var(--brd);border-radius:10px;color:var(--t);font-family:'Cairo',sans-serif;font-size:.85rem;outline:none;margin-bottom:.7rem;transition:border-color .2s}
+.lin:focus{border-color:var(--o)}
+.lbtn{width:100%;padding:.7rem;background:var(--o);color:#fff;border:none;border-radius:10px;font-family:'Cairo',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;transition:background .2s}
+.lbtn:hover{background:var(--od)}
+.lbtn:disabled{opacity:.5}
+
+/* MAIN */
+#main-app{display:none}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--brd);padding:.6rem 1.5rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:100}
+.topbar h1{font-size:1rem;font-weight:800;flex:1;display:flex;align-items:center;gap:.4rem}
+.topbar h1 .lo{color:var(--o)}.topbar h1 .lb{color:var(--b)}
+.user-badge{font-size:.7rem;color:var(--t3);background:var(--bg3);padding:.25rem .65rem;border-radius:20px;border:1px solid var(--brd)}
+.logout-btn{background:none;border:1px solid var(--brd);color:var(--t3);padding:.3rem .7rem;border-radius:8px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:.75rem;transition:all .2s}
+.logout-btn:hover{border-color:var(--re);color:var(--re)}
+.refresh-info{font-size:.68rem;color:var(--t3);display:flex;align-items:center;gap:.3rem}
+.refresh-dot{width:6px;height:6px;border-radius:50%;background:var(--gr);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.refresh-btn{background:none;border:1px solid var(--brd);color:var(--t3);padding:.25rem .55rem;border-radius:6px;cursor:pointer;font-size:.75rem;transition:all .2s;font-family:'Cairo',sans-serif}
+.refresh-btn:hover{border-color:var(--o);color:var(--o)}
+
+.container{max-width:1300px;margin:0 auto;padding:1.2rem 1.5rem}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.7rem;margin-bottom:1.2rem}
+.stat{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r);padding:.85rem 1rem;display:flex;align-items:center;gap:.7rem;transition:border-color .2s}
+.stat:hover{border-color:var(--o)}
+.stat-ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.stat-v{font-family:'Space Mono',monospace;font-size:1.15rem;font-weight:700;line-height:1}
+.stat-l{font-size:.68rem;color:var(--t3);margin-top:.15rem}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.srch{flex:1;min-width:200px;position:relative}
+.srch input{width:100%;padding:.55rem 1rem .55rem 2.5rem;background:var(--bg2);border:1.5px solid var(--brd);border-radius:10px;color:var(--t);font-family:'Cairo',sans-serif;font-size:.82rem;outline:none;transition:border-color .2s}
+.srch input:focus{border-color:var(--o)}
+.srch-i{position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:var(--t3);pointer-events:none}
+.flt{padding:.55rem .85rem;background:var(--bg2);border:1.5px solid var(--brd);border-radius:10px;color:var(--t);font-family:'Cairo',sans-serif;font-size:.8rem;cursor:pointer;outline:none}
+.flt:focus{border-color:var(--o)}
+
+/* ORDERS LIST */
+.order-card{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:.7rem;overflow:hidden;transition:border-color .2s}
+.order-card:hover{border-color:var(--bg4)}
+.order-card.st-new{border-right:4px solid var(--b)}
+.order-card.st-processing{border-right:4px solid var(--ye)}
+.order-card.st-shipped{border-right:4px solid var(--pu)}
+.order-card.st-done{border-right:4px solid var(--gr)}
+.order-card.st-cancel{border-right:4px solid var(--re)}
+
+.oc-head{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;cursor:pointer;flex-wrap:wrap}
+.oc-id{font-family:'Space Mono',monospace;font-size:.78rem;font-weight:700;color:var(--o);min-width:100px}
+.oc-customer{font-weight:700;font-size:.85rem;flex:1;min-width:120px}
+.oc-date{font-size:.72rem;color:var(--t3);font-family:'Space Mono',monospace}
+.oc-total{font-family:'Space Mono',monospace;font-weight:700;color:var(--gr);font-size:.88rem;min-width:80px;text-align:left}
+.oc-status{font-size:.68rem;font-weight:700;padding:.22rem .65rem;border-radius:20px;white-space:nowrap}
+.os-new{background:var(--bl);color:var(--b)}
+.os-processing{background:var(--yel);color:var(--ye)}
+.os-shipped{background:var(--pul);color:var(--pu)}
+.os-done{background:var(--grl);color:var(--gr)}
+.os-cancel{background:var(--rel);color:var(--re)}
+.oc-toggle{background:none;border:none;color:var(--t3);font-size:.9rem;cursor:pointer;transition:transform .2s;padding:.2rem}
+.oc-toggle.open{transform:rotate(180deg)}
+
+.oc-body{display:none;padding:0 1rem 1rem;border-top:1px solid var(--brd)}
+.oc-body.on{display:block}
+.oc-section{margin-top:.8rem}
+.oc-section h4{font-size:.76rem;font-weight:700;color:var(--t3);margin-bottom:.4rem;display:flex;align-items:center;gap:.3rem}
+.oc-items{display:flex;flex-direction:column;gap:.35rem}
+.oc-item{display:flex;align-items:center;gap:.6rem;padding:.45rem .6rem;background:var(--bg3);border-radius:8px;font-size:.8rem}
+.oc-item-img{width:32px;height:32px;border-radius:6px;background:var(--bg4);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.oc-item-img img{width:100%;height:100%;object-fit:contain;padding:2px}
+.oc-item-name{flex:1;font-weight:600}
+.oc-item-qty{color:var(--t3);font-size:.72rem}
+.oc-item-pr{font-family:'Space Mono',monospace;color:var(--o);font-size:.78rem;font-weight:700}
+.oc-info{display:grid;grid-template-columns:1fr 1fr;gap:.4rem .8rem;margin-top:.5rem}
+.oc-info-row{display:flex;align-items:center;gap:.4rem;font-size:.78rem}
+.oc-info-row .lbl{color:var(--t3);min-width:70px;font-size:.72rem}
+.oc-info-row .val{font-weight:600}
+.oc-summary{display:flex;gap:1rem;margin-top:.6rem;padding:.6rem .8rem;background:var(--bg3);border-radius:8px;flex-wrap:wrap}
+.oc-sum-item{font-size:.75rem;display:flex;gap:.3rem}
+.oc-sum-item .lbl{color:var(--t3)}
+.oc-sum-item .val{font-weight:700;font-family:'Space Mono',monospace}
+
+.oc-actions{display:flex;gap:.4rem;margin-top:.8rem;flex-wrap:wrap;align-items:center}
+.oc-actions label{font-size:.72rem;color:var(--t3);font-weight:700}
+.oc-actions select{padding:.35rem .6rem;background:var(--bg3);border:1.5px solid var(--brd);border-radius:8px;color:var(--t);font-family:'Cairo',sans-serif;font-size:.78rem;outline:none;cursor:pointer}
+.oc-actions select:focus{border-color:var(--o)}
+.del-btn{margin-right:auto;background:none;border:1px solid var(--brd);color:var(--t3);padding:.3rem .7rem;border-radius:8px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:.72rem;transition:all .15s}
+.del-btn:hover{border-color:var(--re);color:var(--re);background:var(--rel)}
+.wa-btn{background:var(--gr);color:#fff;border:none;padding:.35rem .8rem;border-radius:8px;font-family:'Cairo',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:.3rem;transition:opacity .2s}
+.wa-btn:hover{opacity:.85}
+
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--t3)}
+.empty-state .ei{font-size:3rem;margin-bottom:.5rem}
+
+/* CONFIRM */
+.cf-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.cf-bg.on{display:flex}
+.cf{background:var(--bg2);border:1px solid var(--brd);border-radius:16px;padding:2rem;text-align:center;max-width:360px;width:90%}
+.cf .ci{font-size:2.5rem;margin-bottom:.6rem}
+.cf h4{font-size:.95rem;margin-bottom:.3rem}
+.cf p{font-size:.8rem;color:var(--t2);margin-bottom:1.2rem}
+.cf-btns{display:flex;gap:.5rem;justify-content:center}
+.btn-cancel{padding:.55rem 1.2rem;background:var(--bg3);color:var(--t2);border:1px solid var(--brd);border-radius:10px;font-family:'Cairo',sans-serif;font-size:.82rem;cursor:pointer}
+.btn-del{padding:.55rem 1.2rem;background:var(--re);color:#fff;border:none;border-radius:10px;font-family:'Cairo',sans-serif;font-weight:700;font-size:.84rem;cursor:pointer}
+
+/* TOAST */
+.toast-wrap{position:fixed;top:1rem;left:50%;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;gap:.4rem;align-items:center}
+.toast{padding:.55rem 1.2rem;border-radius:10px;font-size:.8rem;font-weight:600;animation:tIn .3s ease;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.toast.s{background:#065f46;color:#a7f3d0}.toast.e{background:#7f1d1d;color:#fca5a5}.toast.w{background:#78350f;color:#fde68a}.toast.i{background:#1e3a5f;color:#93c5fd}
+@keyframes tIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+/* PAGINATION */
+.pag{display:flex;align-items:center;justify-content:center;gap:.3rem;padding:1rem 0}
+.pg{width:34px;height:34px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;transition:all .15s;font-family:'Cairo',sans-serif}
+.pg:hover,.pg.on{border-color:var(--o);color:var(--o);background:var(--ol)}
+.pg:disabled{opacity:.3;cursor:default}
+.pg-info{font-size:.72rem;color:var(--t3);margin:0 .5rem}
+
+/* COUNTDOWN */
+.countdown{font-family:'Space Mono',monospace;font-size:.68rem;color:var(--t3);display:flex;align-items:center;gap:.3rem}
+
+@media(max-width:768px){
+  .stats-row{grid-template-columns:1fr 1fr}
+  .toolbar{flex-direction:column;align-items:stretch}
+  .oc-head{gap:.5rem}
+  .oc-info{grid-template-columns:1fr}
+  .topbar{flex-wrap:wrap;gap:.5rem}
+  .topbar h1{font-size:.85rem;width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-wall">
+  <div class="login-box">
+    <h2>🧾 الطلبات الواردة</h2>
+    <p>Aielectronics — متابعة طلبات العملاء</p>
+    <input class="lin" type="email" id="em" placeholder="📧 البريد الإلكتروني" onkeydown="if(event.key==='Enter')doLogin()">
+    <input class="lin" type="password" id="pw" placeholder="🔑 كلمة المرور" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="lbtn" id="loginBtn" onclick="doLogin()">🔐 دخول</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main-app">
+  <div class="topbar">
+    <h1>🧾 <span class="lo">Ai</span><span class="lb">Electronics</span> — الطلبات الواردة</h1>
+    <div class="refresh-info">
+      <span class="refresh-dot"></span>
+      <span>آخر تحديث: <span id="lastRefresh">—</span></span>
+      <span class="countdown" id="countdown"></span>
+    </div>
+    <button class="refresh-btn" onclick="manualRefresh()">🔄 تحديث</button>
+    <span class="user-badge" id="userBadge"></span>
+    <button class="logout-btn" onclick="doLogout()">خروج ↩</button>
+  </div>
+
+  <div class="container">
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat"><div class="stat-ic" style="background:var(--ol);color:var(--o)">🧾</div><div><div class="stat-v" id="s-total">0</div><div class="stat-l">إجمالي الطلبات</div></div></div>
+      <div class="stat"><div class="stat-ic" style="background:var(--bl);color:var(--b)">🆕</div><div><div class="stat-v" id="s-new">0</div><div class="stat-l">جديد</div></div></div>
+      <div class="stat"><div class="stat-ic" style="background:var(--yel);color:var(--ye)">⏳</div><div><div class="stat-v" id="s-proc">0</div><div class="stat-l">قيد المعالجة</div></div></div>
+      <div class="stat"><div class="stat-ic" style="background:var(--pul);color:var(--pu)">📦</div><div><div class="stat-v" id="s-ship">0</div><div class="stat-l">مشحون</div></div></div>
+      <div class="stat"><div class="stat-ic" style="background:var(--grl);color:var(--gr)">✅</div><div><div class="stat-v" id="s-done">0</div><div class="stat-l">مكتمل</div></div></div>
+      <div class="stat"><div class="stat-ic" style="background:var(--rel);color:var(--re)">❌</div><div><div class="stat-v" id="s-cancel">0</div><div class="stat-l">ملغي</div></div></div>
+      <div class="stat"><div class="stat-ic" style="background:var(--grl);color:var(--gr)">💰</div><div><div class="stat-v" id="s-revenue">0</div><div class="stat-l">الإيرادات (JD)</div></div></div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="srch"><span class="srch-i">🔍</span><input id="srch" placeholder="ابحث باسم العميل أو رقم الطلب أو الهاتف..." oninput="renderOrders()"></div>
+      <select class="flt" id="statusFlt" onchange="renderOrders()">
+        <option value="">كل الحالات</option>
+        <option value="new">🆕 جديد</option>
+        <option value="processing">⏳ قيد المعالجة</option>
+        <option value="shipped">📦 مشحون</option>
+        <option value="done">✅ مكتمل</option>
+        <option value="cancel">❌ ملغي</option>
+      </select>
+      <select class="flt" id="sortFlt" onchange="renderOrders()">
+        <option value="newest">الأحدث أولاً</option>
+        <option value="oldest">الأقدم أولاً</option>
+        <option value="highest">الأعلى قيمة</option>
+        <option value="lowest">الأقل قيمة</option>
+      </select>
+    </div>
+
+    <!-- Orders List -->
+    <div id="ordersList"></div>
+    <div class="pag" id="pag"></div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="cf-bg" id="cfModal">
+  <div class="cf">
+    <div class="ci">🗑️</div>
+    <h4>تأكيد حذف الطلب</h4>
+    <p id="cfMsg">هل تريد حذف هذا الطلب نهائياً؟</p>
+    <div class="cf-btns">
+      <button class="btn-cancel" onclick="closeCf()">إلغاء</button>
+      <button class="btn-del" id="cfYes">🗑️ حذف</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+/* ── TOAST ── */
+window.t=function(msg,type='i'){
+  const d=document.createElement('div');
+  d.className='toast '+type;
+  d.textContent=msg;
+  document.getElementById('toasts').appendChild(d);
+  setTimeout(()=>d.remove(),3500);
+};
+
+/* ── STATE ── */
+window._orders=[];
+let curPage=1;
+const PER_PAGE=20;
+
+const STATUS_MAP={
+  new:{label:'🆕 جديد',cls:'os-new'},
+  processing:{label:'⏳ قيد المعالجة',cls:'os-processing'},
+  shipped:{label:'📦 مشحون',cls:'os-shipped'},
+  done:{label:'✅ مكتمل',cls:'os-done'},
+  cancel:{label:'❌ ملغي',cls:'os-cancel'}
+};
+
+/* ── COUNTDOWN TIMER ── */
+setInterval(()=>{
+  if(!window._lastRefresh)return;
+  const el=document.getElementById('countdown');
+  if(!el)return;
+  const elapsed=Date.now()-window._lastRefresh;
+  const remaining=Math.max(0,30*60*1000-elapsed);
+  const min=Math.floor(remaining/60000);
+  const sec=Math.floor((remaining%60000)/1000);
+  el.textContent=`(تحديث بعد ${min}:${String(sec).padStart(2,'0')})`;
+},1000);
+
+/* ── MANUAL REFRESH ── */
+window.manualRefresh=function(){
+  window._lastRefresh=Date.now();
+  const el=document.getElementById('lastRefresh');
+  if(el)el.textContent=new Date().toLocaleTimeString('ar-JO');
+  window.t('🔄 تم التحديث','i');
+};
+
+/* ── RENDER ── */
+window.renderOrders=function(){
+  const q=(document.getElementById('srch')?.value||'').toLowerCase();
+  const sf=document.getElementById('statusFlt')?.value||'';
+  const sort=document.getElementById('sortFlt')?.value||'newest';
+
+  let all=[...window._orders];
+
+  // Filter
+  let filtered=all.filter(o=>
+    (!q||
+      (o.customer||'').toLowerCase().includes(q)||
+      (o.id||'').toLowerCase().includes(q)||
+      (o.phone||'').includes(q)||
+      (o.itemsText||'').toLowerCase().includes(q)
+    )&&(!sf||o.status===sf)
+  );
+
+  // Sort
+  switch(sort){
+    case'oldest':filtered.sort((a,b)=>new Date(a.date||a.createdAt||0)-new Date(b.date||b.createdAt||0));break;
+    case'highest':filtered.sort((a,b)=>(b.total||0)-(a.total||0));break;
+    case'lowest':filtered.sort((a,b)=>(a.total||0)-(b.total||0));break;
+    default:filtered.sort((a,b)=>new Date(b.date||b.createdAt||0)-new Date(a.date||a.createdAt||0));
+  }
+
+  // Stats
+  document.getElementById('s-total').textContent=all.length;
+  document.getElementById('s-new').textContent=all.filter(o=>o.status==='new').length;
+  document.getElementById('s-proc').textContent=all.filter(o=>o.status==='processing').length;
+  document.getElementById('s-ship').textContent=all.filter(o=>o.status==='shipped').length;
+  document.getElementById('s-done').textContent=all.filter(o=>o.status==='done').length;
+  document.getElementById('s-cancel').textContent=all.filter(o=>o.status==='cancel').length;
+  document.getElementById('s-revenue').textContent=all.filter(o=>o.status==='done').reduce((s,o)=>s+(o.total||0),0).toFixed(1);
+
+  // Pagination
+  const totalPages=Math.max(1,Math.ceil(filtered.length/PER_PAGE));
+  if(curPage>totalPages)curPage=totalPages;
+  const start=(curPage-1)*PER_PAGE;
+  const page=filtered.slice(start,start+PER_PAGE);
+
+  const container=document.getElementById('ordersList');
+  if(!filtered.length){
+    container.innerHTML=`<div class="empty-state"><div class="ei">📭</div><p>لا توجد طلبات${q||sf?' تطابق البحث':''}</p></div>`;
+    document.getElementById('pag').innerHTML='';
+    return;
+  }
+
+  container.innerHTML=page.map((o,idx)=>{
+    const st=STATUS_MAP[o.status]||STATUS_MAP.new;
+    const items=Array.isArray(o.items)?o.items:[];
+    const waPhone=(o.phone||'').replace(/[^0-9]/g,'');
+    const waMsg=encodeURIComponent(`مرحباً ${o.customer}، بخصوص طلبك رقم ${o.id} بقيمة ${(o.total||0).toFixed(2)} JD`);
+
+    return`<div class="order-card st-${o.status||'new'}">
+      <div class="oc-head" onclick="toggleOrder(this)">
+        <span class="oc-id">${o.id||'—'}</span>
+        <span class="oc-customer">${o.customer||'—'}</span>
+        <span class="oc-date">${o.date||o.createdAt?.slice(0,10)||'—'}</span>
+        <span class="oc-total">${(o.total||0).toFixed(2)} JD</span>
+        <span class="oc-status ${st.cls}">${st.label}</span>
+        <button class="oc-toggle">▼</button>
+      </div>
+      <div class="oc-body">
+        ${items.length?`<div class="oc-section"><h4>📦 المنتجات</h4>
+          <div class="oc-items">${items.map(i=>`<div class="oc-item">
+            <div class="oc-item-img">${i.img?`<img src="${i.img}" onerror="this.style.display='none';this.parentNode.textContent='📦'">`:'📦'}</div>
+            <span class="oc-item-name">${i.name||'—'}</span>
+            <span class="oc-item-qty">×${i.qty||1}</span>
+            <span class="oc-item-pr">${((i.price||0)*(i.qty||1)).toFixed(2)} JD</span>
+          </div>`).join('')}</div>
+        </div>`:`<div class="oc-section"><h4>📦 المنتجات</h4><p style="font-size:.8rem;color:var(--t3)">${o.itemsText||'—'}</p></div>`}
+
+        <div class="oc-section"><h4>👤 معلومات العميل</h4>
+          <div class="oc-info">
+            <div class="oc-info-row"><span class="lbl">الاسم:</span><span class="val">${o.customer||'—'}</span></div>
+            <div class="oc-info-row"><span class="lbl">الهاتف:</span><span class="val" dir="ltr">${o.phone||'—'}</span></div>
+            <div class="oc-info-row"><span class="lbl">البريد:</span><span class="val">${o.email||'—'}</span></div>
+            <div class="oc-info-row"><span class="lbl">العنوان:</span><span class="val">${o.addr||'—'}</span></div>
+            ${o.notes?`<div class="oc-info-row" style="grid-column:1/-1"><span class="lbl">ملاحظات:</span><span class="val" style="color:var(--ye)">${o.notes}</span></div>`:''}
+          </div>
+        </div>
+
+        <div class="oc-summary">
+          <div class="oc-sum-item"><span class="lbl">المجموع:</span><span class="val">${(o.subtotal||o.total||0).toFixed(2)}</span></div>
+          ${o.discount?`<div class="oc-sum-item"><span class="lbl">الخصم:</span><span class="val" style="color:var(--re)">-${o.discount.toFixed(2)}</span></div>`:''}
+          ${o.coupon?`<div class="oc-sum-item"><span class="lbl">كوبون:</span><span class="val" style="color:var(--pu)">${o.coupon}</span></div>`:''}
+          <div class="oc-sum-item"><span class="lbl">الشحن:</span><span class="val">${o.shipping===0?'مجاني':(o.shipping||0).toFixed(2)}</span></div>
+          <div class="oc-sum-item"><span class="lbl">الإجمالي:</span><span class="val" style="color:var(--gr);font-size:.88rem">${(o.total||0).toFixed(2)} JD</span></div>
+        </div>
+
+        <div class="oc-actions">
+          <label>تغيير الحالة:</label>
+          <select onchange="updateStatus('${o._docId||o.id}',this.value)">
+            <option value="new" ${o.status==='new'?'selected':''}>🆕 جديد</option>
+            <option value="processing" ${o.status==='processing'?'selected':''}>⏳ قيد المعالجة</option>
+            <option value="shipped" ${o.status==='shipped'?'selected':''}>📦 مشحون</option>
+            <option value="done" ${o.status==='done'?'selected':''}>✅ مكتمل</option>
+            <option value="cancel" ${o.status==='cancel'?'selected':''}>❌ ملغي</option>
+          </select>
+          ${waPhone?`<a class="wa-btn" href="https://wa.me/${waPhone}?text=${waMsg}" target="_blank">💬 واتساب</a>`:''}
+          <button class="del-btn" onclick="confirmDelOrder('${o._docId||o.id}','${(o.customer||'').replace(/'/g,'\\\'')}')">🗑️ حذف</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Pagination
+  let pagHtml='';
+  if(totalPages>1){
+    pagHtml+=`<button class="pg" onclick="goPage(${curPage-1})" ${curPage===1?'disabled':''}>→</button>`;
+    for(let i=1;i<=totalPages;i++){
+      if(i===1||i===totalPages||Math.abs(i-curPage)<=2)pagHtml+=`<button class="pg${i===curPage?' on':''}" onclick="goPage(${i})">${i}</button>`;
+      else if(Math.abs(i-curPage)===3)pagHtml+=`<span class="pg-info">...</span>`;
+    }
+    pagHtml+=`<button class="pg" onclick="goPage(${curPage+1})" ${curPage===totalPages?'disabled':''}>←</button>`;
+    pagHtml+=`<span class="pg-info">${filtered.length} طلب</span>`;
+  }
+  document.getElementById('pag').innerHTML=pagHtml;
+};
+
+window.goPage=function(p){curPage=p;renderOrders();window.scrollTo({top:200,behavior:'smooth'});};
+
+/* ── TOGGLE ORDER ── */
+window.toggleOrder=function(el){
+  const body=el.nextElementSibling;
+  const btn=el.querySelector('.oc-toggle');
+  body.classList.toggle('on');
+  btn.classList.toggle('open');
+};
+
+/* ── DELETE CONFIRM ── */
+let delOrderId=null;
+window.confirmDelOrder=function(docId,name){
+  delOrderId=docId;
+  document.getElementById('cfMsg').textContent=`حذف طلب "${name}" نهائياً؟`;
+  document.getElementById('cfModal').classList.add('on');
+};
+window.closeCf=function(){document.getElementById('cfModal').classList.remove('on');delOrderId=null;};
+document.getElementById('cfYes').onclick=async()=>{
+  if(!delOrderId)return;
+  await window.deleteOrder(delOrderId);
+  closeCf();
+};
+
+/* ── KEYBOARD ── */
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCf();});
+</script>
+</body>
+</html>

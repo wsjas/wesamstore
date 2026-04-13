@@ -1,0 +1,2046 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم — Aielectronics</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<!-- Firebase SDK — إعدادات مدمجة مباشرة -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+    from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+  import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc,
+           onSnapshot, serverTimestamp, query, orderBy }
+    from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+  /* ═══════════════════════════════════════
+     إعدادات Firebase — مدمجة مباشرة
+     لا حاجة لإدخالها في كل مرة
+  ═══════════════════════════════════════ */
+  const FIREBASE_CONFIG = {
+    apiKey:            "AIzaSyCd5vSGalgRS5Kyip-8W5D0mcUcvcLumYA",
+    authDomain:        "wesamarduino.firebaseapp.com",
+    databaseURL:       "https://wesamarduino-default-rtdb.firebaseio.com",
+    projectId:         "wesamarduino",
+    storageBucket:     "wesamarduino.firebasestorage.app",
+    messagingSenderId: "884969345682",
+    appId:             "1:884969345682:web:a6192a02ccb1153c600c4b",
+    measurementId:     "G-FXP2LVQJGE"
+  };
+
+  window.__fbReady = false;
+
+  /* تهيئة تلقائية تقبل config اختياري */
+  window.initFirebase = function(config = FIREBASE_CONFIG) {
+    try {
+      const app = initializeApp(config);
+      const auth = getAuth(app);
+      const db   = getFirestore(app);
+      window._auth = auth;
+      window._db   = db;
+      // Expose Firestore helpers for use outside module scope
+      window._fbGetDocs   = getDocs;
+      window._fbCollection = collection;
+      window._fbDoc       = doc;
+      window._fbSetDoc    = setDoc;
+      window._fbDeleteDoc = deleteDoc;
+      window.__fbReady = true;
+
+      /* ─ Auth state watcher ─ */
+      let _ordersUnsubscribe = null;
+
+      onAuthStateChanged(auth, user => {
+        if (user) {
+          window._fbUser = user;
+          document.getElementById('login').classList.add('hide');
+          document.getElementById('app').style.display = 'flex';
+          if (typeof loadFromFirebase === 'function') loadFromFirebase();
+          toast('🔥 مرحباً ' + (user.email || 'المدير') + ' — Firebase متصل', 'ts');
+
+          // ── تشغيل listeners الطلبات بعد تسجيل الدخول (تحتاج auth) ──
+          if (!_ordersUnsubscribe) {
+            try {
+              _ordersUnsubscribe = onSnapshot(query(collection(db, 'orders'), orderBy('date', 'desc')), snap => {
+                if (!snap.empty) {
+                  const arr = [];
+                  snap.forEach(d => arr.push(d.data()));
+                  ORDERS.length = 0; arr.forEach(o => ORDERS.push(o));
+                }
+                if (typeof renderOrders === 'function') renderOrders();
+                if (typeof renderRecentOrders === 'function') renderRecentOrders();
+                if (typeof initDash === 'function') initDash();
+                const pending = ORDERS.filter(o => o.status === 'new').length;
+                const b = document.getElementById('ordBadge');
+                if (b) b.textContent = pending || '';
+              }, err => {
+                console.warn('orders orderBy failed, retrying without order:', err);
+                _ordersUnsubscribe = onSnapshot(collection(db, 'orders'), snap2 => {
+                  if (!snap2.empty) {
+                    const arr = [];
+                    snap2.forEach(d => arr.push(d.data()));
+                    arr.sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
+                    ORDERS.length = 0; arr.forEach(o => ORDERS.push(o));
+                  }
+                  if (typeof renderOrders === 'function') renderOrders();
+                  if (typeof renderRecentOrders === 'function') renderRecentOrders();
+                  if (typeof initDash === 'function') initDash();
+                }, err2 => console.warn('orders fallback error:', err2));
+              });
+            } catch(e) { console.warn('orders listener setup error:', e); }
+          }
+
+        } else {
+          window._fbUser = null;
+          document.getElementById('app').style.display = 'none';
+          document.getElementById('login').classList.remove('hide');
+          // إلغاء listener الطلبات عند الخروج
+          if (_ordersUnsubscribe) { _ordersUnsubscribe(); _ordersUnsubscribe = null; }
+          // Show connected status on login screen
+          const s = document.getElementById('fbConnStatus');
+          if (s) { s.textContent = '✅ Firebase متصل — أدخل بريدك للدخول'; s.style.color = 'var(--gr)'; }
+        }
+      });
+
+      /* ─ Real-time listener on products ─ */
+      try {
+        const q = query(collection(db, 'products'), orderBy('id'));
+        onSnapshot(q, snap => {
+          if (snap.empty) return;
+          const arr = [];
+          snap.forEach(d => arr.push(d.data()));
+          if (arr.length) {
+            PD = arr;
+            if (typeof normalizePD === 'function') normalizePD();
+            localStorage.setItem('TECHSTORE_PRODUCTS', JSON.stringify(PD));
+            if (typeof renderProds === 'function') renderProds();
+            if (typeof renderTopProds === 'function') renderTopProds();
+            if (typeof initDash === 'function') initDash();
+          }
+        }, err => {
+          console.warn('products orderBy failed, retrying without order:', err);
+          // fallback: بدون ترتيب إذا لم يكن هناك index
+          onSnapshot(collection(db, 'products'), snap2 => {
+            if (snap2.empty) return;
+            const arr = [];
+            snap2.forEach(d => arr.push(d.data()));
+            if (arr.length) {
+              arr.sort((a,b) => (a.id||0) - (b.id||0));
+              PD = arr;
+              if (typeof normalizePD === 'function') normalizePD();
+              localStorage.setItem('TECHSTORE_PRODUCTS', JSON.stringify(PD));
+              if (typeof renderProds === 'function') renderProds();
+              if (typeof renderTopProds === 'function') renderTopProds();
+              if (typeof initDash === 'function') initDash();
+            }
+          }, err2 => console.warn('products fallback listener error:', err2));
+        });
+      } catch(e) {
+        console.warn('products listener setup error:', e);
+      }
+
+      /* ─ Real-time listener on config ─ */
+      onSnapshot(doc(db, 'config', 'site'), snap => {
+        if (snap.exists()) {
+          window._siteConfig = snap.data();
+          localStorage.setItem('TECHSTORE_CONFIG', JSON.stringify(window._siteConfig));
+          // Load slides into admin
+          if (window._siteConfig.slides && window._siteConfig.slides.length) {
+            ADMIN_SLIDES = window._siteConfig.slides;
+            if (typeof renderSlidesList === 'function') renderSlidesList();
+          }
+          // Load news into admin
+          if (window._siteConfig.topbarItems && window._siteConfig.topbarItems.length) {
+            NEWS_ITEMS = window._siteConfig.topbarItems;
+            if (typeof renderNewsItems === 'function') renderNewsItems();
+          }
+        }
+      }, err => console.warn('config snapshot error:', err));
+
+      /* ─ Real-time listener on coupons ─ */
+      onSnapshot(collection(db, 'coupons'), snap => {
+        const arr = [];
+        snap.forEach(d => arr.push(d.data()));
+        COUPONS_DATA = arr.length ? arr : COUPONS_DATA;
+        localStorage.setItem('TECHSTORE_COUPONS', JSON.stringify(COUPONS_DATA));
+        if (typeof renderCoupons === 'function') renderCoupons();
+      }, err => console.warn('coupons snapshot error:', err));
+
+      /* ─ Orders listener moved inside onAuthStateChanged (needs auth) ─ */
+
+      const s = document.getElementById('fbConnStatus');
+      if (s) { s.textContent = '🔥 Firebase متصل — wesamarduino'; s.style.color = 'var(--gr)'; }
+      return true;
+    } catch(e) {
+      console.error('Firebase init error:', e);
+      toast('❌ خطأ في الاتصال: ' + e.message, 'te');
+      return false;
+    }
+  };
+
+  /* ─ Firebase Auth Login ─ */
+  window.fbLogin = async function(email, password) {
+    if (!window.__fbReady || !window._auth) {
+      toast('❌ Firebase غير متصل بعد', 'te'); return;
+    }
+    try {
+      await signInWithEmailAndPassword(window._auth, email, password);
+    } catch(e) {
+      const msg = e.code === 'auth/invalid-credential' ? 'بريد أو كلمة مرور خاطئة'
+                : e.code === 'auth/too-many-requests' ? 'محاولات كثيرة — حاول لاحقاً'
+                : e.message;
+      toast('❌ ' + msg, 'te');
+    }
+  };
+
+  /* ─ Logout ─ */
+  window.fbLogout = async function() {
+    if (window._auth) await signOut(window._auth);
+  };
+
+  /* ─ Save products to Firestore ─ */
+  window.fbSaveProducts = async function(arr) {
+    if (!window._db) return;
+    const batch = [];
+    for (const p of arr) {
+      // استخدام sku كمعرف الوثيقة (متوافق مع add-products.html)
+      const docId = p.sku || p.SKU || String(p.id);
+      batch.push(setDoc(doc(window._db, 'products', docId), p, { merge: true }));
+    }
+    await Promise.all(batch);
+  };
+
+  /* ─ Delete product ─ */
+  window.fbDeleteProduct = async function(id, sku) {
+    if (!window._db) return;
+    // حذف بالـ SKU أولاً ثم بالـ ID
+    if (sku) {
+      try { await deleteDoc(doc(window._db, 'products', sku)); } catch(e) {}
+    }
+    try { await deleteDoc(doc(window._db, 'products', String(id))); } catch(e) {}
+  };
+
+  /* ─ Save config ─ */
+  window.fbSaveConfig = async function(cfg) {
+    if (!window._db) return;
+    await setDoc(doc(window._db, 'config', 'site'), { ...cfg, updatedAt: serverTimestamp() });
+  };
+
+  /* ─ Save coupons ─ */
+  window.fbSaveCoupons = async function(arr) {
+    if (!window._db) return;
+    const batch = arr.map(c => setDoc(doc(window._db, 'coupons', c.code), c));
+    await Promise.all(batch);
+  };
+
+  /* ─ Delete coupon ─ */
+  window.fbDeleteCoupon = async function(code) {
+    if (!window._db) return;
+    await deleteDoc(doc(window._db, 'coupons', code));
+  };
+
+  /* ─ Save/update order ─ */
+  window.fbSaveOrder = async function(order) {
+    if (!window._db) return;
+    await setDoc(doc(window._db, 'orders', order.id), order);
+  };
+
+  /* ─ Update order status only ─ */
+  window.fbUpdateOrderStatus = async function(id, status) {
+    if (!window._db) return;
+    const { updateDoc } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    await updateDoc(doc(window._db, 'orders', id), { status });
+  };
+
+  /* ══ تشغيل تلقائي فور تحميل الصفحة ══ */
+  initFirebase(FIREBASE_CONFIG);
+
+</script>
+<style>
+:root{
+  --bg:#0d1117;--bg2:#161b27;--bg3:#1e2638;--bg4:#252f42;--bg5:#2d3a52;
+  --o:#f97316;--od:#ea6c0a;--ol:rgba(249,115,22,.1);--om:rgba(249,115,22,.2);
+  --b:#3b82f6;--bl:rgba(59,130,246,.1);
+  --gr:#22c55e;--grl:rgba(34,197,94,.1);
+  --re:#ef4444;--rel:rgba(239,68,68,.1);
+  --ye:#f59e0b;--yel:rgba(245,158,11,.1);
+  --pu:#a855f7;--pul:rgba(168,85,247,.1);
+  --t:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--t4:#3d4f6a;
+  --brd:rgba(255,255,255,.06);--brd2:rgba(255,255,255,.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--o)}
+
+/* ─── LOGIN ─── */
+#login{position:fixed;inset:0;background:radial-gradient(ellipse at 60% 40%,#1a2442 0%,var(--bg) 70%);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column}
+#login.hide{display:none}
+.lb{background:var(--bg2);border:1px solid var(--brd2);border-radius:20px;padding:2.5rem;width:360px;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+.lb-logo{font-family:'Space Mono',monospace;font-size:1.5rem;font-weight:700;color:var(--o);text-align:center;margin-bottom:.25rem;letter-spacing:-1px}
+.lb-sub{font-size:.8rem;color:var(--t3);text-align:center;margin-bottom:2rem}
+.lf label{display:block;font-size:.7rem;font-weight:800;color:var(--t3);margin-bottom:.38rem;text-transform:uppercase;letter-spacing:.6px}
+.lf input{width:100%;background:var(--bg3);border:1.5px solid var(--brd2);border-radius:9px;padding:.65rem 1rem;color:var(--t);font-family:'Cairo',sans-serif;font-size:.9rem;outline:none;margin-bottom:1rem;transition:border-color .2s;direction:ltr}
+.lf input:focus{border-color:var(--o)}
+.lf input::placeholder{color:var(--t3)}
+.lbtn{width:100%;background:linear-gradient(135deg,var(--o),var(--od));color:#fff;border:none;padding:.75rem;border-radius:10px;font-family:'Cairo',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;transition:all .2s;margin-top:.25rem}
+.lbtn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(249,115,22,.35)}
+.lb-hint{font-size:.7rem;color:var(--t3);text-align:center;margin-top:.85rem}
+
+/* ─── APP LAYOUT ─── */
+#app{display:none;min-height:100vh}
+.sb{width:235px;background:var(--bg2);border-left:1px solid var(--brd);position:fixed;top:0;right:0;height:100vh;display:flex;flex-direction:column;z-index:100;transition:transform .3s}
+.sb.off{transform:translateX(235px)}
+.main{margin-right:235px;min-height:100vh;display:flex;flex-direction:column;transition:margin .3s}
+.main.wide{margin-right:0}
+
+/* ─── SIDEBAR ─── */
+.sb-top{padding:1.25rem 1rem;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:.7rem}
+.sb-logo-ico{width:36px;height:36px;background:linear-gradient(135deg,var(--o),var(--od));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.sb-logo-txt{font-family:'Space Mono',monospace;font-size:.95rem;font-weight:700;color:var(--o)}
+.sb-logo-sub{font-size:.62rem;color:var(--t3)}
+.sb-sec{padding:.7rem 1rem .25rem;font-size:.58rem;font-weight:800;color:var(--t4);text-transform:uppercase;letter-spacing:1.2px}
+.si{display:flex;align-items:center;gap:.65rem;padding:.58rem 1rem;margin:.06rem .5rem;border-radius:9px;cursor:pointer;transition:all .15s;color:var(--t2);font-size:.81rem;font-weight:600;position:relative;text-decoration:none}
+.si:hover{background:var(--bg3);color:var(--t)}
+.si.on{background:var(--ol);color:var(--o)}
+.si.on::after{content:'';position:absolute;right:0;top:25%;bottom:25%;width:3px;background:var(--o);border-radius:3px 0 0 3px}
+.si-ico{font-size:.95rem;width:20px;text-align:center;flex-shrink:0}
+.si-badge{margin-right:auto;font-size:.58rem;font-weight:700;padding:.1rem .42rem;border-radius:10px;min-width:18px;text-align:center}
+.si-badge.o{background:var(--om);color:var(--o)}
+.si-badge.r{background:var(--rel);color:var(--re)}
+.sb-bot{margin-top:auto;padding:.7rem;border-top:1px solid var(--brd)}
+.sb-user{display:flex;align-items:center;gap:.6rem;background:var(--bg3);border-radius:9px;padding:.6rem .75rem}
+.sb-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--o),var(--b));display:flex;align-items:center;justify-content:center;color:#fff;font-size:.78rem;font-weight:700;flex-shrink:0}
+.sb-un{font-size:.78rem;font-weight:700}
+.sb-ur{font-size:.65rem;color:var(--t3)}
+.sb-out{background:none;border:none;color:var(--t3);cursor:pointer;font-size:.85rem;margin-right:auto;transition:color .15s}
+.sb-out:hover{color:var(--re)}
+
+/* ─── TOPBAR ─── */
+.tb{background:var(--bg2);border-bottom:1px solid var(--brd);padding:.7rem 1.4rem;display:flex;align-items:center;gap:.85rem;position:sticky;top:0;z-index:50}
+.tb-tog{background:none;border:1px solid var(--brd2);color:var(--t2);width:34px;height:34px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .15s;flex-shrink:0}
+.tb-tog:hover{border-color:var(--o);color:var(--o)}
+.tb-title{font-size:.92rem;font-weight:800;flex:1}
+.tb-title small{color:var(--t3);font-weight:400;font-size:.74rem;margin-right:.4rem}
+.tb-acts{display:flex;gap:.5rem}
+.tb-btn{background:var(--bg3);border:1px solid var(--brd);color:var(--t2);padding:.38rem .8rem;border-radius:8px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:.76rem;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:.3rem}
+.tb-btn:hover{border-color:var(--o);color:var(--o)}
+.tb-btn.p{background:var(--o);border-color:var(--o);color:#fff}
+.tb-btn.p:hover{background:var(--od);color:#fff}
+
+/* ─── CONTENT ─── */
+.cnt{flex:1;padding:1.4rem;overflow-y:auto}
+.pg{display:none;animation:fadeIn .2s ease}.pg.on{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── STAT CARDS ─── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-bottom:1.4rem}
+.sc{background:var(--bg2);border:1px solid var(--brd);border-radius:13px;padding:1.1rem;cursor:default;transition:all .2s;overflow:hidden;position:relative}
+.sc::after{content:'';position:absolute;top:-20px;left:-20px;width:90px;height:90px;border-radius:50%;opacity:.07}
+.sc.o::after{background:var(--o)}.sc.b::after{background:var(--b)}.sc.g::after{background:var(--gr)}.sc.p::after{background:var(--pu)}
+.sc:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.25)}
+.sc-ico{font-size:1.5rem;margin-bottom:.55rem}
+.sc-val{font-size:1.65rem;font-weight:900;font-family:'Space Mono',monospace;line-height:1}
+.sc-lbl{font-size:.72rem;color:var(--t2);margin-top:.22rem}
+.sc-chg{font-size:.68rem;margin-top:.35rem;display:flex;align-items:center;gap:.25rem}
+.sc-chg.up{color:var(--gr)}.sc-chg.dn{color:var(--re)}
+
+/* ─── SECTION HEADER ─── */
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem}
+.sh-ttl{font-size:.9rem;font-weight:800;display:flex;align-items:center;gap:.45rem}
+.sh-ttl::before{content:'';width:4px;height:17px;background:var(--o);border-radius:2px;display:block}
+
+/* ─── TABLE CARD ─── */
+.tcard{background:var(--bg2);border:1px solid var(--brd);border-radius:13px;overflow:hidden;margin-bottom:1.4rem}
+.thead{padding:.8rem 1.1rem;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:.65rem;flex-wrap:wrap;background:var(--bg3)}
+.tsrch-w{position:relative}
+.tsrch{background:var(--bg2);border:1px solid var(--brd2);border-radius:8px;padding:.38rem .8rem .38rem 2.1rem;color:var(--t);font-family:'Cairo',sans-serif;font-size:.8rem;outline:none;width:210px;transition:border-color .2s}
+.tsrch:focus{border-color:var(--o)}
+.tsrch::placeholder{color:var(--t3)}
+.tsrch-i{position:absolute;left:.6rem;top:50%;transform:translateY(-50%);color:var(--t3);font-size:.82rem;pointer-events:none}
+.tsel{background:var(--bg2);border:1px solid var(--brd2);border-radius:8px;padding:.35rem .7rem;color:var(--t2);font-family:'Cairo',sans-serif;font-size:.76rem;outline:none;cursor:pointer}
+.tsel:focus{border-color:var(--o)}
+.bcnt{background:var(--bg3);color:var(--t2);font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;border:1px solid var(--brd)}
+table{width:100%;border-collapse:collapse}
+th{padding:.65rem 1rem;text-align:right;font-size:.68rem;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--brd);background:rgba(255,255,255,.02);white-space:nowrap}
+td{padding:.62rem 1rem;font-size:.8rem;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle;color:var(--t)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.td-prod{display:flex;align-items:center;gap:.6rem}
+.td-ico{width:38px;height:38px;background:var(--bg3);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.35rem;border:1px solid var(--brd);flex-shrink:0}
+.td-nm{font-weight:700;font-size:.8rem;max-width:190px;line-height:1.3}
+.td-sku{font-family:'Space Mono',monospace;font-size:.62rem;color:var(--t3)}
+.td-pr{font-family:'Space Mono',monospace;font-weight:700;color:var(--o);font-size:.82rem}
+.tag{display:inline-flex;align-items:center;font-size:.62rem;font-weight:700;padding:.16rem .5rem;border-radius:20px;white-space:nowrap}
+.t-in{background:var(--grl);color:var(--gr)}.t-low{background:var(--yel);color:var(--ye)}.t-out{background:var(--rel);color:var(--re)}
+.t-new{background:var(--grl);color:var(--gr)}.t-sale{background:var(--rel);color:var(--re)}.t-hot{background:var(--yel);color:var(--ye)}.t-none{background:var(--bg4);color:var(--t3)}
+.t-ard{background:rgba(249,115,22,.12);color:var(--o)}.t-esp{background:var(--bl);color:var(--b)}.t-rpi{background:var(--pul);color:var(--pu)}.t-cat{background:var(--bg4);color:var(--t2)}
+.ra{display:flex;gap:.3rem}
+.rb{background:var(--bg3);border:1px solid var(--brd);color:var(--t2);width:28px;height:28px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.78rem;transition:all .15s}
+.rb:hover{border-color:var(--o);color:var(--o)}
+.rb.d:hover{border-color:var(--re);color:var(--re);background:var(--rel)}
+
+/* ─── SETTINGS CARD ─── */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin-bottom:1.2rem}
+.sgrid.full{grid-template-columns:1fr}
+.sgrid.tri{grid-template-columns:1fr 1fr 1fr}
+.scard{background:var(--bg2);border:1px solid var(--brd);border-radius:13px;overflow:hidden}
+.scard-hd{padding:.85rem 1.1rem;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:.55rem;background:var(--bg3)}
+.scard-hd h3{font-size:.84rem;font-weight:800}
+.scard-hd-ico{font-size:1rem}
+.scard-bd{padding:1.1rem}
+.sf{margin-bottom:.85rem}.sf:last-child{margin-bottom:0}
+.sf label{display:block;font-size:.68rem;font-weight:800;color:var(--t3);margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.5px}
+.sf input,.sf select,.sf textarea{width:100%;background:var(--bg3);border:1.5px solid var(--brd);border-radius:8px;padding:.5rem .78rem;color:var(--t);font-family:'Cairo',sans-serif;font-size:.82rem;outline:none;transition:border-color .2s}
+.sf input:focus,.sf select:focus,.sf textarea:focus{border-color:var(--o);background:var(--bg4)}
+.sf input::placeholder,.sf textarea::placeholder{color:var(--t3)}
+.sf textarea{resize:vertical;min-height:70px}
+.sf select option{background:var(--bg3)}
+.ssave{background:var(--o);border:none;color:#fff;padding:.48rem 1.2rem;border-radius:8px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:.8rem;font-weight:700;transition:all .2s;margin-top:.25rem;display:inline-flex;align-items:center;gap:.35rem}
+.ssave:hover{background:var(--od);transform:translateY(-1px)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.toggle-row:last-child{border-bottom:none;padding-bottom:0}
+.tgl-lbl{font-size:.8rem}.tgl-sub{font-size:.68rem;color:var(--t3)}
+.toggle{width:40px;height:21px;background:var(--bg4);border-radius:11px;cursor:pointer;position:relative;transition:background .2s;border:none;flex-shrink:0}
+.toggle.on{background:var(--o)}
+.toggle::after{content:'';position:absolute;top:3px;right:3px;width:15px;height:15px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.toggle.on::after{transform:translateX(-19px)}
+.soc-row{display:flex;gap:.45rem;align-items:center;margin-bottom:.55rem}
+.soc-ico{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.82rem;flex-shrink:0;border:1px solid var(--brd);font-weight:700;font-size:.72rem}
+.ph-row{display:flex;gap:.45rem;align-items:center;margin-bottom:.55rem}
+.ph-label{font-size:.72rem;color:var(--t3);width:80px;flex-shrink:0}
+.div{height:1px;background:var(--brd);margin:.75rem 0}
+.feat-row{display:flex;gap:.4rem;margin-bottom:.4rem}
+.feat-row input{flex:1}
+.rm-btn{background:none;border:1px solid var(--brd);color:var(--t3);width:28px;height:28px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-size:.8rem}
+.rm-btn:hover{border-color:var(--re);color:var(--re);background:var(--rel)}
+.add-row-btn{background:none;border:1.5px dashed var(--brd2);color:var(--t3);padding:.38rem .75rem;border-radius:8px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:.74rem;transition:all .15s;width:100%;margin-top:.2rem}
+.add-row-btn:hover{border-color:var(--o);color:var(--o)}
+
+/* ─── CHART ─── */
+.chart-card{background:var(--bg2);border:1px solid var(--brd);border-radius:13px;padding:1.1rem;margin-bottom:1.4rem}
+.chart-bars{display:flex;align-items:flex-end;gap:.35rem;height:110px;padding-top:.4rem}
+.cbar{flex:1;border-radius:4px 4px 0 0;min-width:10px;position:relative;cursor:pointer;transition:opacity .15s}
+.cbar:hover{opacity:.8}
+.cbar-tip{position:absolute;top:-22px;left:50%;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--brd2);font-size:.6rem;padding:.12rem .38rem;border-radius:5px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s}
+.cbar:hover .cbar-tip{opacity:1}
+.clbls{display:flex;gap:.35rem;margin-top:.38rem}
+.clbl{flex:1;text-align:center;font-size:.6rem;color:var(--t3)}
+.mini-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-top:.8rem}
+.mini-sc{background:var(--bg3);border-radius:9px;padding:.6rem .8rem;border:1px solid var(--brd)}
+.mini-val{font-size:1.05rem;font-weight:800;font-family:'Space Mono',monospace}
+.mini-lbl{font-size:.65rem;color:var(--t3);margin-top:.12rem}
+
+/* ─── ORDER STATUS ─── */
+.os{display:inline-flex;align-items:center;font-size:.65rem;font-weight:700;padding:.16rem .52rem;border-radius:20px}
+.os-new{background:var(--bl);color:var(--b)}.os-proc{background:var(--yel);color:var(--ye)}.os-ship{background:var(--pul);color:var(--pu)}.os-done{background:var(--grl);color:var(--gr)}.os-cancel{background:var(--rel);color:var(--re)}
+
+/* ─── MODAL ─── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(5px)}
+.modal-bg.on{opacity:1;pointer-events:all}
+.modal{background:var(--bg2);border:1px solid var(--brd2);border-radius:18px;width:100%;max-width:700px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.6);transform:scale(.95);transition:transform .22s;scrollbar-width:thin}
+.modal-bg.on .modal{transform:scale(1)}
+.modal::-webkit-scrollbar{width:4px}.modal::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px}
+.modal-hd{padding:1.1rem 1.3rem;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1}
+.modal-hd h3{font-size:.93rem;font-weight:800}
+.mx{background:var(--bg3);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;color:var(--t);font-size:.95rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.mx:hover{background:var(--re);color:#fff}
+.modal-bd{padding:1.3rem}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:.85rem}
+.frow.one{grid-template-columns:1fr}
+.frow.tri{grid-template-columns:1fr 1fr 1fr}
+.ff label{display:block;font-size:.67rem;font-weight:800;color:var(--t3);margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.5px}
+.ff input,.ff select,.ff textarea{width:100%;background:var(--bg3);border:1.5px solid var(--brd);border-radius:8px;padding:.52rem .8rem;color:var(--t);font-family:'Cairo',sans-serif;font-size:.83rem;outline:none;transition:border-color .2s}
+.ff input:focus,.ff select:focus,.ff textarea:focus{border-color:var(--o);background:var(--bg4)}
+.ff input::placeholder,.ff textarea::placeholder{color:var(--t3)}
+.ff textarea{resize:vertical;min-height:75px}
+.ff select option{background:var(--bg3)}
+.img-row{display:flex;gap:.4rem;align-items:center;margin-bottom:.38rem}
+.img-prev{width:36px;height:36px;background:var(--bg4);border-radius:7px;border:1px solid var(--brd);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;overflow:hidden}
+.img-prev img{width:100%;height:100%;object-fit:contain;padding:2px}
+.modal-ft{padding:.9rem 1.3rem;border-top:1px solid var(--brd);display:flex;justify-content:flex-end;gap:.55rem;position:sticky;bottom:0;background:var(--bg2)}
+.btn-cancel{background:var(--bg3);border:1px solid var(--brd);color:var(--t2);padding:.5rem 1.1rem;border-radius:8px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:.82rem;font-weight:600;transition:all .15s}
+.btn-cancel:hover{border-color:var(--re);color:var(--re)}
+.btn-save{background:var(--o);border:none;color:#fff;padding:.5rem 1.3rem;border-radius:8px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:.82rem;font-weight:700;transition:all .2s}
+.btn-save:hover{background:var(--od);transform:translateY(-1px)}
+
+/* ─── CONFIRM ─── */
+.cf-bg{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:400;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .18s}
+.cf-bg.on{opacity:1;pointer-events:all}
+.cf-box{background:var(--bg2);border:1px solid var(--brd2);border-radius:16px;padding:1.8rem;width:320px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.cf-ico{font-size:2.4rem;margin-bottom:.75rem}
+.cf-box h3{font-size:.97rem;font-weight:800;margin-bottom:.45rem}
+.cf-box p{font-size:.8rem;color:var(--t2);margin-bottom:1.2rem;line-height:1.6}
+.cf-btns{display:flex;gap:.55rem;justify-content:center}
+.cf-no{background:var(--bg3);border:1px solid var(--brd);color:var(--t2);padding:.5rem 1.1rem;border-radius:8px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:.82rem;font-weight:600;transition:all .15s}
+.cf-no:hover{border-color:var(--t2);color:var(--t)}
+.cf-yes{background:var(--re);border:none;color:#fff;padding:.5rem 1.3rem;border-radius:8px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:.82rem;font-weight:700;transition:opacity .15s}
+.cf-yes:hover{opacity:.85}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:1.8rem;left:50%;transform:translateX(-50%) translateY(80px);color:#fff;padding:.62rem 1.25rem;border-radius:10px;font-size:.83rem;font-weight:600;z-index:999;transition:transform .28s cubic-bezier(.4,0,.2,1);white-space:nowrap;display:flex;align-items:center;gap:.42rem;box-shadow:0 8px 32px rgba(0,0,0,.5);pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.ts{background:var(--gr)}.ti{background:var(--b)}.tw{background:var(--ye);color:#1e293b}.te{background:var(--re)}
+
+/* ─── SYNC BADGE ─── */
+.sync-badge{background:var(--grl);color:var(--gr);font-size:.7rem;font-weight:700;padding:.22rem .65rem;border-radius:20px;border:1px solid rgba(34,197,94,.2);display:flex;align-items:center;gap:.3rem}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:900px){.stats-row{grid-template-columns:repeat(2,1fr)}.sgrid{grid-template-columns:1fr}.sgrid.tri{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.sb{width:220px}.main{margin-right:0}.stats-row{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- ════ LOGIN ════ -->
+<div id="login" class="hide">
+  <div class="lb">
+    <div style="text-align:center;margin-bottom:.5rem">
+      <span style="font-size:2rem">🔥</span>
+    </div>
+    <div class="lb-logo">Aielectronics</div>
+    <div class="lb-sub">لوحة التحكم — Firebase: wesamarduino</div>
+    <div class="lf">
+      <label>البريد الإلكتروني</label>
+      <input type="email" id="lu" placeholder="admin@example.com" dir="ltr">
+      <label>كلمة المرور</label>
+      <input type="password" id="lp" placeholder="••••••••">
+      <button class="lbtn" onclick="doLogin()">🔐 تسجيل الدخول</button>
+    </div>
+    <div id="fbConnStatus" style="margin-top:.85rem;font-size:.76rem;text-align:center;color:var(--t3)">⏳ جاري الاتصال بـ Firebase...</div>
+  </div>
+</div>
+
+<!-- ════ APP ════ -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <div class="sb" id="sb">
+    <div class="sb-top">
+      <div class="sb-logo-ico">⚡</div>
+      <div><div class="sb-logo-txt">Aielectronics</div><div class="sb-logo-sub">Admin Panel</div></div>
+    </div>
+    <div class="sb-sec">الرئيسية</div>
+    <div class="si on" onclick="nav('dash',this)"><span class="si-ico">📊</span> الإحصائيات</div>
+    <div class="si" onclick="nav('orders',this)"><span class="si-ico">📦</span> الطلبات <span class="si-badge r" id="ordBadge">3</span></div>
+    <div class="sb-sec">المتجر</div>
+    <div class="si" onclick="nav('products',this)"><span class="si-ico">🛍️</span> المنتجات <span class="si-badge o" id="prodBadge">24</span></div>
+    <div class="si" onclick="nav('coupons',this)"><span class="si-ico">🎟️</span> كوبونات الخصم</div>
+    <div class="sb-sec">تخصيص الموقع</div>
+    <div class="si" onclick="nav('header',this)"><span class="si-ico">🔝</span> الهيدر والتنقل</div>
+    <div class="si" onclick="nav('slider',this)"><span class="si-ico">🎠</span> السلايدر الرئيسي</div>
+    <div class="si" onclick="nav('news',this)"><span class="si-ico">📰</span> شريط الأخبار</div>
+    <div class="si" onclick="nav('footer',this)"><span class="si-ico">🔚</span> الفوتر</div>
+    <div class="si" onclick="nav('social',this)"><span class="si-ico">📲</span> التواصل الاجتماعي</div>
+    <div class="si" onclick="nav('contact',this)"><span class="si-ico">📞</span> أرقام الهاتف</div>
+    <div class="sb-sec">الإعدادات</div>
+    <div class="si" onclick="nav('settings',this)"><span class="si-ico">⚙️</span> إعدادات عامة</div>
+    <div class="si" onclick="nav('shipping',this)"><span class="si-ico">🚚</span> الشحن والتوصيل</div>
+    <div class="sb-bot">
+      <div class="sb-user">
+        <div class="sb-av">م</div>
+        <div><div class="sb-un">المدير</div><div class="sb-ur">Super Admin</div></div>
+        <button class="sb-out" onclick="doLogout()" title="خروج">🚪</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main" id="main">
+    <!-- TOPBAR -->
+    <div class="tb">
+      <button class="tb-tog" onclick="togSb()">☰</button>
+      <div class="tb-title"><small>لوحة التحكم /</small><span id="pgLabel">الإحصائيات</span></div>
+      <div class="sync-badge" id="syncBadge">🔥 Firebase متصل</div>
+      <div class="tb-acts">
+        <button class="tb-btn" onclick="seedDatabase()" title="رفع المنتجات الافتراضية إلى Firebase">🌱 زرع البيانات</button>
+        <button class="tb-btn" onclick="openStore()">🌐 فتح المتجر</button>
+        <button class="tb-btn" onclick="pushToStore()">📤 حفظ ومزامنة</button>
+        <button class="tb-btn p" onclick="openProdModal()">+ منتج جديد</button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="cnt">
+
+      <!-- ══ DASHBOARD ══ -->
+      <div class="pg on" id="pg-dash">
+        <!-- Stats row — updated by Firebase realtime -->
+        <div class="stats-row">
+          <div class="sc o" style="cursor:pointer" onclick="nav('orders',document.querySelector('[onclick*=orders]'))">
+            <div class="sc-ico">💰</div>
+            <div class="sc-val" id="s-rev">0</div>
+            <div class="sc-lbl">إجمالي المبيعات (JD)</div>
+            <div class="sc-chg up" id="s-rev-chg">جاري التحميل...</div>
+          </div>
+          <div class="sc b" style="cursor:pointer" onclick="nav('orders',document.querySelector('[onclick*=orders]'))">
+            <div class="sc-ico">📦</div>
+            <div class="sc-val" id="s-ord">0</div>
+            <div class="sc-lbl">إجمالي الطلبات</div>
+            <div class="sc-chg" id="s-ord-chg">جاري التحميل...</div>
+          </div>
+          <div class="sc g" style="cursor:pointer" onclick="nav('products',document.querySelector('[onclick*=products]'))">
+            <div class="sc-ico">🛍️</div>
+            <div class="sc-val" id="s-prod">0</div>
+            <div class="sc-lbl">إجمالي المنتجات</div>
+            <div class="sc-chg up" id="s-prod-chg">جاري التحميل...</div>
+          </div>
+          <div class="sc" style="cursor:pointer" onclick="nav('coupons',document.querySelector('[onclick*=coupons]'))">
+            <div class="sc-ico">🎟️</div>
+            <div class="sc-val" id="s-cpn">0</div>
+            <div class="sc-lbl">كوبونات نشطة</div>
+            <div class="sc-chg up" id="s-cpn-chg">جاري التحميل...</div>
+          </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="chart-card">
+          <div class="sh">
+            <div class="sh-ttl">مبيعات آخر 7 أيام</div>
+            <div style="display:flex;align-items:center;gap:.6rem">
+              <span class="bcnt" id="weekTotal">0 JD</span>
+              <button class="tb-btn" onclick="exportOrdersCSV()" title="تصدير الطلبات">📥 تصدير CSV</button>
+            </div>
+          </div>
+          <div class="chart-bars" id="chartBars"></div>
+          <div class="clbls" id="chartLabels"></div>
+          <div class="mini-row" id="miniStats">
+            <div class="mini-sc"><div class="mini-val" style="color:var(--o)" id="m-pending">0</div><div class="mini-lbl">طلب قيد الانتظار</div></div>
+            <div class="mini-sc"><div class="mini-val" style="color:var(--gr)" id="m-done">0</div><div class="mini-lbl">طلب مكتمل</div></div>
+            <div class="mini-sc"><div class="mini-val" style="color:var(--b)" id="m-rev-today">0</div><div class="mini-lbl">مبيعات اليوم (JD)</div></div>
+          </div>
+        </div>
+
+        <!-- Low stock alert -->
+        <div id="lowStockAlert" style="display:none;background:var(--yel);border:1px solid var(--ye);border-radius:10px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.82rem;color:var(--ye)"></div>
+
+        <div class="sh">
+          <div class="sh-ttl">أحدث الطلبات</div>
+          <button class="tb-btn" onclick="nav('orders',document.querySelector('[onclick*=orders]'))">عرض الكل ←</button>
+        </div>
+        <div class="tcard" id="recentOrdTbl"></div>
+
+        <div class="sh" style="margin-top:1.2rem">
+          <div class="sh-ttl">أكثر المنتجات مبيعاً</div>
+        </div>
+        <div class="tcard" id="topProdTbl"></div>
+      </div>
+
+      <!-- ══ PRODUCTS ══ -->
+      <div class="pg" id="pg-products">
+        <div class="tcard">
+          <div class="thead">
+            <div class="tsrch-w"><span class="tsrch-i">🔍</span><input class="tsrch" id="prodSrch" placeholder="ابحث في المنتجات..." oninput="renderProds()"></div>
+            <select class="tsel" id="catFlt" onchange="renderProds()">
+              <option value="">كل التصنيفات</option>
+              <option value="arduino">Arduino</option><option value="raspberry">Raspberry Pi</option>
+              <option value="esp">ESP32/8266</option><option value="sensors">حساسات</option>
+              <option value="displays">شاشات</option><option value="motors">موتورات</option>
+              <option value="power">طاقة</option><option value="wireless">لاسلكي</option>
+              <option value="tools">أدوات</option><option value="3dprint">طباعة 3D</option>
+            </select>
+            <select class="tsel" id="stFlt" onchange="renderProds()">
+              <option value="">كل الحالات</option>
+              <option value="in-stock">متوفر</option><option value="low-stock">كمية محدودة</option>
+            </select>
+            <span class="bcnt" id="prodCnt">24</span>
+          </div>
+          <table><thead><tr><th>المنتج</th><th>SKU</th><th>التصنيف</th><th>السعر</th><th>الحالة</th><th>الشارة</th><th>التقييم</th><th>إجراءات</th></tr></thead>
+          <tbody id="prodsTbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ══ ORDERS ══ -->
+      <div class="pg" id="pg-orders">
+        <div class="tcard">
+          <div class="thead">
+            <div class="tsrch-w"><span class="tsrch-i">🔍</span><input class="tsrch" id="ordSrch" placeholder="ابحث بالاسم أو رقم الطلب..." oninput="renderOrders()"></div>
+            <select class="tsel" id="ordStatusFlt" onchange="renderOrders()">
+              <option value="">كل الحالات</option>
+              <option value="new">جديد</option>
+              <option value="processing">قيد المعالجة</option>
+              <option value="shipped">مشحون</option>
+              <option value="done">مكتمل</option>
+              <option value="cancel">ملغي</option>
+            </select>
+            <span class="bcnt" id="ordCnt">0</span>
+            <button class="tb-btn" onclick="exportOrdersCSV()" style="margin-right:auto">📥 CSV</button>
+            <button class="tb-btn p" onclick="openOrderModal()">+ طلب جديد</button>
+          </div>
+          <table>
+            <thead><tr><th>#</th><th>العميل</th><th>الهاتف</th><th>المنتجات</th><th>المجموع</th><th>الحالة</th><th>التاريخ</th><th>إجراء</th></tr></thead>
+            <tbody id="ordTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══ COUPONS ══ -->
+      <div class="pg" id="pg-coupons">
+        <div class="sgrid">
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">🎟️</span><h3>الكوبونات النشطة</h3></div>
+            <div class="scard-bd" id="cpnList"></div>
+          </div>
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">➕</span><h3>إضافة كوبون جديد</h3></div>
+            <div class="scard-bd">
+              <div class="sf"><label>كود الكوبون</label><input id="cpnCode" placeholder="SAVE20" dir="ltr" style="text-transform:uppercase"></div>
+              <div class="sf"><label>نسبة الخصم (%)</label><input id="cpnPct" type="number" min="1" max="100" placeholder="20"></div>
+              <div class="sf"><label>الحد الأقصى للاستخدام</label><input id="cpnMax" type="number" placeholder="100"></div>
+              <button class="ssave" onclick="addCoupon()">+ إضافة</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ HEADER ══ -->
+      <div class="pg" id="pg-header">
+        <div class="sgrid">
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">🏷️</span><h3>الشعار واسم الموقع</h3></div>
+            <div class="scard-bd">
+              <div class="sf"><label>الجزء الأول من الشعار</label><input id="h-prefix" value="⚡تك" dir="ltr"></div>
+              <div class="sf"><label>الجزء الثاني من الشعار</label><input id="h-suffix" value="ستور"></div>
+              <div class="sf"><label>وصف الموقع (Meta)</label><textarea id="h-meta" rows="2">متجرك الأول للإلكترونيات في الأردن</textarea></div>
+              <button class="ssave" onclick="saveConfig('logo')">💾 حفظ</button>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">📢</span><h3>شريط الإعلانات العلوي</h3></div>
+            <div class="scard-bd">
+              <div id="topbarItems"></div>
+              <button class="add-row-btn" onclick="addTopbarItem()">+ إضافة إعلان</button>
+              <div class="toggle-row" style="margin-top:.75rem">
+                <div><div class="tgl-lbl">تفعيل شريط الإعلانات</div></div>
+                <button class="toggle on" id="topbarToggle" onclick="this.classList.toggle('on')"></button>
+              </div>
+              <button class="ssave" onclick="saveConfig('topbar')" style="margin-top:.75rem">💾 حفظ</button>
+            </div>
+          </div>
+          <div class="scard" style="grid-column:1/-1">
+            <div class="scard-hd"><span class="scard-hd-ico">🧭</span><h3>روابط القائمة الرئيسية</h3></div>
+            <div class="scard-bd">
+              <div id="navLinks"></div>
+              <button class="add-row-btn" onclick="addNavLink()">+ إضافة رابط</button>
+              <button class="ssave" onclick="saveConfig('nav')" style="margin-top:.75rem">💾 حفظ</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SLIDER ══ -->
+      <div class="pg" id="pg-slider">
+        <div class="sh" style="margin-bottom:1rem">
+          <div class="sh-ttl">السلايدر الرئيسي</div>
+          <div style="display:flex;gap:.6rem">
+            <button class="tb-btn p" onclick="openSlideModal()">+ سلايد جديد</button>
+            <button class="tb-btn" onclick="saveSlides()">💾 حفظ الكل</button>
+          </div>
+        </div>
+        <div id="slidesList" style="display:flex;flex-direction:column;gap:.85rem"></div>
+      </div>
+
+      <!-- ══ NEWS TICKER ══ -->
+      <div class="pg" id="pg-news">
+        <div class="sgrid">
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">📰</span><h3>أخبار شريط التمرير</h3></div>
+            <div class="scard-bd">
+              <div style="margin-bottom:.6rem;font-size:.76rem;color:var(--t3)">كل سطر = خبر واحد يظهر في الشريط المتحرك</div>
+              <div id="newsItems"></div>
+              <button class="add-row-btn" onclick="addNewsItem()">+ إضافة خبر</button>
+              <button class="ssave" onclick="saveNews()" style="margin-top:.75rem">💾 حفظ وتطبيق</button>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">👁️</span><h3>معاينة الشريط</h3></div>
+            <div class="scard-bd">
+              <div style="background:var(--bd);border-radius:8px;padding:.5rem 0;overflow:hidden;margin-bottom:1rem">
+                <div id="newsPreview" style="display:flex;width:max-content;animation:scroll-ltr 20s linear infinite;font-size:.76rem;color:#fff"></div>
+              </div>
+              <div class="sf"><label>سرعة التمرير (ثانية)</label><input id="news-speed" type="number" value="30" min="10" max="120"></div>
+              <div class="toggle-row">
+                <div><div class="tgl-lbl">تفعيل الشريط</div></div>
+                <button class="toggle on" id="newsToggle" onclick="this.classList.toggle('on')"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ FOOTER ══ -->
+      <div class="pg" id="pg-footer">
+        <div class="sgrid">
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">📝</span><h3>نص الفوتر</h3></div>
+            <div class="scard-bd">
+              <div class="sf"><label>وصف المتجر</label><textarea id="f-desc" rows="3">متجرك الأول للإلكترونيات في الأردن. نوفر أفضل القطع والمكونات للمهندسين والطلاب وعشاق التقنية بأسعار تنافسية وجودة مضمونة 100%.</textarea></div>
+              <div class="sf"><label>نص حقوق النشر</label><input id="f-copy" value="© 2025 Aielectronics. جميع الحقوق محفوظة."></div>
+              <div class="sf"><label>نص يمين الفوتر</label><input id="f-right" value="صُنع بـ ❤️ في الأردن 🇯🇴"></div>
+              <button class="ssave" onclick="saveConfig('footer')">💾 حفظ</button>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">🔗</span><h3>عمود 1 — التصنيفات</h3></div>
+            <div class="scard-bd">
+              <div class="sf"><label>عنوان العمود</label><input id="fc1t" value="التصنيفات"></div>
+              <div class="sf"><label>الروابط (سطر لكل رابط)</label><textarea id="fc1l" rows="5">Arduino & AVR
+Raspberry Pi
+ESP32 / ESP8266
+حساسات
+شاشات وعروض
+موتورات وطاقة</textarea></div>
+              <button class="ssave" onclick="saveConfig('fc1')">💾 حفظ</button>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">🔗</span><h3>عمود 2 — الخدمات</h3></div>
+            <div class="scard-bd">
+              <div class="sf"><label>عنوان العمود</label><input id="fc2t" value="خدماتنا"></div>
+              <div class="sf"><label>الروابط</label><textarea id="fc2l" rows="5">الشحن والتوصيل
+سياسة الإرجاع
+الدعم التقني
+خصومات الطلاب
+تجهيز المختبرات
+مشاريع التخرج</textarea></div>
+              <button class="ssave" onclick="saveConfig('fc2')">💾 حفظ</button>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">💳</span><h3>طرق الدفع</h3></div>
+            <div class="scard-bd">
+              <div class="sf"><label>طرق الدفع (افصل بفاصلة)</label><input id="f-pay" value="VISA, MC, JD Pay, Cash, MyFatoorah"></div>
+              <div class="toggle-row">
+                <div><div class="tgl-lbl">عرض أيقونات الدفع في الفوتر</div></div>
+                <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+              </div>
+              <button class="ssave" onclick="saveConfig('pay')" style="margin-top:.75rem">💾 حفظ</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SOCIAL ══ -->
+      <div class="pg" id="pg-social">
+        <div class="sgrid">
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">📲</span><h3>روابط مواقع التواصل</h3></div>
+            <div class="scard-bd">
+              <div class="soc-row"><div class="soc-ico" style="background:#1877f2;color:#fff">f</div><input id="sc-fb" value="https://facebook.com/mikroelectron" dir="ltr" placeholder="رابط فيسبوك"></div>
+              <div class="soc-row"><div class="soc-ico" style="background:#e1306c;color:#fff">📸</div><input id="sc-ig" value="https://instagram.com/mikroelectron" dir="ltr" placeholder="رابط انستغرام"></div>
+              <div class="soc-row"><div class="soc-ico" style="background:#ff0000;color:#fff">▶</div><input id="sc-yt" value="https://youtube.com/@mikroelectron" dir="ltr" placeholder="رابط يوتيوب"></div>
+              <div class="soc-row"><div class="soc-ico" style="background:#0a66c2;color:#fff">in</div><input id="sc-li" value="" dir="ltr" placeholder="رابط لينكدإن"></div>
+              <div class="soc-row"><div class="soc-ico" style="background:#000;color:#fff">X</div><input id="sc-tw" value="" dir="ltr" placeholder="رابط تويتر/X"></div>
+              <div class="soc-row"><div class="soc-ico" style="background:#25d366;color:#fff">💬</div><input id="sc-wa" value="https://wa.me/96279006219" dir="ltr" placeholder="رابط واتساب"></div>
+              <div class="soc-row"><div class="soc-ico" style="background:#0088cc;color:#fff">✈️</div><input id="sc-tg" value="" dir="ltr" placeholder="رابط تيليغرام"></div>
+              <button class="ssave" onclick="saveConfig('social')">💾 حفظ الروابط</button>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">🗺️</span><h3>الموقع الجغرافي</h3></div>
+            <div class="scard-bd">
+              <div class="sf"><label>العنوان الكامل</label><textarea id="sc-addr" rows="2">شارع الجامعة الأردنية، مبنى خليفة، الطابق الثالث، عمّان</textarea></div>
+              <div class="sf"><label>رابط خريطة Google Maps</label><input id="sc-map" value="https://maps.google.com/?q=mikroelectron+amman" dir="ltr"></div>
+              <button class="ssave" onclick="saveConfig('location')">💾 حفظ</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CONTACT ══ -->
+      <div class="pg" id="pg-contact">
+        <div class="sgrid">
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">📞</span><h3>أرقام الهاتف</h3></div>
+            <div class="scard-bd">
+              <div class="ph-row"><span class="ph-label">الرئيسي</span><input id="ph1" value="+962 6 222 5522" dir="ltr"></div>
+              <div class="ph-row"><span class="ph-label">واتساب</span><input id="ph2" value="+962 7900 621 96" dir="ltr"></div>
+              <div class="ph-row"><span class="ph-label">ثانٍ</span><input id="ph3" value="+962 6 534 4772" dir="ltr"></div>
+              <div class="ph-row"><span class="ph-label">فاكس</span><input id="ph4" value="+962 6 534 4778" dir="ltr"></div>
+              <button class="ssave" onclick="saveConfig('phones')">💾 حفظ</button>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">📧</span><h3>البريد الإلكتروني</h3></div>
+            <div class="scard-bd">
+              <div class="sf"><label>البريد الرئيسي</label><input id="em1" value="info@mikroelectron.com" dir="ltr"></div>
+              <div class="sf"><label>بريد الدعم التقني</label><input id="em2" value="support@mikroelectron.com" dir="ltr"></div>
+              <div class="sf"><label>بريد الشراكات</label><input id="em3" value="partner@mikroelectron.com" dir="ltr"></div>
+              <button class="ssave" onclick="saveConfig('emails')">💾 حفظ</button>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">🕐</span><h3>ساعات العمل</h3></div>
+            <div class="scard-bd">
+              <div class="sf"><label>الأحد - الخميس</label><input id="hw1" value="9:00 ص – 6:00 م"></div>
+              <div class="sf"><label>الجمعة</label><input id="hw2" value="مغلق"></div>
+              <div class="sf"><label>السبت</label><input id="hw3" value="9:00 ص – 4:00 م"></div>
+              <button class="ssave" onclick="saveConfig('hours')">💾 حفظ</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SETTINGS ══ -->
+      <div class="pg" id="pg-settings">
+        <div class="sgrid">
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">🌐</span><h3>إعدادات عامة</h3></div>
+            <div class="scard-bd">
+              <div class="sf"><label>اسم المتجر</label><input value="تك ستور — متجر الإلكترونيات"></div>
+              <div class="sf"><label>العملة</label><select><option>دينار أردني (JD)</option><option>دولار (USD)</option></select></div>
+              <div class="sf"><label>عدد المنتجات في كل صفحة</label><input type="number" value="12"></div>
+              <div class="toggle-row"><div><div class="tgl-lbl">وضع الصيانة</div><div class="tgl-sub">يُخفي المتجر عن الزوار</div></div><button class="toggle" onclick="this.classList.toggle('on')"></button></div>
+              <div class="toggle-row"><div><div class="tgl-lbl">التسجيل مفتوح للعملاء</div></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+              <div class="toggle-row"><div><div class="tgl-lbl">عرض تقييمات العملاء</div></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+              <button class="ssave" onclick="toast('تم حفظ الإعدادات ✓','ts')">💾 حفظ</button>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">🎨</span><h3>ألوان الموقع</h3></div>
+            <div class="scard-bd">
+              <div class="sf"><label>اللون الرئيسي (برتقالي)</label><div style="display:flex;gap:.5rem"><input type="color" value="#f97316" style="width:42px;height:34px;border-radius:7px;border:1px solid var(--brd2);cursor:pointer;background:none;padding:2px"><input value="#f97316" dir="ltr" style="flex:1"></div></div>
+              <div class="sf"><label>اللون الثانوي (أزرق)</label><div style="display:flex;gap:.5rem"><input type="color" value="#1d4ed8" style="width:42px;height:34px;border-radius:7px;border:1px solid var(--brd2);cursor:pointer;background:none;padding:2px"><input value="#1d4ed8" dir="ltr" style="flex:1"></div></div>
+              <div class="sf"><label>خط الموقع</label><select><option>Cairo</option><option>Tajawal</option><option>Almarai</option></select></div>
+              <button class="ssave" onclick="toast('تم حفظ الألوان ✓','ts')">💾 تطبيق</button>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">🔐</span><h3>تغيير كلمة المرور</h3></div>
+            <div class="scard-bd">
+              <div class="sf"><label>كلمة المرور الحالية</label><input type="password" placeholder="••••••••"></div>
+              <div class="sf"><label>كلمة المرور الجديدة</label><input type="password" placeholder="••••••••"></div>
+              <div class="sf"><label>تأكيد كلمة المرور</label><input type="password" placeholder="••••••••"></div>
+              <button class="ssave" onclick="toast('تم تغيير كلمة المرور ✓','ts')">🔐 تغيير</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SHIPPING ══ -->
+      <div class="pg" id="pg-shipping">
+        <div class="sgrid">
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">🚚</span><h3>إعدادات الشحن</h3></div>
+            <div class="scard-bd">
+              <div class="sf"><label>تكلفة الشحن الافتراضية (JD)</label><input type="number" value="2" step="0.5"></div>
+              <div class="sf"><label>حد الشحن المجاني (JD)</label><input type="number" value="25"></div>
+              <div class="sf"><label>شركة الشحن</label><input value="أرامكس الأردن"></div>
+              <div class="toggle-row"><div><div class="tgl-lbl">شحن مجاني فوق الحد</div></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+              <div class="toggle-row"><div><div class="tgl-lbl">توصيل عمّان 24 ساعة</div></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+              <div class="toggle-row"><div><div class="tgl-lbl">الدفع عند الاستلام</div></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+              <button class="ssave" onclick="toast('تم حفظ إعدادات الشحن ✓','ts')">💾 حفظ</button>
+            </div>
+          </div>
+          <div class="scard">
+            <div class="scard-hd"><span class="scard-hd-ico">🗺️</span><h3>مناطق التوصيل</h3></div>
+            <div class="scard-bd">
+              <table style="width:100%;font-size:.78rem">
+                <thead><tr><th style="text-align:right;padding:.35rem;color:var(--t3)">المنطقة</th><th style="text-align:right;padding:.35rem;color:var(--t3)">السعر</th><th style="text-align:right;padding:.35rem;color:var(--t3)">المدة</th></tr></thead>
+                <tbody>
+                  <tr><td style="padding:.38rem;color:var(--t)">عمّان</td><td style="padding:.38rem"><span style="color:var(--o);font-family:'Space Mono',monospace">2.00 JD</span></td><td style="padding:.38rem;color:var(--t2)">24 ساعة</td></tr>
+                  <tr><td style="padding:.38rem;color:var(--t)">إربد / الزرقاء</td><td style="padding:.38rem"><span style="color:var(--o);font-family:'Space Mono',monospace">2.50 JD</span></td><td style="padding:.38rem;color:var(--t2)">24-48 ساعة</td></tr>
+                  <tr><td style="padding:.38rem;color:var(--t)">العقبة / الجنوب</td><td style="padding:.38rem"><span style="color:var(--o);font-family:'Space Mono',monospace">3.50 JD</span></td><td style="padding:.38rem;color:var(--t2)">48-72 ساعة</td></tr>
+                  <tr><td style="padding:.38rem;color:var(--t)">باقي المحافظات</td><td style="padding:.38rem"><span style="color:var(--o);font-family:'Space Mono',monospace">3.00 JD</span></td><td style="padding:.38rem;color:var(--t2)">48 ساعة</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /cnt -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- PRODUCT MODAL -->
+<div class="modal-bg" id="prodModal">
+  <div class="modal">
+    <div class="modal-hd"><h3 id="modalTitle">إضافة منتج جديد</h3><button class="mx" onclick="closeModal()">✕</button></div>
+    <div class="modal-bd">
+      <div class="frow"><div class="ff"><label>اسم المنتج *</label><input id="fn" placeholder="Arduino Uno R3"></div><div class="ff"><label>رقم SKU *</label><input id="fsku" placeholder="ARD-UNO-R3" dir="ltr"></div></div>
+      <div class="frow tri">
+        <div class="ff"><label>السعر (JD) *</label><input id="fp" type="number" step="0.01" placeholder="8.50"></div>
+        <div class="ff"><label>السعر القديم (اختياري)</label><input id="fop" type="number" step="0.01" placeholder="10.00"></div>
+        <div class="ff"><label>التصنيف</label><select id="fcat"><option value="arduino">Arduino</option><option value="raspberry">Raspberry Pi</option><option value="esp">ESP32/8266</option><option value="sensors">حساسات</option><option value="displays">شاشات</option><option value="motors">موتورات</option><option value="power">طاقة</option><option value="wireless">لاسلكي</option><option value="tools">أدوات</option><option value="3dprint">طباعة 3D</option></select></div>
+      </div>
+      <div class="frow tri">
+        <div class="ff"><label>الحالة</label><select id="fst"><option value="in-stock">متوفر</option><option value="low-stock">كمية محدودة</option><option value="out-stock">غير متوفر</option></select></div>
+        <div class="ff"><label>نص الحالة</label><input id="fstx" placeholder="متوفر"></div>
+        <div class="ff"><label>الشارة</label><select id="fb"><option value="">بدون</option><option value="new">جديد</option><option value="sale">خصم</option><option value="hot">رائج 🔥</option></select></div>
+      </div>
+      <div class="frow">
+        <div class="ff"><label>الأيقونة (Emoji)</label><input id="fic" placeholder="🤖" dir="ltr"></div>
+        <div class="ff"><label>التقييم (1-5)</label><input id="frat" type="number" min="1" max="5" step="0.1" placeholder="4.8"></div>
+      </div>
+      <div class="frow one"><div class="ff"><label>الوصف التفصيلي</label><textarea id="fdesc" rows="3" placeholder="اكتب وصفاً تفصيلياً للمنتج..."></textarea></div></div>
+      <div class="frow one">
+        <div class="ff">
+          <label>صور المنتج (روابط خارجية)</label>
+          <div id="imgsWrap"></div>
+          <button class="add-row-btn" onclick="addImgRow()">+ إضافة رابط صورة</button>
+        </div>
+      </div>
+      <div class="frow one">
+        <div class="ff">
+          <label>المميزات الرئيسية</label>
+          <div id="featsWrap"></div>
+          <button class="add-row-btn" onclick="addFeatRow()">+ إضافة ميزة</button>
+        </div>
+      </div>
+      <div class="frow one"><div class="ff"><label>المواصفات التقنية (مفتاح: قيمة — سطر لكل مواصفة)</label><textarea id="fsp" rows="5" dir="ltr" placeholder="المعالج: ATmega328P&#10;التردد: 16 MHz&#10;الجهد: 5V"></textarea></div></div>
+      <div class="frow one"><div class="ff"><label>حالات الاستخدام (افصل بفاصلة)</label><input id="fuc" placeholder="مشاريع تخرج، روبوتات، تعلم البرمجة"></div></div>
+    </div>
+    <div class="modal-ft"><button class="btn-cancel" onclick="closeModal()">إلغاء</button><button class="btn-save" onclick="saveProd()">💾 حفظ المنتج</button></div>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="cf-bg" id="cfModal">
+  <div class="cf-box">
+    <div class="cf-ico">🗑️</div>
+    <h3>تأكيد الحذف</h3>
+    <p id="cfMsg">هل أنت متأكد؟ لا يمكن التراجع.</p>
+    <div class="cf-btns"><button class="cf-no" onclick="closeCf()">إلغاء</button><button class="cf-yes" id="cfYes">حذف</button></div>
+  </div>
+</div>
+
+<!-- SLIDE MODAL -->
+<div class="modal-bg" id="slideModal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-hd"><h3 id="slideModalTitle">إضافة سلايد جديد</h3><button class="mx" onclick="closeSlideModal()">✕</button></div>
+    <div class="modal-bd">
+      <input type="hidden" id="sl-id">
+      <div class="frow">
+        <div class="ff"><label>شارة (badge) — اختياري</label><input id="sl-tag" placeholder="🔥 عروض حصرية"></div>
+        <div class="ff"><label>تفعيل</label>
+          <select id="sl-active"><option value="true">✅ نشط</option><option value="false">❌ مخفي</option></select>
+        </div>
+      </div>
+      <div class="frow one">
+        <div class="ff"><label>العنوان (ضع \n بين السطرين)</label><input id="sl-title" placeholder="كل ما يحتاجه\nمشروعك الإلكتروني"></div>
+      </div>
+      <div class="frow one">
+        <div class="ff"><label>الوصف</label><textarea id="sl-desc" rows="2" placeholder="نص وصفي مختصر..."></textarea></div>
+      </div>
+      <div class="frow">
+        <div class="ff"><label>نص الزر الأول</label><input id="sl-btn1" placeholder="تصفح المنتجات"></div>
+        <div class="ff"><label>رابط الزر الأول</label>
+          <select id="sl-btn1link"><option value="shop">المتجر</option><option value="home">الرئيسية</option><option value="compare">المقارنة</option></select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="ff"><label>نص الزر الثاني (اختياري)</label><input id="sl-btn2" placeholder=""></div>
+        <div class="ff"><label>رابط الزر الثاني</label>
+          <select id="sl-btn2link"><option value="">بدون</option><option value="shop">المتجر</option><option value="home">الرئيسية</option></select>
+        </div>
+      </div>
+      <div class="frow one">
+        <div class="ff"><label>رابط الصورة (اختياري — يغطي الخلفية)</label><input id="sl-img" placeholder="https://..." dir="ltr" oninput="previewSlide()"></div>
+      </div>
+      <div class="frow" id="sl-bg-row">
+        <div class="ff"><label>لون الخلفية (Gradient CSS)</label><input id="sl-bg" placeholder="linear-gradient(125deg,#0f2460,#1d4ed8)" dir="ltr" oninput="previewSlide()"></div>
+        <div class="ff"><label>طبقة التعتيم</label><input id="sl-overlay" placeholder="rgba(0,0,0,0.2)" dir="ltr" oninput="previewSlide()"></div>
+      </div>
+      <!-- Preview -->
+      <div style="margin-top:.75rem">
+        <div style="font-size:.72rem;color:var(--t3);margin-bottom:.4rem;font-weight:700">معاينة مصغرة:</div>
+        <div id="slidePreview" style="height:140px;border-radius:10px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:flex-end">
+          <div id="sp-bg" style="position:absolute;inset:0;background:linear-gradient(125deg,#0f2460,#1d4ed8)"></div>
+          <div id="sp-ov" style="position:absolute;inset:0;background:rgba(0,0,0,0.2)"></div>
+          <div style="position:relative;z-index:2;padding:1rem 1.5rem;color:#fff;text-align:right">
+            <div id="sp-tag" style="background:rgba(249,115,22,.9);color:#fff;font-size:.65rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;display:inline-block;margin-bottom:.4rem">🔥 شارة</div>
+            <div id="sp-title" style="font-size:1rem;font-weight:900;line-height:1.2">عنوان السلايد</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-cancel" onclick="closeSlideModal()">إلغاء</button>
+      <button class="btn-save" onclick="saveSlide()">💾 حفظ السلايد</button>
+    </div>
+  </div>
+</div>
+
+<!-- ORDER MODAL -->
+<div class="modal-bg" id="ordModal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-hd"><h3 id="ordModalTitle">إضافة طلب جديد</h3><button class="mx" onclick="closeOrdModal()">✕</button></div>
+    <div class="modal-bd">
+      <div class="frow">
+        <div class="ff"><label>اسم العميل *</label><input id="o-name" placeholder="أحمد خالد"></div>
+        <div class="ff"><label>رقم الهاتف *</label><input id="o-phone" placeholder="+962 7..." dir="ltr"></div>
+      </div>
+      <div class="frow">
+        <div class="ff"><label>البريد الإلكتروني</label><input id="o-email" placeholder="email@example.com" dir="ltr"></div>
+        <div class="ff"><label>العنوان / المنطقة</label><input id="o-addr" placeholder="عمّان، الجبيهة"></div>
+      </div>
+      <div class="frow one">
+        <div class="ff">
+          <label>المنتجات (اسم المنتج × الكمية — سطر لكل منتج)</label>
+          <textarea id="o-items" rows="3" placeholder="Arduino Uno × 2&#10;ESP32 × 1&#10;DHT22 × 3"></textarea>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="ff"><label>المجموع الكلي (JD) *</label><input id="o-total" type="number" step="0.01" placeholder="17.50"></div>
+        <div class="ff"><label>الحالة</label>
+          <select id="o-status">
+            <option value="new">جديد</option>
+            <option value="processing">قيد المعالجة</option>
+            <option value="shipped">مشحون</option>
+            <option value="done">مكتمل</option>
+            <option value="cancel">ملغي</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow one">
+        <div class="ff"><label>ملاحظات</label><input id="o-notes" placeholder="ملاحظات خاصة بالطلب..."></div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-cancel" onclick="closeOrdModal()">إلغاء</button>
+      <button class="btn-save" onclick="saveOrder()">💾 حفظ الطلب</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════
+   FULL PRODUCT DATA
+════════════════════════════ */
+let PD=[
+  {id:1,n:'Arduino Uno R3 الأصلي',sku:'ARD-UNO-R3',p:8.5,op:null,cat:'arduino',ic:'🤖',b:'hot',st:'in-stock',stx:'متوفر',rat:4.8,rcnt:124,
+   imgs:['https://store.arduino.cc/cdn/shop/products/A000066_iso_1_3f47da08-8b4a-453e-b8c4-4e8ef9d47b7c_643x483.jpg?v=1629028814'],
+   desc:'لوحة Arduino Uno R3 هي الأكثر مبيعاً في العالم ونقطة البداية المثالية لكل من يريد تعلم الإلكترونيات والبرمجة.',
+   features:['14 منفذ رقمي (6 منها PWM)','ذاكرة Flash 32KB وSRAM 2KB','دعم UART، SPI، وI2C','توصيل USB مباشر'],
+   useCases:['مشاريع تخرج','روبوتات','تعلم البرمجة'],
+   sp:{المعالج:'ATmega328P',التردد:'16 MHz',الجهد:'5V',الحجم:'68.6×53.4mm'},reviews:[]},
+  {id:2,n:'Arduino Mega 2560 Rev3',sku:'ARD-MEGA-2560',p:14.0,op:18.0,cat:'arduino',ic:'🤖',b:'sale',st:'in-stock',stx:'متوفر',rat:4.7,rcnt:89,
+   imgs:['https://store.arduino.cc/cdn/shop/products/A000047_iso_643x483.jpg?v=1629028824'],
+   desc:'Arduino Mega 2560 مع 54 منفذاً رقمياً — مثالية للمشاريع الكبيرة.',
+   features:['54 منفذ رقمي','16 منفذ تناظري','Flash 256KB'],useCases:['CNC','طباعة 3D'],
+   sp:{المعالج:'ATmega2560',التردد:'16 MHz',الجهد:'5V'},reviews:[]},
+  {id:3,n:'Arduino Nano V3.0',sku:'ARD-NANO-V3',p:4.5,op:null,cat:'arduino',ic:'🤖',b:'',st:'in-stock',stx:'متوفر',rat:4.6,rcnt:203,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Arduino-nano-overview.jpg/400px-Arduino-nano-overview.jpg'],
+   desc:'نسخة مدمجة من Arduino Uno بحجم أصغر بكثير.',features:['حجم صغير جداً','مناسب للـ Breadboard'],useCases:['مشاريع مدمجة'],
+   sp:{المعالج:'ATmega328P',الحجم:'45×18mm',الوزن:'7g'},reviews:[]},
+  {id:4,n:'Arduino Starter Kit Complete',sku:'ARD-KIT-FULL',p:28.0,op:35.0,cat:'arduino',ic:'🎁',b:'sale',st:'low-stock',stx:'كمية محدودة',rat:4.9,rcnt:56,
+   imgs:['https://m.media-amazon.com/images/I/91PQ9tNRpGL._AC_SL1500_.jpg'],
+   desc:'كيت Arduino المتكامل للمبتدئين — 30+ مكون.',features:['Arduino Uno أصلي','Breadboard 830','30+ مكوّن'],useCases:['هدية تعليمية'],
+   sp:{المحتوى:'30+ مكوّن',المستوى:'مبتدئ'},reviews:[]},
+  {id:5,n:'Raspberry Pi 4 Model B 4GB',sku:'RPI-4B-4G',p:55.0,op:60.0,cat:'raspberry',ic:'🍓',b:'sale',st:'low-stock',stx:'كمية محدودة',rat:4.9,rcnt:78,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Raspberry-Pi-4-Model-B-02.jpg/800px-Raspberry-Pi-4-Model-B-02.jpg'],
+   desc:'Raspberry Pi 4 بذاكرة 4GB — يعمل كحاسوب كامل.',features:['معالج Cortex-A72','ذاكرة 4GB','دعم 4K'],useCases:['ذكاء اصطناعي','Linux'],
+   sp:{المعالج:'Cortex-A72 1.8GHz',الذاكرة:'4GB LPDDR4X'},reviews:[]},
+  {id:6,n:'Raspberry Pi Zero 2W',sku:'RPI-ZERO-2W',p:18.0,op:null,cat:'raspberry',ic:'🍓',b:'new',st:'in-stock',stx:'متوفر',rat:4.7,rcnt:34,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Raspberry_Pi_Zero_2_W_Diagram.jpg/640px-Raspberry_Pi_Zero_2_W_Diagram.jpg'],
+   desc:'أصغر Pi مع WiFi وBluetooth مدمجَين.',features:['WiFi+BT مدمج','حجم بطاقة ائتمان'],useCases:['أجهزة ارتداء'],
+   sp:{المعالج:'Cortex-A53 1GHz',الذاكرة:'512MB'},reviews:[]},
+  {id:7,n:'ESP32 Dev Board 38-Pin',sku:'ESP-32-DEV-38',p:5.5,op:null,cat:'esp',ic:'📶',b:'hot',st:'in-stock',stx:'متوفر',rat:4.8,rcnt:312,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/ESP32_Espressif_ESP-WROOM-32_Dev_Board.jpg/640px-ESP32_Espressif_ESP-WROOM-32_Dev_Board.jpg'],
+   desc:'ESP32 مع WiFi وBluetooth — الأكثر مبيعاً في IoT.',features:['WiFi+BT4.2 مدمج','معالج مزدوج 240MHz'],useCases:['IoT','WiFi'],
+   sp:{المعالج:'Xtensa LX6 240MHz',الاتصال:'WiFi+BT4.2'},reviews:[]},
+  {id:8,n:'ESP32-S3 WROOM-1 Module',sku:'ESP-S3-WROOM-1',p:7.0,op:null,cat:'esp',ic:'📶',b:'new',st:'in-stock',stx:'متوفر',rat:4.7,rcnt:45,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/ESP32_Espressif_ESP-WROOM-32_Dev_Board.jpg/640px-ESP32_Espressif_ESP-WROOM-32_Dev_Board.jpg'],
+   desc:'أحدث ESP مع USB OTG ودعم AI.',features:['USB OTG نيتيف','دعم Neural Network'],useCases:['رؤية حاسوبية','AI'],
+   sp:{المعالج:'Xtensa LX7 240MHz',USB:'OTG نيتيف'},reviews:[]},
+  {id:9,n:'ESP8266 NodeMCU V3',sku:'ESP-8266-NCU',p:3.5,op:4.5,cat:'esp',ic:'📶',b:'sale',st:'in-stock',stx:'متوفر',rat:4.5,rcnt:287,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/ESP8266_01.jpg/640px-ESP8266_01.jpg'],
+   desc:'WiFi رخيص ومجرّب لمشاريع IoT.',features:['WiFi مدمج','11 GPIO','Arduino IDE'],useCases:['WiFi بسيط'],
+   sp:{المعالج:'Xtensa L106 80MHz',WiFi:'802.11 b/g/n'},reviews:[]},
+  {id:10,n:'HC-SR04 Ultrasonic Distance Sensor',sku:'SNS-HC-SR04',p:1.5,op:null,cat:'sensors',ic:'📡',b:'',st:'in-stock',stx:'متوفر',rat:4.5,rcnt:445,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Ultrasound_sensor.jpg/640px-Ultrasound_sensor.jpg'],
+   desc:'قياس مسافة 2-400cm بدقة 3mm.',features:['مدى 2-400cm','دقة 3mm','4 أطراف فقط'],useCases:['روبوتات','قياس مسافة'],
+   sp:{المدى:'2-400cm',الدقة:'3mm',الجهد:'5V'},reviews:[]},
+  {id:11,n:'DHT22 Temperature & Humidity Sensor',sku:'SNS-DHT22',p:2.8,op:null,cat:'sensors',ic:'🌡️',b:'hot',st:'in-stock',stx:'متوفر',rat:4.7,rcnt:189,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/AM2302.jpg/640px-AM2302.jpg'],
+   desc:'حساس دقيق للحرارة والرطوبة — أفضل من DHT11.',features:['دقة ±0.5°C','مدى -40 إلى 80°C','رطوبة 0-100%'],useCases:['محطات طقس'],
+   sp:{الحرارة:'-40–80°C',الرطوبة:'0-100%',الدقة:'±0.5°C'},reviews:[]},
+  {id:12,n:'MPU-6050 6-Axis IMU Gyroscope',sku:'SNS-MPU6050',p:3.0,op:null,cat:'sensors',ic:'📡',b:'',st:'in-stock',stx:'متوفر',rat:4.6,rcnt:134,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/GY-521_MPU-6050_3-Axis_Gyro_Accelerometer_Module.jpg/640px-GY-521_MPU-6050_3-Axis_Gyro_Accelerometer_Module.jpg'],
+   desc:'جيروسكوب وتسارع 6 محاور عبر I2C.',features:['6 محاور','I2C 400kHz','ADC 16-bit'],useCases:['طيارات','روبوتات'],
+   sp:{المحاور:'6',البروتوكول:'I2C',الدقة:'16-bit ADC'},reviews:[]},
+  {id:13,n:'PIR Motion Sensor HC-SR501',sku:'SNS-PIR-SR501',p:1.8,op:null,cat:'sensors',ic:'👁️',b:'',st:'in-stock',stx:'متوفر',rat:4.4,rcnt:276,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/PIR_motion_sensor.jpg/640px-PIR_motion_sensor.jpg'],
+   desc:'حساس حركة بالأشعة تحت الحمراء — مدى 7م.',features:['مدى 7م','زاوية 120°','خرج رقمي'],useCases:['أضواء تلقائية','إنذار'],
+   sp:{المدى:'7m',الزاوية:'120°'},reviews:[]},
+  {id:14,n:'OLED Display 0.96" I2C SSD1306',sku:'DSP-OLED-096',p:4.0,op:5.0,cat:'displays',ic:'🖥️',b:'sale',st:'in-stock',stx:'متوفر',rat:4.7,rcnt:167,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/SSD1306-front.jpg/640px-SSD1306-front.jpg'],
+   desc:'شاشة OLED واضحة جداً عبر I2C.',features:['128×64px','I2C منفذين فقط','بدون إضاءة خلفية'],useCases:['عرض بيانات'],
+   sp:{الدقة:'128×64px',البروتوكول:'I2C'},reviews:[]},
+  {id:15,n:'LCD 16×2 Blue Backlight + I2C PCF8574',sku:'DSP-LCD-162',p:3.5,op:null,cat:'displays',ic:'🖥️',b:'',st:'in-stock',stx:'متوفر',rat:4.5,rcnt:223,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/LCD_16x2.jpg/640px-LCD_16x2.jpg'],
+   desc:'شاشة LCD مع I2C — 4 أسلاك فقط.',features:['16×2 حرف','I2C PCF8574','إضاءة زرقاء'],useCases:['واجهات مستخدم'],
+   sp:{الأحرف:'16×2',البروتوكول:'I2C'},reviews:[]},
+  {id:16,n:'TFT Color LCD 2.4" SPI 240×320 Touch',sku:'DSP-TFT-24',p:9.0,op:null,cat:'displays',ic:'🖥️',b:'new',st:'low-stock',stx:'كمية محدودة',rat:4.6,rcnt:88,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/LCD_TFT_2.4_display.jpg/640px-LCD_TFT_2.4_display.jpg'],
+   desc:'شاشة ملونة مع لمس مقاوم وكارت SD.',features:['240×320px','65K لون','لمس مقاوم','microSD'],useCases:['واجهات GUI'],
+   sp:{الدقة:'240×320px',اللمس:'مقاوم'},reviews:[]},
+  {id:17,n:'Servo Motor SG90 9g Micro',sku:'MOT-SG90',p:2.0,op:null,cat:'motors',ic:'⚙️',b:'',st:'in-stock',stx:'متوفر',rat:4.5,rcnt:334,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/SG90.jpg/640px-SG90.jpg'],
+   desc:'محرك سيرفو صغير 0-180° بـ 9 جرام.',features:['0-180°','9g وزن','PWM 50Hz'],useCases:['طيارات','روبوتات'],
+   sp:{الزاوية:'0-180°',الوزن:'9g',العزم:'1.8 kg.cm'},reviews:[]},
+  {id:18,n:'Stepper Motor 28BYJ-48 + ULN2003 Driver',sku:'MOT-28BYJ',p:3.5,op:null,cat:'motors',ic:'⚙️',b:'',st:'in-stock',stx:'متوفر',rat:4.4,rcnt:198,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/28byj-48.jpg/640px-28byj-48.jpg'],
+   desc:'محرك خطوي مع مشغل — 4096 خطوة.',features:['1:64 تروس','ULN2003 مدمج','5V مباشر'],useCases:['CNC','ساعات'],
+   sp:{الخطوات:'4096',التروس:'1:64'},reviews:[]},
+  {id:19,n:'Li-Po Battery 3.7V 2000mAh JST',sku:'PWR-LIPO-2K',p:6.0,op:null,cat:'power',ic:'🔋',b:'',st:'in-stock',stx:'متوفر',rat:4.5,rcnt:112,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/LiPo_EMAX.jpg/640px-LiPo_EMAX.jpg'],
+   desc:'بطارية ليثيوم 3.7V 2000mAh خفيفة الوزن.',features:['2000mAh','JST 2.0mm','38g خفيفة'],useCases:['روبوتات متنقلة'],
+   sp:{الجهد:'3.7V',الطاقة:'2000mAh',الوزن:'38g'},reviews:[]},
+  {id:20,n:'DC-DC Buck Converter XL4016 8A',sku:'PWR-XL4016',p:2.5,op:null,cat:'power',ic:'⚡',b:'',st:'in-stock',stx:'متوفر',rat:4.6,rcnt:145,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/DC_DC_converter.jpg/640px-DC_DC_converter.jpg'],
+   desc:'محول جهد 4-40V إلى 1.25-36V بـ 8A.',features:['8A تيار','96% كفاءة','حماية حرارة'],useCases:['مصادر طاقة'],
+   sp:{الدخل:'4-40V',الخرج:'1.25-36V',التيار:'8A'},reviews:[]},
+  {id:21,n:'NRF24L01+ PA+LNA 2.4GHz Wireless',sku:'WL-NRF24L01',p:3.0,op:null,cat:'wireless',ic:'📡',b:'hot',st:'in-stock',stx:'متوفر',rat:4.6,rcnt:267,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/NRF24L01.jpg/640px-NRF24L01.jpg'],
+   desc:'اتصال لاسلكي 100م — 2.4GHz.',features:['100م مدى','126 قناة','2Mbps'],useCases:['تحكم لاسلكي'],
+   sp:{التردد:'2.4GHz',المدى:'100m',الجهد:'3.3V'},reviews:[]},
+  {id:22,n:'HC-05 Bluetooth Serial Module',sku:'WL-HC05',p:4.5,op:null,cat:'wireless',ic:'🔵',b:'',st:'in-stock',stx:'متوفر',rat:4.4,rcnt:189,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/HC-05.jpg/640px-HC-05.jpg'],
+   desc:'بلوتوث UART سهل للربط بالهاتف.',features:['Master/Slave','أوامر AT','10م مدى'],useCases:['تحكم عبر الهاتف'],
+   sp:{البلوتوث:'2.0+EDR',المدى:'10m'},reviews:[]},
+  {id:23,n:'Soldering Station 60W + 5 Tips',sku:'TL-SOLDER-60',p:12.0,op:15.0,cat:'tools',ic:'🔧',b:'sale',st:'in-stock',stx:'متوفر',rat:4.7,rcnt:67,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Soldering_station.jpg/640px-Soldering_station.jpg'],
+   desc:'محطة لحام 60W مع 5 رؤوس وحامل.',features:['60W','200-480°C','5 رؤوس'],useCases:['لحام إلكترونيات'],
+   sp:{الطاقة:'60W',الحرارة:'200-480°C'},reviews:[]},
+  {id:24,n:'3D Printer Filament PLA+ 1.75mm 1KG',sku:'3D-PLA-PLUS-1KG',p:18.0,op:22.0,cat:'3dprint',ic:'🖨️',b:'sale',st:'in-stock',stx:'متوفر',rat:4.6,rcnt:93,
+   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Prusa_Mendel_Filament_Spool.jpg/640px-Prusa_Mendel_Filament_Spool.jpg'],
+   desc:'PLA+ 1.75mm 1KG — جودة عالية.',features:['قطر 1.75mm','1KG','190-220°C'],useCases:['طباعة 3D'],
+   sp:{القطر:'1.75mm',الوزن:'1KG',الطباعة:'190-220°C'},reviews:[]},
+];
+
+/* ══════════════════════════════
+   NORMALIZE: توحيد بنية المنتج
+   يقبل حقول add-products (name,price,...) ويحولها للشكل المختصر (n,p,...)
+══════════════════════════════ */
+function normalizeProduct(raw){
+  // إذا كان المنتج يستخدم الحقول المختصرة أصلاً
+  if(raw.n && raw.p !== undefined) return raw;
+  
+  // تحويل من الحقول الكاملة إلى المختصرة
+  const catMap = {
+    'Arduino & AVR':'arduino','Raspberry Pi':'raspberry','ESP32/ESP8266':'esp',
+    'حساسات':'sensors','شاشات':'displays','موتورات':'motors',
+    'طاقة':'power','لاسلكي':'wireless','أدوات':'tools','طباعة 3D':'3dprint'
+  };
+  const statusMap = {
+    'متوفر':'in-stock','كمية محدودة':'low-stock','غير متوفر':'out-of-stock'
+  };
+  const badgeMap = {
+    'جديد':'new','خصم':'sale','رائج 🔥':'hot','رائج':'hot'
+  };
+
+  return {
+    id:    raw.id || Date.now(),
+    n:     raw.name || raw.n || 'بدون اسم',
+    sku:   raw.sku || '',
+    p:     parseFloat(raw.price) || raw.p || 0,
+    op:    raw.oldPrice ? parseFloat(raw.oldPrice) : (raw.op || null),
+    cat:   catMap[raw.category] || raw.cat || raw.category || 'arduino',
+    ic:    raw.ic || '📦',
+    b:     badgeMap[raw.badge] || raw.b || raw.badge || '',
+    st:    statusMap[raw.status] || raw.st || raw.status || 'in-stock',
+    stx:   raw.status || raw.stx || 'متوفر',
+    rat:   parseFloat(raw.rating) || raw.rat || 5,
+    rcnt:  raw.rcnt || 0,
+    imgs:  raw.images || raw.imgs || [],
+    desc:  raw.description || raw.desc || '',
+    features: raw.features || [],
+    useCases: raw.useCases || [],
+    sp:    raw.sp || (Array.isArray(raw.specs) ? Object.fromEntries(raw.specs.map(s=>{const[k,...v]=s.split(':');return[k.trim(),(v.join(':')).trim()];})) : {}),
+    reviews: raw.reviews || []
+  };
+}
+
+/* تطبيع كل المنتجات في PD عند التحميل */
+function normalizePD(){
+  PD = PD.map(normalizeProduct);
+}
+normalizePD();
+
+const ORDERS=[
+  {id:'ORD-001',customer:'أحمد خالد',items:'Arduino Uno × 2',total:17.0,status:'new',date:'2025-04-08'},
+  {id:'ORD-002',customer:'سارة محمد',items:'Raspberry Pi 4 × 1',total:57.0,status:'processing',date:'2025-04-07'},
+  {id:'ORD-003',customer:'محمد العلي',items:'ESP32 × 3, DHT22 × 2',total:22.1,status:'shipped',date:'2025-04-06'},
+  {id:'ORD-004',customer:'نور الدين',items:'Arduino Starter Kit',total:30.0,status:'done',date:'2025-04-05'},
+  {id:'ORD-005',customer:'ريم النور',items:'OLED × 2, LCD × 1',total:11.5,status:'done',date:'2025-04-04'},
+  {id:'ORD-006',customer:'خالد السعيد',items:'Soldering Station × 1',total:14.0,status:'cancel',date:'2025-04-03'},
+];
+
+let COUPONS_DATA=[
+  {code:'STUDENT10',pct:10,max:200,uses:45,active:true},
+  {code:'TECH20',pct:20,max:50,uses:12,active:true},
+  {code:'JORDAN15',pct:15,max:100,uses:8,active:false},
+];
+
+let NAV_LINKS=['الرئيسية','المتجر','العروض','من نحن','تواصل معنا'];
+let TOPBAR_ITEMS=['🚚 شحن مجاني فوق <strong>25 دينار</strong>','🎓 خصم <strong>10%</strong> للطلاب','🔥 عروض ESP32 خصم <strong>20%</strong>','⭐ تقييم عملائنا <strong>4.8/5</strong>','🔄 إرجاع مجاني <strong>7 أيام</strong>'];
+
+let editId=null,sbOpen=true,imgCount=0,featCount=0;
+
+/* ── Firebase مدمج مباشرة — لا حاجة لإعادة الإعداد ── */
+/* Project: wesamarduino | Auth: Email/Password | Firestore enabled */
+
+/* ── LOAD FROM FIREBASE ── */
+async function loadFromFirebase(){
+  if(!window._db||!window._fbGetDocs||!window._fbCollection){
+    try {
+      const saved = localStorage.getItem('TECHSTORE_PRODUCTS');
+      if(saved) {
+        const arr = JSON.parse(saved);
+        if(Array.isArray(arr) && arr.length) PD = arr;
+      }
+    } catch(e){}
+    normalizePD();
+    initDash();
+    return;
+  }
+  try {
+    const snap = await window._fbGetDocs(window._fbCollection(window._db,'products'));
+    if(snap.empty && PD.length){
+      toast('🌱 قاعدة البيانات فارغة — جاري رفع المنتجات...','ti');
+      await fbSaveProducts(PD);
+      toast('✅ تم رفع '+PD.length+' منتج إلى Firebase','ts');
+    } else if(!snap.empty){
+      const arr=[];
+      snap.forEach(d=>arr.push(d.data()));
+      PD=arr;
+      normalizePD();
+      localStorage.setItem('TECHSTORE_PRODUCTS', JSON.stringify(PD));
+    }
+    initDash();
+  } catch(e){
+    console.warn('loadFromFirebase error:',e);
+    try {
+      const saved = localStorage.getItem('TECHSTORE_PRODUCTS');
+      if(saved) {
+        const arr = JSON.parse(saved);
+        if(Array.isArray(arr) && arr.length) PD = arr;
+      }
+    } catch(ex){}
+    normalizePD();
+    toast('⚠️ تعذّر تحميل البيانات من Firebase — تم استخدام البيانات المحلية','tw');
+    initDash();
+  }
+}
+
+/* ── PUSH TO FIREBASE ── */
+async function pushToStore(){
+  if(!window.__fbReady||!window._db){
+    toast('⚠️ Firebase غير متصل','tw'); return;
+  }
+  try{
+    setSyncBadge('loading');
+    // Save products
+    await fbSaveProducts(PD);
+    // Save coupons
+    await fbSaveCoupons(COUPONS_DATA);
+    // Build & save config
+    const cfg={
+      topbarItems:TOPBAR_ITEMS,
+      navLinks:NAV_LINKS,
+      phone1:document.getElementById('ph1')?.value||'+962 6 222 5522',
+      phone2:document.getElementById('ph2')?.value||'',
+      email:document.getElementById('em1')?.value||'info@mikroelectron.com',
+      addr:document.getElementById('sc-addr')?.value||'عمّان، الأردن',
+      mapLink:document.getElementById('sc-map')?.value||'',
+      social:{
+        fb:document.getElementById('sc-fb')?.value||'',
+        ig:document.getElementById('sc-ig')?.value||'',
+        yt:document.getElementById('sc-yt')?.value||'',
+        wa:document.getElementById('sc-wa')?.value||'',
+        tw:document.getElementById('sc-tw')?.value||'',
+        li:document.getElementById('sc-li')?.value||'',
+        tg:document.getElementById('sc-tg')?.value||'',
+      },
+      footerDesc:document.getElementById('f-desc')?.value||'',
+      footerCopy:document.getElementById('f-copy')?.value||'',
+      footerRight:document.getElementById('f-right')?.value||'',
+      fc1:{title:document.getElementById('fc1t')?.value||'',links:(document.getElementById('fc1l')?.value||'').split('\n').filter(Boolean)},
+      fc2:{title:document.getElementById('fc2t')?.value||'',links:(document.getElementById('fc2l')?.value||'').split('\n').filter(Boolean)},
+      heroTag:document.getElementById('h-tag')?.value||'',
+      heroH1:document.getElementById('h-h1')?.value||'',
+      heroH2:document.getElementById('h-h2')?.value||'',
+      heroDesc:document.getElementById('h-desc')?.value||'',
+      heroBtn1:document.getElementById('h-btn1')?.value||'',
+      heroBtn2:document.getElementById('h-btn2')?.value||'',
+      heroNums:[
+        {v:document.getElementById('n1v')?.value||'6,000+',l:document.getElementById('n1l')?.value||'منتج'},
+        {v:document.getElementById('n2v')?.value||'4.8★',l:document.getElementById('n2l')?.value||'تقييم'},
+        {v:document.getElementById('n3v')?.value||'24h',l:document.getElementById('n3l')?.value||'توصيل'},
+      ],
+      promo1:{ico:document.getElementById('p1ico')?.value,title:document.getElementById('p1title')?.value,desc:document.getElementById('p1desc')?.value,tag:document.getElementById('p1tag')?.value,pr:document.getElementById('p1pr')?.value},
+      promo2:{ico:document.getElementById('p2ico')?.value,title:document.getElementById('p2title')?.value,desc:document.getElementById('p2desc')?.value,tag:document.getElementById('p2tag')?.value,pr:document.getElementById('p2pr')?.value},
+      coupons:Object.fromEntries(COUPONS_DATA.filter(c=>c.active).map(c=>[c.code,c.pct])),
+      hours:{wd:document.getElementById('hw1')?.value,fr:document.getElementById('hw2')?.value,sa:document.getElementById('hw3')?.value},
+      slides:ADMIN_SLIDES,
+      topbarItems:NEWS_ITEMS,
+    };
+    await fbSaveConfig(cfg);
+    // Also cache locally so store loads instantly on next visit
+    localStorage.setItem('TECHSTORE_PRODUCTS', JSON.stringify(PD));
+    localStorage.setItem('TECHSTORE_CONFIG', JSON.stringify(cfg));
+    localStorage.setItem('TECHSTORE_COUPONS', JSON.stringify(COUPONS_DATA));
+    setSyncBadge('ok');
+    toast('✅ تم الحفظ والمزامنة مع Firebase!','ts');
+  }catch(e){
+    setSyncBadge('err');
+    toast('❌ خطأ: '+e.message,'te');
+  }
+}
+
+function setSyncBadge(state){
+  const el=document.getElementById('syncBadge');if(!el)return;
+  if(state==='loading'){el.innerHTML='⏳ جاري المزامنة...';el.style.color='var(--ye)';}
+  else if(state==='ok'){el.innerHTML='🔥 Firebase — تم المزامنة ✓';el.style.color='var(--gr)';setTimeout(()=>{el.innerHTML='🔥 Firebase متصل';el.style.color='var(--gr)';},3000);}
+  else{el.innerHTML='❌ فشل الحفظ';el.style.color='var(--re)';}
+}
+
+function openStore(){
+  pushToStore();
+  setTimeout(()=>window.open('electronics-store.html','_blank'),600);
+}
+
+/* ── AUTH ── */
+function doLogin(){
+  const email=document.getElementById('lu').value.trim();
+  const pass=document.getElementById('lp').value;
+  if(!email||!pass){toast('يرجى إدخال البريد وكلمة المرور','tw');return;}
+  if(!window.__fbReady){
+    toast('⏳ جاري الاتصال بـ Firebase، انتظر لحظة...','ti');
+    // retry after 2s
+    setTimeout(()=>{
+      if(window.__fbReady) window.fbLogin(email,pass);
+      else toast('❌ Firebase لم يتصل بعد، أعد تحميل الصفحة','te');
+    },2000);
+    return;
+  }
+  toast('⏳ جاري تسجيل الدخول...','ti');
+  window.fbLogin(email,pass);
+}
+function doLogout(){
+  window.fbLogout().then(()=>{
+    document.getElementById('app').style.display='none';
+    document.getElementById('login').classList.remove('hide');
+    toast('تم تسجيل الخروج','ti');
+  });
+}
+document.addEventListener('keydown',e=>{
+  const login=document.getElementById('login');
+  if(!login.classList.contains('hide')&&e.key==='Enter')doLogin();
+});
+
+
+/* ── NAV ── */
+function nav(p,el){
+  document.querySelectorAll('.si').forEach(x=>x.classList.remove('on'));
+  if(el)el.classList.add('on');
+  document.querySelectorAll('.pg').forEach(x=>x.classList.remove('on'));
+  const pg=document.getElementById('pg-'+p);if(pg)pg.classList.add('on');
+  const lbl={dash:'الإحصائيات',orders:'الطلبات',products:'إدارة المنتجات',coupons:'كوبونات الخصم',header:'الهيدر والتنقل',slider:'السلايدر الرئيسي',news:'شريط الأخبار',footer:'الفوتر',social:'التواصل الاجتماعي',contact:'أرقام الهاتف والتواصل',settings:'الإعدادات العامة',shipping:'الشحن والتوصيل'};
+  document.getElementById('pgLabel').textContent=lbl[p]||p;
+  if(p==='products')renderProds();
+  if(p==='orders')renderOrders();
+  if(p==='coupons')renderCoupons();
+  if(p==='header')renderHeaderInputs();
+  if(p==='slider'){renderSlidesList();}
+  if(p==='news'){renderNewsItems();}
+}
+function togSb(){sbOpen=!sbOpen;document.getElementById('sb').classList.toggle('off',!sbOpen);document.getElementById('main').classList.toggle('wide',!sbOpen);}
+
+/* ── INIT ── */
+function initDash(){
+  // Products
+  const sp=document.getElementById('s-prod');const pb=document.getElementById('prodBadge');
+  if(sp)sp.textContent=PD.length;if(pb)pb.textContent=PD.length;
+  const lowStock=PD.filter(p=>p.st==='low-stock');
+  const alert=document.getElementById('lowStockAlert');
+  if(alert&&lowStock.length){
+    alert.style.display='block';
+    alert.innerHTML='⚠️ تنبيه: '+lowStock.length+' منتج بكمية محدودة: '+lowStock.map(p=>'<strong>'+p.n.split(' ').slice(0,3).join(' ')+'</strong>').join('، ');
+  }
+  // Orders stats
+  const total=ORDERS.length;
+  const rev=ORDERS.filter(o=>o.status==='done').reduce((s,o)=>s+(parseFloat(o.total)||0),0);
+  const pending=ORDERS.filter(o=>o.status==='new'||o.status==='processing').length;
+  const done=ORDERS.filter(o=>o.status==='done').length;
+  const today=new Date().toISOString().slice(0,10);
+  const todayRev=ORDERS.filter(o=>o.status==='done'&&(o.date||'').startsWith(today)).reduce((s,o)=>s+(parseFloat(o.total)||0),0);
+  const el_rev=document.getElementById('s-rev');if(el_rev)el_rev.textContent=rev.toFixed(0);
+  const el_ord=document.getElementById('s-ord');if(el_ord)el_ord.textContent=total;
+  const el_cpn=document.getElementById('s-cpn');if(el_cpn)el_cpn.textContent=COUPONS_DATA.filter(c=>c.active).length;
+  const el_rc=document.getElementById('s-rev-chg');if(el_rc)el_rc.textContent=(rev>0?'↑ ':'')+'إجمالي المكتملة';
+  const el_oc=document.getElementById('s-ord-chg');if(el_oc){el_oc.textContent=pending+' طلب قيد الانتظار';el_oc.className='sc-chg '+(pending>0?'dn':'up');}
+  const el_mp=document.getElementById('m-pending');if(el_mp)el_mp.textContent=pending;
+  const el_md=document.getElementById('m-done');if(el_md)el_md.textContent=done;
+  const el_mt=document.getElementById('m-rev-today');if(el_mt)el_mt.textContent=todayRev.toFixed(1);
+  const el_ob=document.getElementById('ordBadge');if(el_ob)el_ob.textContent=ORDERS.filter(o=>o.status==='new').length||'';
+  renderChart();renderRecentOrders();renderTopProds();
+  renderProds();renderOrders();renderCoupons();renderHeaderInputs();
+}
+
+/* ── SEED DATABASE (first run) ── */
+async function seedDatabase(){
+  if(!window.__fbReady||!window._db){toast('⚠️ Firebase غير متصل','tw');return;}
+  if(!confirm('هل تريد رفع '+PD.length+' منتج إلى Firebase؟ سيُستبدل أي محتوى موجود.')){return;}
+  toast('⏳ جاري رفع المنتجات إلى Firebase...','ti');
+  try{
+    await fbSaveProducts(PD);
+    localStorage.setItem('TECHSTORE_PRODUCTS',JSON.stringify(PD));
+    toast('✅ تم رفع '+PD.length+' منتج بنجاح!','ts');
+    initDash();
+  }catch(e){toast('❌ خطأ: '+e.message,'te');}
+}
+
+/* ── CHART ── */
+function renderChart(){
+  const days=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+  const vals=[145,210,178,320,265,189,410];
+  const max=Math.max(...vals);
+  document.getElementById('weekTotal').textContent=vals.reduce((a,b)=>a+b,0)+' JD';
+  const clrs=['var(--o)','var(--b)','var(--gr)','var(--o)','var(--pu)','var(--b)','var(--o)'];
+  document.getElementById('chartBars').innerHTML=vals.map((v,i)=>`<div class="cbar" style="height:${(v/max*100)}%;background:${clrs[i]};opacity:.82"><div class="cbar-tip">${v} JD</div></div>`).join('');
+  document.getElementById('chartLabels').innerHTML=days.map(d=>`<div class="clbl">${d}</div>`).join('');
+}
+
+/* ── RECENT ORDERS ── */
+function renderRecentOrders(){
+  const sm={new:'os-new جديد',processing:'os-proc قيد المعالجة',shipped:'os-ship مشحون',done:'os-done مكتمل',cancel:'os-cancel ملغي'};
+  document.getElementById('recentOrdTbl').innerHTML=`<table><thead><tr><th>#</th><th>العميل</th><th>المنتجات</th><th>المجموع</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody>${ORDERS.slice(0,4).map(o=>{const[c,l]=(sm[o.status]||'os-new جديد').split(' ');return`<tr><td style="font-family:'Space Mono',monospace;font-size:.7rem;color:var(--t3)">${o.id}</td><td style="font-weight:700">${o.customer}</td><td style="color:var(--t2);font-size:.76rem">${o.items}</td><td class="td-pr">${o.total.toFixed(2)} JD</td><td><span class="os ${c}">${l}</span></td><td style="color:var(--t3);font-size:.72rem">${o.date}</td></tr>`;}).join('')}</tbody></table>`;
+}
+
+/* ── TOP PRODUCTS ── */
+function renderTopProds(){
+  const top=[...PD].sort((a,b)=>b.rcnt-a.rcnt).slice(0,5);
+  document.getElementById('topProdTbl').innerHTML=`<table><thead><tr><th>#</th><th>المنتج</th><th>SKU</th><th>السعر</th><th>المبيعات</th><th>التقييم</th></tr></thead><tbody>${top.map((p,i)=>`<tr><td style="font-weight:800;color:var(--o);font-family:'Space Mono',monospace">#${i+1}</td><td><div class="td-prod"><div class="td-ico" style="overflow:hidden"><img src="${(p.imgs&&p.imgs[0])||''}" alt="${p.n}" style="width:100%;height:100%;object-fit:contain;padding:3px" onerror="this.style.display='none';this.parentNode.textContent='${p.ic||'📦'}'"></div><div class="td-nm">${p.n}</div></div></td><td class="td-sku">${p.sku}</td><td class="td-pr">${p.p.toFixed(2)} JD</td><td style="font-size:.76rem">${p.rcnt} طلب</td><td style="color:#f59e0b">${p.rat}★</td></tr>`).join('')}</tbody></table>`;
+}
+
+/* ── PRODUCTS TABLE ── */
+const catTag={arduino:'t-ard',raspberry:'t-rpi',esp:'t-esp',sensors:'t-cat',displays:'t-cat',motors:'t-cat',power:'t-cat',wireless:'t-cat',tools:'t-cat','3dprint':'t-cat'};
+const badgeTag={new:'t-new جديد',sale:'t-sale خصم',hot:'t-hot رائج','':`t-none —`};
+
+function renderProds(){
+  const q=document.getElementById('prodSrch')?.value.toLowerCase()||'';
+  const cf=document.getElementById('catFlt')?.value||'';
+  const sf=document.getElementById('stFlt')?.value||'';
+  let list=PD.filter(p=>
+    (!q||(p.n.toLowerCase().includes(q)||p.sku.toLowerCase().includes(q)))&&
+    (!cf||p.cat===cf)&&(!sf||p.st===sf)
+  );
+  const el=document.getElementById('prodCnt');if(el)el.textContent=list.length;
+  const tb=document.getElementById('prodsTbody');if(!tb)return;
+  tb.innerHTML=list.map(p=>{
+    const [bc,bl]=(badgeTag[p.b]||'t-none —').split(' ');
+    return`<tr>
+      <td><div class="td-prod"><div class="td-ico" style="overflow:hidden"><img src="${(p.imgs&&p.imgs[0])||''}" alt="${p.n}" style="width:100%;height:100%;object-fit:contain;padding:3px" onerror="this.style.display='none';this.parentNode.textContent='${p.ic||'📦'}'"></div><div><div class="td-nm">${p.n}</div><div class="td-sku">${p.sku}</div></div></div></td>
+      <td class="td-sku">${p.sku}</td>
+      <td><span class="tag ${catTag[p.cat]||'t-cat'}">${p.cat}</span></td>
+      <td class="td-pr">${p.p.toFixed(2)} JD${p.op?`<div style="color:var(--t3);font-size:.64rem;text-decoration:line-through">${p.op.toFixed(2)}</div>`:''}</td>
+      <td><span class="tag ${p.st==='in-stock'?'t-in':p.st==='low-stock'?'t-low':'t-out'}">${p.stx}</span></td>
+      <td><span class="tag ${bc}">${bl}</span></td>
+      <td style="color:#f59e0b;font-size:.78rem">${p.rat}★</td>
+      <td><div class="ra">
+        <button class="rb" onclick="openProdModal(${p.id})" title="تعديل">✏️</button>
+        <button class="rb d" onclick="confirmDel(${p.id})" title="حذف">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── ORDERS ── */
+function renderOrders(){
+  const q=(document.getElementById('ordSrch')?.value||'').toLowerCase();
+  const sf=document.getElementById('ordStatusFlt')?.value||'';
+  const sm={new:'os-new جديد',processing:'os-proc قيد المعالجة',shipped:'os-ship مشحون',done:'os-done مكتمل',cancel:'os-cancel ملغي'};
+  let list=ORDERS.filter(o=>
+    (!q||(o.customer||'').toLowerCase().includes(q)||(o.id||'').toLowerCase().includes(q)||(o.phone||'').includes(q))&&
+    (!sf||o.status===sf)
+  );
+  const cnt=document.getElementById('ordCnt');if(cnt)cnt.textContent=list.length;
+  const tb=document.getElementById('ordTbody');if(!tb)return;
+  if(!list.length){tb.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:2.5rem;color:var(--t3)">لا توجد طلبات تطابق البحث</td></tr>`;return;}
+  tb.innerHTML=list.map((o,i)=>{
+    const idx=ORDERS.indexOf(o);
+    const[c,l]=(sm[o.status]||'os-new جديد').split(' ');
+    return`<tr>
+      <td style="font-family:'Space Mono',monospace;font-size:.68rem;color:var(--t3)">${o.id}</td>
+      <td style="font-weight:700">${o.customer||'—'}</td>
+      <td style="font-size:.75rem;color:var(--t2)">${o.phone||'—'}</td>
+      <td style="color:var(--t2);font-size:.75rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.items||'—'}</td>
+      <td class="td-pr">${parseFloat(o.total||0).toFixed(2)} JD</td>
+      <td>
+        <select style="background:var(--bg3);border:1px solid var(--brd2);border-radius:6px;padding:.26rem .5rem;color:var(--t);font-family:'Cairo',sans-serif;font-size:.72rem;outline:none;cursor:pointer"
+          onchange="ORDERS[${idx}].status=this.value;window.fbUpdateOrderStatus&&window.fbUpdateOrderStatus('${o.id}',this.value);initDash();toast('تم تحديث الحالة ✓','ts')">
+          <option value="new" ${o.status==='new'?'selected':''}>جديد</option>
+          <option value="processing" ${o.status==='processing'?'selected':''}>قيد المعالجة</option>
+          <option value="shipped" ${o.status==='shipped'?'selected':''}>مشحون</option>
+          <option value="done" ${o.status==='done'?'selected':''}>مكتمل</option>
+          <option value="cancel" ${o.status==='cancel'?'selected':''}>ملغي</option>
+        </select>
+      </td>
+      <td style="color:var(--t3);font-size:.72rem">${o.date||'—'}</td>
+      <td><div class="ra">
+        <button class="rb" onclick="viewOrder('${o.id}')" title="تفاصيل">👁️</button>
+        <button class="rb" onclick="printInvoice('${o.id}')" title="طباعة فاتورة">🖨️</button>
+        <button class="rb d" onclick="deleteOrder('${o.id}')" title="حذف">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── COUPONS ── */
+function renderCoupons(){
+  const el=document.getElementById('cpnList');if(!el)return;
+  el.innerHTML=COUPONS_DATA.map((c,i)=>`<div style="background:var(--bg3);border-radius:9px;padding:.7rem .9rem;margin-bottom:.5rem;border:1px solid var(--brd);display:flex;align-items:center;gap:.65rem">
+    <div style="font-family:'Space Mono',monospace;font-weight:700;font-size:.86rem;color:var(--o);flex:1">${c.code}</div>
+    <span class="tag ${c.active?'t-in':'t-out'}">${c.pct}% خصم</span>
+    <span style="font-size:.68rem;color:var(--t3)">${c.uses}/${c.max}</span>
+    <button class="toggle ${c.active?'on':''}" onclick="COUPONS_DATA[${i}].active=!COUPONS_DATA[${i}].active;renderCoupons();toast('تم تحديث الكوبون ✓','ts')"></button>
+    <button class="rb d" onclick="COUPONS_DATA.splice(${i},1);renderCoupons();toast('تم حذف الكوبون','ti')" style="width:26px;height:26px;font-size:.72rem">✕</button>
+  </div>`).join('')||'<div style="color:var(--t3);text-align:center;padding:1.5rem;font-size:.8rem">لا توجد كوبونات</div>';
+}
+function addCoupon(){
+  const code=document.getElementById('cpnCode').value.trim().toUpperCase();
+  const pct=parseInt(document.getElementById('cpnPct').value);
+  const max=parseInt(document.getElementById('cpnMax').value)||100;
+  if(!code||!pct){toast('يرجى ملء الكود والنسبة','tw');return;}
+  COUPONS_DATA.push({code,pct,max,uses:0,active:true});
+  renderCoupons();
+  document.getElementById('cpnCode').value='';document.getElementById('cpnPct').value='';
+  toast('✓ تم إضافة الكوبون','ts');
+}
+
+/* ── HEADER INPUTS ── */
+function renderHeaderInputs(){
+  const tEl=document.getElementById('topbarItems');
+  if(tEl)tEl.innerHTML=TOPBAR_ITEMS.map((t,i)=>`<div class="feat-row" style="margin-bottom:.4rem"><input value="${t}" style="flex:1;background:var(--bg3);border:1.5px solid var(--brd);border-radius:8px;padding:.48rem .75rem;color:var(--t);font-family:'Cairo',sans-serif;font-size:.8rem;outline:none" oninput="TOPBAR_ITEMS[${i}]=this.value"><button class="rm-btn" onclick="TOPBAR_ITEMS.splice(${i},1);renderHeaderInputs()">✕</button></div>`).join('');
+  const nEl=document.getElementById('navLinks');
+  if(nEl)nEl.innerHTML=NAV_LINKS.map((l,i)=>`<div class="feat-row" style="margin-bottom:.4rem"><input value="${l}" style="flex:1;background:var(--bg3);border:1.5px solid var(--brd);border-radius:8px;padding:.48rem .75rem;color:var(--t);font-family:'Cairo',sans-serif;font-size:.8rem;outline:none" oninput="NAV_LINKS[${i}]=this.value"><button class="rm-btn" onclick="NAV_LINKS.splice(${i},1);renderHeaderInputs()">✕</button></div>`).join('');
+}
+function addTopbarItem(){TOPBAR_ITEMS.push('نص جديد');renderHeaderInputs();}
+function addNavLink(){NAV_LINKS.push('رابط جديد');renderHeaderInputs();}
+
+/* ── SAVE CONFIG ── */
+function saveConfig(section){
+  pushToStore();
+  toast(`✓ تم حفظ "${section==='logo'?'الشعار':section==='topbar'?'شريط الإعلانات':section==='nav'?'روابط التنقل':section==='hero'?'البانر':section==='footer'?'الفوتر':section==='social'?'التواصل':section==='phones'?'أرقام الهاتف':section==='emails'?'البريد':section==='hours'?'ساعات العمل':section==='location'?'الموقع':section}" ومزامنته`,'ts');
+}
+
+/* ── PRODUCT MODAL ── */
+function openProdModal(id=null){
+  editId=id;imgCount=0;featCount=0;
+  document.getElementById('modalTitle').textContent=id?'تعديل المنتج':'إضافة منتج جديد';
+  resetModal();
+  if(id){
+    const p=PD.find(x=>x.id===id);if(!p)return;
+    document.getElementById('fn').value=p.n;
+    document.getElementById('fsku').value=p.sku;
+    document.getElementById('fp').value=p.p;
+    document.getElementById('fop').value=p.op||'';
+    document.getElementById('fcat').value=p.cat;
+    document.getElementById('fst').value=p.st;
+    document.getElementById('fstx').value=p.stx;
+    document.getElementById('fb').value=p.b||'';
+    document.getElementById('fic').value=p.ic;
+    document.getElementById('frat').value=p.rat;
+    document.getElementById('fdesc').value=p.desc||'';
+    document.getElementById('fsp').value=Object.entries(p.sp||{}).map(([k,v])=>k+': '+v).join('\n');
+    document.getElementById('fuc').value=(p.useCases||[]).join('، ');
+    (p.imgs||[]).forEach(src=>addImgRow(src));
+    (p.features||[]).forEach(f=>addFeatRow(f));
+  } else {addImgRow();addFeatRow();}
+  document.getElementById('prodModal').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function resetModal(){
+  ['fn','fsku','fp','fop','fstx','fic','frat','fdesc','fsp','fuc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('fcat').value='arduino';
+  document.getElementById('fst').value='in-stock';
+  document.getElementById('fb').value='';
+  document.getElementById('imgsWrap').innerHTML='';
+  document.getElementById('featsWrap').innerHTML='';
+}
+function addImgRow(val=''){
+  const idx=imgCount++;
+  const row=document.createElement('div');
+  row.className='img-row';
+  row.innerHTML=`<div class="img-prev" id="ip-${idx}">${val?`<img src="${val}" onerror="this.parentNode.textContent='🖼️'">`:'🖼️'}</div><input dir="ltr" placeholder="https://..." value="${val}" oninput="previewImg(this,${idx})" style="flex:1;background:var(--bg3);border:1.5px solid var(--brd);border-radius:8px;padding:.48rem .75rem;color:var(--t);font-family:'Cairo',sans-serif;font-size:.8rem;outline:none;transition:border-color .2s"><button class="rm-btn" onclick="this.parentNode.remove()">✕</button>`;
+  document.getElementById('imgsWrap').appendChild(row);
+}
+function addFeatRow(val=''){
+  const row=document.createElement('div');
+  row.className='feat-row';
+  row.style.marginBottom='.4rem';
+  row.innerHTML=`<input value="${val}" placeholder="مثال: دعم WiFi مدمج..." style="flex:1;background:var(--bg3);border:1.5px solid var(--brd);border-radius:8px;padding:.48rem .75rem;color:var(--t);font-family:'Cairo',sans-serif;font-size:.8rem;outline:none"><button class="rm-btn" onclick="this.parentNode.remove()">✕</button>`;
+  document.getElementById('featsWrap').appendChild(row);
+}
+function previewImg(input,idx){
+  const prev=document.getElementById('ip-'+idx);if(!prev)return;
+  if(input.value.startsWith('http')){prev.innerHTML=`<img src="${input.value}" onerror="this.parentNode.textContent='❌'">`;input.style.borderColor='var(--o)';}
+  else{prev.textContent='🖼️';input.style.borderColor='';}
+}
+function closeModal(){document.getElementById('prodModal').classList.remove('on');document.body.style.overflow='';}
+
+function saveProd(){
+  const name=document.getElementById('fn').value.trim();
+  const sku=document.getElementById('fsku').value.trim();
+  const price=parseFloat(document.getElementById('fp').value);
+  if(!name||!sku||isNaN(price)){toast('⚠️ يرجى ملء الاسم والـ SKU والسعر','tw');return;}
+  const imgs=[...document.querySelectorAll('#imgsWrap input')].map(i=>i.value.trim()).filter(v=>v.startsWith('http'));
+  const features=[...document.querySelectorAll('#featsWrap input')].map(i=>i.value.trim()).filter(Boolean);
+  const sp={};
+  document.getElementById('fsp').value.split('\n').forEach(line=>{const sep=line.indexOf(':');if(sep>0)sp[line.slice(0,sep).trim()]=line.slice(sep+1).trim();});
+  const useCases=document.getElementById('fuc').value.split('،').map(x=>x.trim()).filter(Boolean);
+  const prod={
+    id:editId||Date.now(),n:name,sku,p:price,
+    op:parseFloat(document.getElementById('fop').value)||null,
+    cat:document.getElementById('fcat').value,
+    st:document.getElementById('fst').value,
+    stx:document.getElementById('fstx').value||'متوفر',
+    b:document.getElementById('fb').value,
+    ic:document.getElementById('fic').value||'📦',
+    rat:parseFloat(document.getElementById('frat').value)||4.5,
+    rcnt:editId?PD.find(x=>x.id===editId)?.rcnt||0:0,
+    desc:document.getElementById('fdesc').value.trim(),
+    imgs,features,sp,useCases,reviews:editId?PD.find(x=>x.id===editId)?.reviews||[]:[]
+  };
+  if(editId){const idx=PD.findIndex(x=>x.id===editId);if(idx!==-1)PD[idx]=prod;toast('⏳ جاري التحديث على Firebase...','ti');}
+  else{PD.push(prod);toast('⏳ جاري الرفع إلى Firebase...','ti');}
+  document.getElementById('prodBadge').textContent=PD.length;
+  document.getElementById('s-prod').textContent=PD.length;
+  renderProds();
+  // Save to Firebase
+  window.fbSaveProducts([prod]).then(()=>{
+    toast('✅ '+(editId?'تم تحديث':'تم إضافة')+' المنتج على Firebase','ts');
+  }).catch(e=>toast('❌ خطأ Firebase: '+e.message,'te'));
+  pushToStore();closeModal();
+}
+
+/* ── DELETE ── */
+function confirmDel(id){
+  const p=PD.find(x=>x.id===id);
+  document.getElementById('cfMsg').textContent=`هل أنت متأكد من حذف "${p?.n}"؟`;
+  document.getElementById('cfYes').onclick=()=>{
+    const sku = p?.sku || p?.SKU || '';
+    window.fbDeleteProduct(id, sku).then(()=>{
+      toast('تم حذف المنتج من Firebase','ti');
+    }).catch(e=>toast('خطأ: '+e.message,'te'));
+    PD=PD.filter(x=>x.id!==id);renderProds();
+    document.getElementById('prodBadge').textContent=PD.length;
+    document.getElementById('s-prod').textContent=PD.length;
+    closeCf();
+  };
+  document.getElementById('cfModal').classList.add('on');
+}
+function closeCf(){document.getElementById('cfModal').classList.remove('on');}
+
+/* ── TOAST ── */
+function toast(msg,type='ts'){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast '+type+' show';
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+/* ── ORDER MODAL ── */
+let editOrdId=null;
+function openOrderModal(id=null){
+  editOrdId=id;
+  document.getElementById('ordModalTitle').textContent=id?'تعديل الطلب':'إضافة طلب جديد';
+  if(id){
+    const o=ORDERS.find(x=>x.id===id);
+    if(!o)return;
+    document.getElementById('o-name').value=o.customer||'';
+    document.getElementById('o-phone').value=o.phone||'';
+    document.getElementById('o-email').value=o.email||'';
+    document.getElementById('o-addr').value=o.addr||'';
+    document.getElementById('o-items').value=o.items||'';
+    document.getElementById('o-total').value=o.total||'';
+    document.getElementById('o-status').value=o.status||'new';
+    document.getElementById('o-notes').value=o.notes||'';
+  } else {
+    ['o-name','o-phone','o-email','o-addr','o-items','o-total','o-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('o-status').value='new';
+  }
+  document.getElementById('ordModal').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closeOrdModal(){document.getElementById('ordModal').classList.remove('on');document.body.style.overflow='';}
+function saveOrder(){
+  const name=document.getElementById('o-name').value.trim();
+  const phone=document.getElementById('o-phone').value.trim();
+  const total=parseFloat(document.getElementById('o-total').value);
+  if(!name||isNaN(total)){toast('⚠️ الاسم والمجموع مطلوبان','tw');return;}
+  const now=new Date();
+  const order={
+    id:editOrdId||('ORD-'+now.getFullYear()+'-'+String(ORDERS.length+1).padStart(3,'0')),
+    customer:name,phone,
+    email:document.getElementById('o-email').value.trim(),
+    addr:document.getElementById('o-addr').value.trim(),
+    items:document.getElementById('o-items').value.trim(),
+    total,status:document.getElementById('o-status').value,
+    notes:document.getElementById('o-notes').value.trim(),
+    date:now.toISOString().slice(0,10),
+  };
+  if(editOrdId){const idx=ORDERS.findIndex(x=>x.id===editOrdId);if(idx!==-1)ORDERS[idx]=order;}
+  else ORDERS.unshift(order);
+  window.fbSaveOrder&&window.fbSaveOrder(order).then(()=>toast('✅ تم حفظ الطلب على Firebase','ts')).catch(e=>toast('❌ '+e.message,'te'));
+  renderOrders();initDash();closeOrdModal();
+}
+
+/* ── VIEW ORDER DETAILS ── */
+function viewOrder(id){
+  const o=ORDERS.find(x=>x.id===id);if(!o)return;
+  const sm={new:'جديد',processing:'قيد المعالجة',shipped:'مشحون',done:'مكتمل',cancel:'ملغي'};
+  alert(`📦 تفاصيل الطلب: ${o.id}\n\n👤 العميل: ${o.customer||'—'}\n📞 الهاتف: ${o.phone||'—'}\n📍 العنوان: ${o.addr||'—'}\n\n🛍️ المنتجات:\n${o.items||'—'}\n\n💰 المجموع: ${o.total} JD\n📌 الحالة: ${sm[o.status]||o.status}\n📅 التاريخ: ${o.date||'—'}\n📝 ملاحظات: ${o.notes||'—'}`);
+}
+
+/* ── PRINT INVOICE ── */
+function printInvoice(id){
+  const o=ORDERS.find(x=>x.id===id);if(!o)return;
+  const w=window.open('','_blank','width=600,height=700');
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>فاتورة ${o.id}</title>
+  <style>body{font-family:Cairo,sans-serif;padding:2rem;color:#1e293b}h1{color:#f97316;font-size:1.4rem;margin-bottom:.5rem}.logo{font-size:1.6rem;font-weight:900;margin-bottom:1.5rem}.info{background:#f8fafc;padding:1rem;border-radius:8px;margin-bottom:1.5rem;font-size:.9rem;line-height:1.8}.items{margin-bottom:1.5rem}.items table{width:100%;border-collapse:collapse}.items td,.items th{padding:.5rem .75rem;border-bottom:1px solid #e2e8f0;font-size:.85rem;text-align:right}.items th{background:#f1f5f9;font-weight:700}.total{text-align:left;font-size:1.1rem;font-weight:800;color:#f97316}.footer{margin-top:2rem;font-size:.75rem;color:#94a3b8;text-align:center;border-top:1px solid #e2e8f0;padding-top:1rem}</style></head>
+  <body><div class="logo">⚡ تك ستور</div><h1>فاتورة رقم: ${o.id}</h1>
+  <div class="info"><strong>العميل:</strong> ${o.customer||'—'}<br><strong>الهاتف:</strong> ${o.phone||'—'}<br><strong>العنوان:</strong> ${o.addr||'—'}<br><strong>التاريخ:</strong> ${o.date||'—'}</div>
+  <div class="items"><table><thead><tr><th>المنتج</th><th>التفاصيل</th></tr></thead><tbody>
+  ${(o.items||'').split('\n').map(item=>`<tr><td>${item}</td><td>—</td></tr>`).join('')}
+  </tbody></table></div>
+  <div class="total">الإجمالي: ${parseFloat(o.total||0).toFixed(2)} JD</div>
+  ${o.notes?`<p style="margin-top:1rem;font-size:.82rem;color:#64748b">ملاحظات: ${o.notes}</p>`:''}
+  <div class="footer">تك ستور — info@techstore.jo — +962 6 222 5522<br>شكراً لتسوقك معنا!</div>
+  <script>window.onload=()=>{window.print();}<\/script></body></html>`);
+  w.document.close();
+}
+
+/* ── DELETE ORDER ── */
+function deleteOrder(id){
+  const o=ORDERS.find(x=>x.id===id);
+  if(!confirm('حذف الطلب "'+id+'"؟'))return;
+  ORDERS.splice(ORDERS.findIndex(x=>x.id===id),1);
+  if(window._db&&window._fbDeleteDoc&&window._fbDoc){
+    window._fbDeleteDoc(window._fbDoc(window._db,'orders',id)).catch(()=>{});
+  }
+  renderOrders();initDash();toast('تم حذف الطلب','ti');
+}
+
+/* ── CSV EXPORT ── */
+function exportOrdersCSV(){
+  const headers=['رقم الطلب','العميل','الهاتف','المنتجات','المجموع','الحالة','التاريخ','الملاحظات'];
+  const rows=ORDERS.map(o=>[
+    o.id||'',o.customer||'',o.phone||'',
+    (o.items||'').replace(/\n/g,' | '),
+    parseFloat(o.total||0).toFixed(2),
+    o.status||'',o.date||'',o.notes||''
+  ]);
+  const csv='\uFEFF'+[headers,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='orders-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  toast('📥 تم تصدير '+ORDERS.length+' طلب','ts');
+}
+
+/* ══════════════════════════════
+   SLIDER MANAGEMENT
+══════════════════════════════ */
+let ADMIN_SLIDES=[
+  {id:1,tag:'🔥 عروض حصرية',title:'كل ما يحتاجه\nمشروعك الإلكتروني',desc:'أفضل قطع الإلكترونيات بأسعار لا تُنافس',btn1Text:'تصفح المنتجات',btn1Link:'shop',btn2Text:'العروض',btn2Link:'shop',bg:'linear-gradient(125deg,#0f2460 0%,#1d4ed8 55%,#2563eb 100%)',overlay:'rgba(0,0,0,0.2)',imgUrl:'',active:true},
+  {id:2,tag:'📶 وصلت كميات جديدة',title:'ESP32 & IoT\nأفضل الأسعار',desc:'معالجات ESP32 وESP8266 لمشاريع IoT',btn1Text:'تسوق الآن',btn1Link:'shop',btn2Text:'',btn2Link:'',bg:'linear-gradient(125deg,#064e3b 0%,#065f46 50%,#047857 100%)',overlay:'rgba(0,0,0,0.15)',imgUrl:'',active:true},
+  {id:3,tag:'🍓 جديد',title:'Raspberry Pi\nأحدث الإصدارات',desc:'Raspberry Pi 4 و Zero 2W',btn1Text:'اكتشف',btn1Link:'shop',btn2Text:'',btn2Link:'',bg:'linear-gradient(125deg,#7c1d6f 0%,#a21caf 50%,#86198f 100%)',overlay:'rgba(0,0,0,0.15)',imgUrl:'',active:true},
+  {id:4,tag:'🎓 خصم طلابي',title:'خصم 10% لطلاب\nالجامعات',desc:'أبرز بطاقتك الجامعية واحصل على خصم فوري',btn1Text:'تسوق بخصم',btn1Link:'shop',btn2Text:'',btn2Link:'',bg:'linear-gradient(125deg,#92400e 0%,#b45309 50%,#d97706 100%)',overlay:'rgba(0,0,0,0.2)',imgUrl:'',active:true},
+  {id:5,tag:'🚚 شحن مجاني',title:'توصيل مجاني\nللطلبات فوق 25 دينار',desc:'اطلب الآن واستلم خلال 24 ساعة في عمّان',btn1Text:'ابدأ التسوق',btn1Link:'shop',btn2Text:'',btn2Link:'',bg:'linear-gradient(125deg,#1e3a5f 0%,#1e40af 50%,#1d4ed8 100%)',overlay:'rgba(0,0,0,0.15)',imgUrl:'',active:true}
+];
+
+let NEWS_ITEMS=[
+  '📞 للتواصل: 00962790781206',
+  '🚚 شحن مجاني للطلبات فوق 25 دينار',
+  '🎓 خصم 10% لطلاب الجامعات',
+  '🔄 إرجاع مجاني خلال 7 أيام',
+  '⭐ أكثر من 6000 منتج إلكتروني'
+];
+
+let editSlideId=null;
+
+function renderSlidesList(){
+  const el=document.getElementById('slidesList');if(!el)return;
+  el.innerHTML=ADMIN_SLIDES.map((s,i)=>`
+    <div style="background:var(--bg2);border:1px solid var(--brd);border-radius:13px;overflow:hidden;display:flex;gap:0">
+      <!-- Mini preview -->
+      <div style="width:180px;min-width:180px;height:100px;position:relative;overflow:hidden;flex-shrink:0">
+        <div style="position:absolute;inset:0;${s.imgUrl?`background:url('${s.imgUrl}') center/cover`:`background:${s.bg||'linear-gradient(135deg,#1d4ed8,#0f2460)'}`}"></div>
+        <div style="position:absolute;inset:0;background:${s.overlay||'rgba(0,0,0,0.2)'}"></div>
+        <div style="position:relative;z-index:1;padding:.6rem .8rem;color:#fff">
+          ${s.tag?`<div style="background:rgba(249,115,22,.9);color:#fff;font-size:.58rem;font-weight:700;padding:.15rem .45rem;border-radius:12px;display:inline-block;margin-bottom:.25rem">${s.tag}</div>`:''}
+          <div style="font-size:.78rem;font-weight:700;line-height:1.25">${(s.title||'').replace(/\\n/g,'<br>')}</div>
+        </div>
+        <div style="position:absolute;top:.4rem;left:.4rem;background:${s.active?'rgba(34,197,94,.9)':'rgba(239,68,68,.8)'};color:#fff;font-size:.55rem;font-weight:700;padding:.15rem .45rem;border-radius:10px">${s.active?'نشط':'مخفي'}</div>
+      </div>
+      <!-- Info -->
+      <div style="flex:1;padding:.75rem 1rem;display:flex;flex-direction:column;gap:.25rem">
+        <div style="font-weight:700;font-size:.84rem">سلايد ${i+1}: ${s.btn1Text||'—'}</div>
+        <div style="font-size:.74rem;color:var(--t2)">${(s.desc||'').slice(0,60)}${s.desc&&s.desc.length>60?'...':''}</div>
+        <div style="margin-top:auto;display:flex;gap:.4rem">
+          <button class="rb" onclick="openSlideModal(${s.id})" title="تعديل">✏️</button>
+          <button class="rb" onclick="toggleSlideActive(${i})" title="${s.active?'إخفاء':'إظهار'}">${s.active?'👁️':'🚫'}</button>
+          <button class="rb" onclick="moveSlide(${i},-1)" title="تحريك لليمين" ${i===0?'disabled':''}>→</button>
+          <button class="rb" onclick="moveSlide(${i},1)" title="تحريك لليسار" ${i===ADMIN_SLIDES.length-1?'disabled':''}>←</button>
+          <button class="rb d" onclick="deleteSlide(${i})" title="حذف">🗑️</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function openSlideModal(id=null){
+  editSlideId=id;
+  document.getElementById('slideModalTitle').textContent=id?'تعديل السلايد':'إضافة سلايد جديد';
+  if(id){
+    const s=ADMIN_SLIDES.find(x=>x.id===id);if(!s)return;
+    document.getElementById('sl-id').value=s.id;
+    document.getElementById('sl-tag').value=s.tag||'';
+    document.getElementById('sl-title').value=s.title||'';
+    document.getElementById('sl-desc').value=s.desc||'';
+    document.getElementById('sl-btn1').value=s.btn1Text||'';
+    document.getElementById('sl-btn1link').value=s.btn1Link||'shop';
+    document.getElementById('sl-btn2').value=s.btn2Text||'';
+    document.getElementById('sl-btn2link').value=s.btn2Link||'';
+    document.getElementById('sl-img').value=s.imgUrl||'';
+    document.getElementById('sl-bg').value=s.bg||'linear-gradient(125deg,#0f2460,#1d4ed8)';
+    document.getElementById('sl-overlay').value=s.overlay||'rgba(0,0,0,0.2)';
+    document.getElementById('sl-active').value=s.active===false?'false':'true';
+  } else {
+    ['sl-tag','sl-title','sl-desc','sl-btn1','sl-btn2','sl-img'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('sl-bg').value='linear-gradient(125deg,#0f2460,#1d4ed8)';
+    document.getElementById('sl-overlay').value='rgba(0,0,0,0.2)';
+    document.getElementById('sl-btn1link').value='shop';
+    document.getElementById('sl-btn2link').value='';
+    document.getElementById('sl-active').value='true';
+  }
+  previewSlide();
+  document.getElementById('slideModal').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+
+function previewSlide(){
+  const bg=document.getElementById('sl-bg')?.value||'linear-gradient(125deg,#0f2460,#1d4ed8)';
+  const ov=document.getElementById('sl-overlay')?.value||'rgba(0,0,0,0.2)';
+  const img=document.getElementById('sl-img')?.value||'';
+  const tag=document.getElementById('sl-tag')?.value||'';
+  const title=document.getElementById('sl-title')?.value||'عنوان السلايد';
+  const spBg=document.getElementById('sp-bg');if(spBg)spBg.style.background=img?`url('${img}') center/cover`:bg;
+  const spOv=document.getElementById('sp-ov');if(spOv)spOv.style.background=ov;
+  const spTag=document.getElementById('sp-tag');if(spTag)spTag.textContent=tag||'🔥 شارة';
+  const spTitle=document.getElementById('sp-title');if(spTitle)spTitle.innerHTML=(title).replace(/\\n/g,'<br>');
+}
+
+function closeSlideModal(){document.getElementById('slideModal').classList.remove('on');document.body.style.overflow='';}
+
+function saveSlide(){
+  const title=document.getElementById('sl-title').value.trim();
+  if(!title){toast('⚠️ العنوان مطلوب','tw');return;}
+  const slide={
+    id:editSlideId||Date.now(),
+    tag:document.getElementById('sl-tag').value.trim(),
+    title,
+    desc:document.getElementById('sl-desc').value.trim(),
+    btn1Text:document.getElementById('sl-btn1').value.trim(),
+    btn1Link:document.getElementById('sl-btn1link').value,
+    btn2Text:document.getElementById('sl-btn2').value.trim(),
+    btn2Link:document.getElementById('sl-btn2link').value,
+    imgUrl:document.getElementById('sl-img').value.trim(),
+    bg:document.getElementById('sl-bg').value.trim(),
+    overlay:document.getElementById('sl-overlay').value.trim(),
+    active:document.getElementById('sl-active').value==='true'
+  };
+  if(editSlideId){const idx=ADMIN_SLIDES.findIndex(x=>x.id===editSlideId);if(idx!==-1)ADMIN_SLIDES[idx]=slide;}
+  else ADMIN_SLIDES.push(slide);
+  renderSlidesList();
+  closeSlideModal();
+  toast('✓ تم حفظ السلايد','ts');
+}
+
+function deleteSlide(i){
+  if(!confirm('حذف هذا السلايد؟'))return;
+  ADMIN_SLIDES.splice(i,1);
+  renderSlidesList();
+  toast('تم الحذف','ti');
+}
+
+function toggleSlideActive(i){
+  ADMIN_SLIDES[i].active=!ADMIN_SLIDES[i].active;
+  renderSlidesList();
+}
+
+function moveSlide(i,dir){
+  const j=i+dir;
+  if(j<0||j>=ADMIN_SLIDES.length)return;
+  [ADMIN_SLIDES[i],ADMIN_SLIDES[j]]=[ADMIN_SLIDES[j],ADMIN_SLIDES[i]];
+  renderSlidesList();
+}
+
+async function saveSlides(){
+  if(!window.__fbReady||!window._db){toast('⚠️ Firebase غير متصل','tw');return;}
+  try{
+    setSyncBadge('loading');
+    const {setDoc,doc}=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    await window.fbSaveConfig({slides:ADMIN_SLIDES});
+    // Also update localStorage for store
+    const cfg=JSON.parse(localStorage.getItem('TECHSTORE_CONFIG')||'{}');
+    cfg.slides=ADMIN_SLIDES;
+    localStorage.setItem('TECHSTORE_CONFIG',JSON.stringify(cfg));
+    setSyncBadge('ok');
+    toast('✅ تم حفظ السلايدر ومزامنته مع المتجر!','ts');
+  }catch(e){setSyncBadge('err');toast('❌ '+e.message,'te');}
+}
+
+/* ══════════════════════════════
+   NEWS TICKER MANAGEMENT
+══════════════════════════════ */
+function renderNewsItems(){
+  const el=document.getElementById('newsItems');if(!el)return;
+  el.innerHTML=NEWS_ITEMS.map((n,i)=>`<div class="feat-row" style="margin-bottom:.4rem">
+    <input value="${n.replace(/"/g,'&quot;')}" style="flex:1;background:var(--bg3);border:1.5px solid var(--brd);border-radius:8px;padding:.48rem .75rem;color:var(--t);font-family:'Cairo',sans-serif;font-size:.8rem;outline:none" oninput="NEWS_ITEMS[${i}]=this.value;updateNewsPreview()">
+    <button class="rm-btn" onclick="NEWS_ITEMS.splice(${i},1);renderNewsItems();updateNewsPreview()">✕</button>
+  </div>`).join('');
+  updateNewsPreview();
+}
+
+function addNewsItem(){
+  NEWS_ITEMS.push('خبر جديد');
+  renderNewsItems();
+}
+
+function updateNewsPreview(){
+  const el=document.getElementById('newsPreview');if(!el)return;
+  el.innerHTML=NEWS_ITEMS.concat(NEWS_ITEMS).map(n=>`<div style="white-space:nowrap;padding:0 2rem;display:flex;align-items:center;gap:.4rem">${n}</div>`).join('');
+}
+
+async function saveNews(){
+  if(!window.__fbReady||!window._db){toast('⚠️ Firebase غير متصل','tw');return;}
+  try{
+    setSyncBadge('loading');
+    const speed=document.getElementById('news-speed')?.value||'30';
+    const active=document.getElementById('newsToggle')?.classList.contains('on');
+    await window.fbSaveConfig({topbarItems:NEWS_ITEMS,newsSpeed:speed,newsActive:active});
+    // Update localStorage
+    const cfg=JSON.parse(localStorage.getItem('TECHSTORE_CONFIG')||'{}');
+    cfg.topbarItems=NEWS_ITEMS;cfg.newsSpeed=speed;cfg.newsActive=active;
+    localStorage.setItem('TECHSTORE_CONFIG',JSON.stringify(cfg));
+    setSyncBadge('ok');
+    toast('✅ تم حفظ الأخبار ومزامنتها!','ts');
+  }catch(e){setSyncBadge('err');toast('❌ '+e.message,'te');}
+}
+
+/* ── KEYBOARD ── */
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeModal();closeCf();closeOrdModal();closeSlideModal();}
+  if(e.ctrlKey&&e.key==='n'){e.preventDefault();openProdModal();}
+  if(e.ctrlKey&&e.key==='s'){e.preventDefault();pushToStore();}
+});
+</script>
+</body>
+</html>
