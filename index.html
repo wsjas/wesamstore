@@ -4750,6 +4750,7 @@ header.glass i {
 <div class="nav-links">
 <button class="active" id="navServiceBtn" type="button"><i class="fas fa-tools"></i> الصيانة</button>
 <button id="navShopBtn" type="button"><i class="fas fa-store"></i> المتجر</button>
+<button id="navElectronicsStoreBtn" type="button"><i class="fas fa-microchip"></i> متجر القطع والالكترونيات</button>
 </div>
 <div class="nav-cta">
 <a href="https://wa.me/962790781206" id="navWhatsApp" rel="noopener" target="_blank">
@@ -5306,6 +5307,7 @@ header.glass i {
             serviceHome: document.getElementById('serviceHome'),
             navServiceBtn: document.getElementById('navServiceBtn'),
             navShopBtn: document.getElementById('navShopBtn'),
+            navElectronicsStoreBtn: document.getElementById('navElectronicsStoreBtn'),
             navWhatsApp: document.getElementById('navWhatsApp'),
             navEmail: document.getElementById('navEmail'),
             openServiceRequestBtn: document.getElementById('openServiceRequestBtn'),
@@ -9131,6 +9133,12 @@ if (elements.navShopBtn) {
         elements.navServiceBtn && elements.navServiceBtn.classList.remove('active');
         const shopSection = document.querySelector('.categories-section') || document.querySelector('.products-section');
         scrollToSection(shopSection);
+    });
+}
+
+if (elements.navElectronicsStoreBtn) {
+    bind(elements.navElectronicsStoreBtn, 'click', () => {
+        window.location.href = 'electronics-store.html';
     });
 }
 
