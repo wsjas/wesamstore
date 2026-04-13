@@ -8266,8 +8266,7 @@ function updateProductsTable() {
                 if (elements.adminLoginBtn) elements.adminLoginBtn.style.display = 'none';
                 if (elements.mAdminPanelBtn) elements.mAdminPanelBtn.style.display = 'none';
 
-                // تذكير الواجهة (اختياري)
-                localStorage.setItem('wassam_admin', 'true');
+                // لا نخزن وضع الأدمن في localStorage لأسباب أمنية
 
                 // تحميل بيانات المدير
                 try { updateProductsTable(); } catch (e) { console.warn(e); }
@@ -8282,7 +8281,6 @@ function updateProductsTable() {
                 if (announce) showNotification('✅ تم تسجيل الدخول كأدمن');
             } else {
                 elements.adminPanel && (elements.adminPanel.style.display = 'none');
-                localStorage.removeItem('wassam_admin');
 
                 if (announce) showNotification('✅ تم تسجيل الخروج');
             }
@@ -11148,45 +11146,43 @@ function getCachedProducts() {
 }
 
 // ===== 8. BEST SELLERS =====
+// ملاحظة أمنية: لا نقرأ الطلبات من الواجهة العامة.
+// اعرض منتجات مختارة من البيانات العامة المحمّلة فقط.
 function renderBestSellers() {
     const row = document.getElementById('bestSellersRow');
-    if (!row || !window.db) return;
+    if (!row) return;
 
-    window.db.collection('orders').limit(100).get().then(snap => {
-        const productCounts = {};
-        snap.forEach(doc => {
-            const d = doc.data();
-            if (d.items && Array.isArray(d.items)) {
-                d.items.forEach(item => {
-                    const key = item.name || item.id;
-                    if (key) productCounts[key] = (productCounts[key] || 0) + (item.quantity || 1);
-                });
-            }
-        });
+    const allProducts = Array.isArray(window._allProducts) ? [...window._allProducts] : [];
+    if (!allProducts.length) {
+        row.innerHTML = '<p style="color:#999;font-size:0.85rem;">لا توجد منتجات لعرضها حالياً</p>';
+        return;
+    }
 
-        // Get top 10
-        const sorted = Object.entries(productCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
-        if (!sorted.length) { row.innerHTML = '<p style="color:#999;font-size:0.85rem;">لا توجد بيانات مبيعات بعد</p>'; return; }
+    const sorted = allProducts
+        .sort((a, b) => {
+            const aScore = Number(a.order ?? a.sortOrder ?? a.position ?? 999999);
+            const bScore = Number(b.order ?? b.sortOrder ?? b.position ?? 999999);
+            if (aScore !== bScore) return aScore - bScore;
+            return String(a.name || '').localeCompare(String(b.name || ''), 'ar');
+        })
+        .slice(0, 10);
 
-        // Match with loaded products
-        const allProducts = window._allProducts || [];
-        let html = '';
-        sorted.forEach(([name, count], i) => {
-            const prod = allProducts.find(p => p.name === name || p.id === name);
-            const img = prod ? prod.image : 'https://images.unsplash.com/photo-1556656793-08538906a9f8?w=300';
-            const price = prod ? (prod.sell || prod.price || 0) : '';
-            const displayName = prod ? prod.name : name;
-            html += `<div class="best-seller-card" style="position:relative;" onclick="if(typeof openGallery==='function' && '${prod?.id||''}') openGallery('${prod?.id||''}')">
-                <span class="best-seller-rank">${i + 1}</span>
-                <img src="${img}" alt="${displayName}" loading="lazy" />
-                <div class="best-seller-info">
-                    <h4>${displayName}</h4>
-                    ${price ? `<span class="bs-price">${price} د.أ</span>` : ''}
-                </div>
-            </div>`;
-        });
-        row.innerHTML = html;
-    }).catch(e => { console.warn('Best sellers error:', e); });
+    let html = '';
+    sorted.forEach((prod, i) => {
+        const img = prod?.image || 'https://images.unsplash.com/photo-1556656793-08538906a9f8?w=300';
+        const price = prod ? (prod.sell || prod.price || 0) : '';
+        const displayName = prod?.name || 'منتج';
+        const pid = prod?.id || '';
+        html += `<div class="best-seller-card" style="position:relative;" onclick="if(typeof openGallery==='function' && '${pid}') openGallery('${pid}')">
+            <span class="best-seller-rank">${i + 1}</span>
+            <img src="${img}" alt="${displayName}" loading="lazy" />
+            <div class="best-seller-info">
+                <h4>${displayName}</h4>
+                ${price ? `<span class="bs-price">${price} د.أ</span>` : ''}
+            </div>
+        </div>`;
+    });
+    row.innerHTML = html;
 }
 setTimeout(renderBestSellers, 3000);
 
