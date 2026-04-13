@@ -555,6 +555,12 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
             <div class="form-group"><label>رابط صورة العروض</label><input id="featuredOffersImage" type="text" placeholder="https://.../offers.jpg"/></div>
             <div class="form-group"><label>عنوان: قسم الصيانة</label><input id="featuredServiceTitle" type="text" placeholder="قسم الصيانة"/></div>
             <div class="form-group"><label>رابط صورة الصيانة</label><input id="featuredServiceImage" type="text" placeholder="https://.../service.jpg"/></div>
+            <div class="form-group"><label>وصف قصير: قسم الصيانة</label><input id="featuredServiceSub" type="text" placeholder="قدّم طلبك خلال دقيقة"/></div>
+            <div class="form-group"><label>عنوان: متجر القطع والالكترونيات</label><input id="featuredElectronicsTitle" type="text" placeholder="متجر القطع والالكترونيات"/></div>
+            <div class="form-group"><label>رابط صورة متجر القطع والالكترونيات</label><input id="featuredElectronicsImage" type="text" placeholder="https://.../electronics.jpg"/></div>
+            <div class="form-group"><label>وصف قصير: متجر القطع والالكترونيات</label><input id="featuredElectronicsSub" type="text" placeholder="تسوق القطع الإلكترونية والإكسسوارات والمنتجات المتخصصة"/></div>
+            <div class="form-group"><label>نص الزر: متجر القطع والالكترونيات</label><input id="featuredElectronicsBadge" type="text" placeholder="ادخل الآن"/></div>
+            <div class="form-group"><label>رابط البطاقة</label><input id="featuredElectronicsLink" type="text" placeholder="electronics-store.html"/></div>
           </div>
 
           <div class="form-group">
@@ -601,6 +607,9 @@ const $ = window.WesamUtils.$id;
 const escapeHtml = window.WesamUtils.escapeHtml;
 const getServerTimestamp = window.WesamFirebase.getServerTimestamp;
 
+let products = [];
+let categories = [];
+const siteSettings = { productOrder: [], categoryOrder: [] };
 
 function showToast(msg, type = '') {
   const t = $('toast');
@@ -723,6 +732,12 @@ async function loadSettings() {
       $('featuredOffersImage') && ($('featuredOffersImage').value = p.featuredOffersImage || '');
       $('featuredServiceTitle') && ($('featuredServiceTitle').value = p.featuredServiceTitle || '');
       $('featuredServiceImage') && ($('featuredServiceImage').value = p.featuredServiceImage || '');
+      $('featuredServiceSub') && ($('featuredServiceSub').value = p.featuredServiceSub || '');
+      $('featuredElectronicsTitle') && ($('featuredElectronicsTitle').value = p.featuredElectronicsTitle || '');
+      $('featuredElectronicsImage') && ($('featuredElectronicsImage').value = p.featuredElectronicsImage || '');
+      $('featuredElectronicsSub') && ($('featuredElectronicsSub').value = p.featuredElectronicsSub || '');
+      $('featuredElectronicsBadge') && ($('featuredElectronicsBadge').value = p.featuredElectronicsBadge || '');
+      $('featuredElectronicsLink') && ($('featuredElectronicsLink').value = p.featuredElectronicsLink || 'electronics-store.html');
       $('servicesList') && ($('servicesList').value = p.servicesList || '');
     }
   } catch(e) { console.warn(e); }
@@ -934,7 +949,9 @@ $('pageContentForm').addEventListener('submit', async e => {
     ['storeName','storeSlogan','phoneNumber','storeAddress','storeTagline','specializationText',
      'footerAbout','storeEmail','workingHours','servicesList',
      'featuredNewTitle','featuredNewImage','featuredOffersTitle','featuredOffersImage',
-     'featuredServiceTitle','featuredServiceImage'].forEach(key => {
+     'featuredServiceTitle','featuredServiceImage','featuredServiceSub',
+     'featuredElectronicsTitle','featuredElectronicsImage','featuredElectronicsSub',
+     'featuredElectronicsBadge','featuredElectronicsLink'].forEach(key => {
       const el = $(key);
       if (el) data[key] = el.value.trim();
     });

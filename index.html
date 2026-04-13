@@ -4753,6 +4753,32 @@ header.glass i {
 
 
 
+<div class="form-grid">
+  <div class="form-group">
+    <label for="featuredElectronicsTitle">عنوان: متجر القطع والالكترونيات</label>
+    <input id="featuredElectronicsTitle" type="text" placeholder="متجر القطع والالكترونيات"/>
+  </div>
+  <div class="form-group">
+    <label for="featuredElectronicsImage">رابط صورة متجر القطع والالكترونيات (Direct URL)</label>
+    <input id="featuredElectronicsImage" type="text" placeholder="https://.../electronics.jpg"/>
+  </div>
+  <div class="form-group">
+    <label for="featuredElectronicsSub">وصف قصير (اختياري)</label>
+    <input id="featuredElectronicsSub" type="text" placeholder="تسوق القطع الإلكترونية والإكسسوارات والمنتجات المتخصصة"/>
+  </div>
+</div>
+
+<div class="form-grid">
+  <div class="form-group">
+    <label for="featuredElectronicsBadge">نص الزر (اختياري)</label>
+    <input id="featuredElectronicsBadge" type="text" placeholder="ادخل الآن"/>
+  </div>
+  <div class="form-group">
+    <label for="featuredElectronicsLink">رابط البطاقة (اختياري)</label>
+    <input id="featuredElectronicsLink" type="text" placeholder="electronics-store.html"/>
+  </div>
+</div>
+
 <div class="form-group">
 <label for="servicesList">قائمة الخدمات (كل خدمة في سطر)</label>
 <textarea id="servicesList" placeholder="توصيل سريع لجميع مناطق عمان
@@ -5458,6 +5484,11 @@ header.glass i {
             featuredServiceTitle: document.getElementById('featuredServiceTitle'),
             featuredServiceImage: document.getElementById('featuredServiceImage'),
             featuredServiceSub: document.getElementById('featuredServiceSub'),
+            featuredElectronicsTitle: document.getElementById('featuredElectronicsTitle'),
+            featuredElectronicsImage: document.getElementById('featuredElectronicsImage'),
+            featuredElectronicsSub: document.getElementById('featuredElectronicsSub'),
+            featuredElectronicsBadge: document.getElementById('featuredElectronicsBadge'),
+            featuredElectronicsLink: document.getElementById('featuredElectronicsLink'),
 
             savePageContentBtn: document.getElementById('savePageContentBtn'),
             footerAboutText: document.getElementById('footerAboutText'),
@@ -5517,6 +5548,11 @@ header.glass i {
                 featuredServiceTitle: 'قسم الصيانة',
                 featuredServiceSub: 'قدّم طلبك خلال دقيقة',
                 featuredServiceImage: '',
+                featuredElectronicsTitle: 'متجر القطع والالكترونيات',
+                featuredElectronicsSub: 'تسوق القطع الإلكترونية والإكسسوارات والمنتجات المتخصصة',
+                featuredElectronicsImage: '',
+                featuredElectronicsBadge: 'ادخل الآن',
+                featuredElectronicsLink: 'electronics-store.html',
 
                 footerAbout: 'متجر وسام للإلكترونيات هو الوجهة المفضلة في عمان لشراء جميع المنتجات الإلكترونية والاكسسوارات ذات الجودة العالية. نقدم أفضل الأسعار مع استبدال فوري.',
                 storeEmail: 'wesamelectronics@gmail.com',
@@ -6061,6 +6097,11 @@ header.glass i {
             if (elements.featuredServiceTitle) elements.featuredServiceTitle.value = state.pageContent.featuredServiceTitle || 'قسم الصيانة';
             if (elements.featuredServiceImage) elements.featuredServiceImage.value = state.pageContent.featuredServiceImage || '';
             if (elements.featuredServiceSub) elements.featuredServiceSub.value = state.pageContent.featuredServiceSub || 'قدّم طلبك خلال دقيقة';
+            if (elements.featuredElectronicsTitle) elements.featuredElectronicsTitle.value = state.pageContent.featuredElectronicsTitle || 'متجر القطع والالكترونيات';
+            if (elements.featuredElectronicsImage) elements.featuredElectronicsImage.value = state.pageContent.featuredElectronicsImage || '';
+            if (elements.featuredElectronicsSub) elements.featuredElectronicsSub.value = state.pageContent.featuredElectronicsSub || 'تسوق القطع الإلكترونية والإكسسوارات والمنتجات المتخصصة';
+            if (elements.featuredElectronicsBadge) elements.featuredElectronicsBadge.value = state.pageContent.featuredElectronicsBadge || 'ادخل الآن';
+            if (elements.featuredElectronicsLink) elements.featuredElectronicsLink.value = state.pageContent.featuredElectronicsLink || 'electronics-store.html';
 
             
             updatePageContentUI();
@@ -6127,6 +6168,11 @@ header.glass i {
                     featuredServiceTitle: (elements.featuredServiceTitle ? elements.featuredServiceTitle.value.trim() : 'قسم الصيانة') || 'قسم الصيانة',
                     featuredServiceImage: (elements.featuredServiceImage ? elements.featuredServiceImage.value.trim() : '') || '',
                     featuredServiceSub: (elements.featuredServiceSub ? elements.featuredServiceSub.value.trim() : 'قدّم طلبك خلال دقيقة') || 'قدّم طلبك خلال دقيقة',
+                    featuredElectronicsTitle: (elements.featuredElectronicsTitle ? elements.featuredElectronicsTitle.value.trim() : 'متجر القطع والالكترونيات') || 'متجر القطع والالكترونيات',
+                    featuredElectronicsImage: (elements.featuredElectronicsImage ? elements.featuredElectronicsImage.value.trim() : '') || '',
+                    featuredElectronicsSub: (elements.featuredElectronicsSub ? elements.featuredElectronicsSub.value.trim() : 'تسوق القطع الإلكترونية والإكسسوارات والمنتجات المتخصصة') || 'تسوق القطع الإلكترونية والإكسسوارات والمنتجات المتخصصة',
+                    featuredElectronicsBadge: (elements.featuredElectronicsBadge ? elements.featuredElectronicsBadge.value.trim() : 'ادخل الآن') || 'ادخل الآن',
+                    featuredElectronicsLink: (elements.featuredElectronicsLink ? elements.featuredElectronicsLink.value.trim() : 'electronics-store.html') || 'electronics-store.html',
 
                     updatedAt: getServerTimestamp()
                 };
@@ -6286,11 +6332,11 @@ header.glass i {
 
             setCard(electronicsCard, {
                 type: 'link',
-                href: 'electronics-store.html',
-                titleHtml: '<i class="fas fa-microchip"></i> متجر القطع والالكترونيات',
-                sub: 'تسوق القطع الإلكترونية والإكسسوارات والمنتجات المتخصصة',
-                badgeHtml: '<i class="fas fa-store"></i> ادخل الآن',
-                image: ''
+                href: (state.pageContent.featuredElectronicsLink || 'electronics-store.html'),
+                titleHtml: `<i class="fas fa-microchip"></i> ${escapeHtml(state.pageContent.featuredElectronicsTitle || 'متجر القطع والالكترونيات')}`,
+                sub: (state.pageContent.featuredElectronicsSub || 'تسوق القطع الإلكترونية والإكسسوارات والمنتجات المتخصصة'),
+                badgeHtml: `<i class="fas fa-store"></i> ${escapeHtml(state.pageContent.featuredElectronicsBadge || 'ادخل الآن')}`,
+                image: (state.pageContent.featuredElectronicsImage || '')
             });
         }
 
