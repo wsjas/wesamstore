@@ -2796,9 +2796,33 @@ setTimeout(() => {
   }
 
   // ---------- Storage System with Advanced Cache ----------
+  function normalizeProductRecord(product = {}) {
+    if (!product || typeof product !== 'object') return product;
+
+    const normalized = { ...product };
+    const buy = normalized.buyPrice ?? normalized.buy ?? 0;
+    const sell = normalized.sellPrice ?? normalized.sell ?? 0;
+
+    normalized.buy = toNumber(buy);
+    normalized.sell = toNumber(sell);
+    normalized.buyPrice = toNumber(buy);
+    normalized.sellPrice = toNumber(sell);
+    normalized.stock = toNumber(normalized.stock ?? 0);
+
+    return normalized;
+  }
+
+  function normalizeCollectionData(key, value) {
+    if (key === 'products' && Array.isArray(value)) {
+      return value.map(normalizeProductRecord);
+    }
+    return value;
+  }
+
   async function save(key, value) {
     try {
       showLoading();
+      value = normalizeCollectionData(key, value);
       
       // Update cache with LRU
       setToCache(key, value);
@@ -2894,6 +2918,7 @@ setTimeout(() => {
         }
       }
       
+      data = normalizeCollectionData(key, data || []);
       return data || [];
       
     } catch (error) {
@@ -4261,67 +4286,43 @@ async function loadProducts(page = 1) {
     console.log('🔄 بدء تحميل وعرض المنتجات - الصفحة:', page);
     
     try {
-        // إظهار حالة التحميل
         const table = document.getElementById('productsTable');
         if (table) {
             table.innerHTML = `
                 <tr>
                     <td colspan="6" class="text-center py-4">
                         <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-                        جاري تحميل المنتجات...
+                        جاري تحميل المنتجات من Firebase...
                     </td>
                 </tr>
             `;
         }
-        
-        // تحميل البيانات مع إجبار التحميل الجديد
-        let products = [];
-        
-        // الطريقة المباشرة - تجاوز الكاش
-        const localData = localStorage.getItem('wesam_products');
-        if (localData) {
-            try {
-                products = JSON.parse(localData);
-                console.log('📥 تم تحميل', products.length, 'منتج من localStorage');
-            } catch (e) {
-                console.error('❌ خطأ في تحليل بيانات المنتجات:', e);
-                products = [];
-            }
-        }
-        
-        // إذا لم توجد بيانات، أنشئ بيانات افتراضية
-        if (!products || !Array.isArray(products) || products.length === 0) {
-            console.log('⚠️ لا توجد بيانات، سيتم إنشاء بيانات افتراضية...');
-            products = createSampleProducts();
-            await save('products', products);
-        }
-        
+
+        let products = await load('products', false);
+        if (!Array.isArray(products)) products = [];
+
         console.log('📊 بيانات المنتجات المحملة:', products);
-        
-        // تطبيق فلترة البحث إذا وجدت
+
         const searchTerm = document.getElementById('searchProduct')?.value.toLowerCase() || '';
         let filteredProducts = [...products];
-        
+
         if (searchTerm) {
             filteredProducts = products.filter(product => 
                 product.name && product.name.toLowerCase().includes(searchTerm)
             );
             console.log('🔍 نتائج البحث:', filteredProducts.length, 'منتج');
         }
-        
-        // ترتيب المنتجات (الأحدث أولاً)
-        filteredProducts.sort((a, b) => {
-            return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-        });
-        
-        // التقطيع
+
+        filteredProducts = filteredProducts.map(normalizeProductRecord);
+        filteredProducts.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
         const pageSize = paginationConfig.pageSize;
         const totalItems = filteredProducts.length;
         const totalPages = Math.ceil(totalItems / pageSize);
         const startIndex = (page - 1) * pageSize;
         const endIndex = Math.min(startIndex + pageSize, totalItems);
         const currentItems = filteredProducts.slice(startIndex, endIndex);
-        
+
         console.log('📄 التقطيع:', {
             totalItems,
             totalPages,
@@ -4330,22 +4331,23 @@ async function loadProducts(page = 1) {
             endIndex,
             currentItemsCount: currentItems.length
         });
-        
-        // تحديث الجدول
+
         if (table) {
             if (currentItems.length === 0) {
                 table.innerHTML = `
                     <tr>
                         <td colspan="6" class="text-center py-4 text-muted">
                             <i class="bi bi-inbox fs-4 d-block mb-2"></i>
-                            ${searchTerm ? 'لا توجد منتجات تطابق البحث' : 'لا توجد منتجات في المستودع'}
+                            ${searchTerm ? 'لا توجد منتجات تطابق البحث' : 'لا توجد منتجات محفوظة في Firebase'}
                             <br>
-                            <button class="btn btn-sm btn-primary mt-2" onclick="addSampleProducts()">
-                                <i class="bi bi-plus-circle"></i> إضافة منتجات نموذجية
+                            <button class="btn btn-sm btn-outline-primary mt-2" onclick="syncStoreProductsToInventory()">
+                                <i class="bi bi-arrow-repeat"></i> مزامنة المنتجات من Firebase
                             </button>
                         </td>
                     </tr>
                 `;
+                document.getElementById('totalBuyPrice').textContent = currency(0);
+                document.getElementById('totalProductsCount').textContent = '0';
             } else {
                 let html = '';
                 let totalBuyValue = 0;
@@ -4353,8 +4355,8 @@ async function loadProducts(page = 1) {
                 
                 currentItems.forEach((product, index) => {
                     const globalIndex = startIndex + index + 1;
-                    const buyPrice = toNumber(product.buy);
-                    const sellPrice = toNumber(product.sell);
+                    const buyPrice = toNumber(product.buyPrice ?? product.buy);
+                    const sellPrice = toNumber(product.sellPrice ?? product.sell);
                     const stock = toNumber(product.stock);
                     
                     totalBuyValue += buyPrice * stock;
@@ -4365,7 +4367,7 @@ async function loadProducts(page = 1) {
                         <td class="text-center">${globalIndex}</td>
                         <td>
                             <strong class="d-block">${escapeHtml(product.name || 'بدون اسم')}</strong>
-                            <small class="text-muted">ID: ${product.id.substring(0, 8)}...</small>
+                            <small class="text-muted">ID: ${String(product.id || '').substring(0, 8)}...</small>
                         </td>
                         <td class="text-end text-danger fw-bold">${currency(buyPrice)}</td>
                         <td class="text-end text-success fw-bold">${currency(sellPrice)}</td>
@@ -4395,61 +4397,44 @@ async function loadProducts(page = 1) {
                 });
                 
                 table.innerHTML = html;
-                
-                // تحديث الإحصائيات
                 document.getElementById('totalBuyPrice').textContent = currency(totalBuyValue);
                 document.getElementById('totalProductsCount').textContent = totalStockCount.toLocaleString();
-                
-                console.log('✅ تم تحديث الجدول بـ', currentItems.length, 'صف');
-                
-                // إضافة المستمعين للأحداث
+
                 setTimeout(() => {
-                    // مستمعين للتعديل
                     document.querySelectorAll('.edit-product').forEach(btn => {
                         btn.addEventListener('click', function(e) {
                             e.stopPropagation();
-                            const id = this.getAttribute('data-id');
-                            console.log('تعديل المنتج:', id);
-                            editProduct(id);
+                            editProduct(this.getAttribute('data-id'));
                         });
                     });
-                    
-                    // مستمعين للحذف
+
                     document.querySelectorAll('.delete-product').forEach(btn => {
                         btn.addEventListener('click', function(e) {
                             e.stopPropagation();
-                            const id = this.getAttribute('data-id');
-                            console.log('حذف المنتج:', id);
-                            deleteProduct(id);
+                            deleteProduct(this.getAttribute('data-id'));
                         });
                     });
-                    
-                    // مستمعين للعرض
+
                     document.querySelectorAll('.view-product').forEach(btn => {
                         btn.addEventListener('click', function(e) {
                             e.stopPropagation();
-                            const id = this.getAttribute('data-id');
-                            console.log('عرض المنتج:', id);
-                            viewProductDetails(id);
+                            viewProductDetails(this.getAttribute('data-id'));
                         });
                     });
                 }, 100);
             }
         }
-        
-        // تحديث التقطيع
+
         createPagination(totalPages, page, 'productsPagination', (newPage) => {
-            console.log('📄 تغيير الصفحة إلى:', newPage);
             loadProducts(newPage);
         });
-        
-        // تحديث معلومات التقطيع
+
         updatePaginationInfo('productsPaginationInfo', {
             total: totalItems,
             currentPage: page,
             pageSize: pageSize
         });
-        
+
         console.log('✅ تم تحميل وعرض المنتجات بنجاح');
         
     } catch (error) {
@@ -4464,7 +4449,7 @@ async function loadProducts(page = 1) {
                         <strong>خطأ في تحميل المنتجات</strong>
                         <div class="small mt-1">${error.message}</div>
                         <button class="btn btn-sm btn-warning mt-3" onclick="forceReloadProducts()">
-                            <i class="bi bi-arrow-clockwise"></i> إعادة المحاولة بقوة
+                            <i class="bi bi-arrow-clockwise"></i> إعادة التحميل من Firebase
                         </button>
                     </td>
                 </tr>
@@ -4475,98 +4460,7 @@ async function loadProducts(page = 1) {
 
 // دالة مساعدة لإنشاء منتجات نموذجية
 function createSampleProducts() {
-    return [
-        {
-            id: 'prod_' + Date.now() + '_1',
-            name: 'لابتوب ديل إكس بي إس 13',
-            buy: 4500,
-            sell: 5800,
-            stock: 7,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            id: 'prod_' + Date.now() + '_2',
-            name: 'ماوس لوجيتك إم إكس ماستر 3',
-            buy: 120,
-            sell: 180,
-            stock: 22,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            id: 'prod_' + Date.now() + '_3',
-            name: 'شاشة سامسونج أوديسي جي 7 32 بوصة',
-            buy: 2200,
-            sell: 2900,
-            stock: 5,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            id: 'prod_' + Date.now() + '_4',
-            name: 'كيبورد كوريغير كي 70',
-            buy: 350,
-            sell: 480,
-            stock: 12,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            id: 'prod_' + Date.now() + '_5',
-            name: 'سماعات سوني وايرلس',
-            buy: 180,
-            sell: 250,
-            stock: 18,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            id: 'prod_' + Date.now() + '_6',
-            name: 'كاميرا لوجيتك برو 9000',
-            buy: 420,
-            sell: 550,
-            stock: 9,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            id: 'prod_' + Date.now() + '_7',
-            name: 'ماسح ضوئي كانون LiDE 400',
-            buy: 280,
-            sell: 380,
-            stock: 6,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            id: 'prod_' + Date.now() + '_8',
-            name: 'طابعة ليزر إتش بي 107a',
-            buy: 650,
-            sell: 850,
-            stock: 4,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            id: 'prod_' + Date.now() + '_9',
-            name: 'راوتر تي بي-لينك آرتشر AX73',
-            buy: 320,
-            sell: 450,
-            stock: 11,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        },
-        {
-            id: 'prod_' + Date.now() + '_10',
-            name: 'هارد ديسك ويسترن ديجيتال 2TB',
-            buy: 280,
-            sell: 380,
-            stock: 15,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        }
-    ];
+    return [];
 }
 
 // دالة عرض تفاصيل المنتج
@@ -4588,15 +4482,15 @@ async function viewProductDetails(productId) {
                         <table class="table table-sm">
                             <tr>
                                 <th>سعر الشراء:</th>
-                                <td class="text-danger fw-bold">${currency(product.buy)}</td>
+                                <td class="text-danger fw-bold">${currency(product.buyPrice ?? product.buy)}</td>
                             </tr>
                             <tr>
                                 <th>سعر البيع:</th>
-                                <td class="text-success fw-bold">${currency(product.sell)}</td>
+                                <td class="text-success fw-bold">${currency(product.sellPrice ?? product.sell)}</td>
                             </tr>
                             <tr>
                                 <th>الربح لكل قطعة:</th>
-                                <td class="text-info fw-bold">${currency(toNumber(product.sell) - toNumber(product.buy))}</td>
+                                <td class="text-info fw-bold">${currency(toNumber(product.sellPrice ?? product.sell) - toNumber(product.buyPrice ?? product.buy))}</td>
                             </tr>
                         </table>
                     </div>
@@ -4612,7 +4506,7 @@ async function viewProductDetails(productId) {
                             </tr>
                             <tr>
                                 <th>إجمالي قيمة الشراء:</th>
-                                <td>${currency(toNumber(product.buy) * toNumber(product.stock))}</td>
+                                <td>${currency(toNumber(product.buyPrice ?? product.buy) * toNumber(product.stock))}</td>
                             </tr>
                             <tr>
                                 <th>تاريخ الإضافة:</th>
@@ -4670,36 +4564,10 @@ async function viewProductDetails(productId) {
 
 // دالة لإعادة التحميل القسري
 async function forceReloadProducts() {
-    console.log('🔄 إعادة تحميل المنتجات بقوة...');
-    
-    // مسح الكاش
+    console.log('🔄 إعادة تحميل المنتجات من Firebase...');
     clearCache('products');
-    
-    // إعادة تحميل البيانات من المصدر مباشرة
-    const localData = localStorage.getItem('wesam_products');
-    if (localData) {
-        try {
-            const products = JSON.parse(localData);
-            console.log('✅ تم تحميل', products.length, 'منتج مباشرة من localStorage');
-            
-            // تحديث الكاش
-            cache.data['products'] = products;
-            cache.timestamps['products'] = Date.now();
-            cache.usage['products'] = Date.now();
-            
-            // إعادة تحميل الجدول
-            loadProducts();
-            
-            showToast('✅ تم إعادة تحميل المنتجات بنجاح', 'success');
-            
-        } catch (error) {
-            console.error('❌ خطأ في تحليل البيانات:', error);
-            showToast('❌ بيانات المنتجات تالفة', 'error');
-        }
-    } else {
-        console.log('⚠️ لا توجد بيانات محلية');
-        showToast('⚠️ لا توجد بيانات محلية للمنتجات', 'warning');
-    }
+    await loadProducts(1);
+    showToast('✅ تم إعادة تحميل المنتجات من Firebase', 'success');
 }
 
 // جعل الدوال متاحة عالمياً
@@ -4710,13 +4578,7 @@ async function forceReloadProducts() {
 window.viewProductDetails = viewProductDetails;
 window.forceReloadProducts = forceReloadProducts;
 window.addSampleProducts = async function() {
-    const sampleProducts = createSampleProducts();
-    const currentProducts = await load('products');
-    const updatedProducts = [...currentProducts, ...sampleProducts];
-    
-    await save('products', updatedProducts);
-    showToast('✅ تم إضافة 10 منتجات نموذجية', 'success');
-    loadProducts();
+    showToast('ℹ️ تم تعطيل المنتجات النموذجية. يتم الآن جلب المنتجات والأسعار من Firebase فقط.', 'info');
 };
   // ---------- Advanced Invoices Management ----------
   async function loadInvoices(page = 1) {
@@ -8555,7 +8417,7 @@ window.calculateCurrentMonthCommitments = calculateCurrentMonthCommitments;
     try {
       const products = await load('products');
       selectElement.innerHTML = '<option value="">-- اختر المنتج --</option>';
-      products.forEach(product => {
+      products.map(normalizeProductRecord).forEach(product => {
         if (toNumber(product.stock) > 0) {
           const option = document.createElement('option');
           option.value = product.id;
@@ -8582,8 +8444,9 @@ window.calculateCurrentMonthCommitments = calculateCurrentMonthCommitments;
       const products = await load('products');
       const product = products.find(p => p.id === productId);
       if (product) {
-        document.getElementById(`buyPrice_${rowId}`).value = product.buy;
-        document.getElementById(`sellPrice_${rowId}`).value = product.sell;
+        const normalizedProduct = normalizeProductRecord(product);
+        document.getElementById(`buyPrice_${rowId}`).value = normalizedProduct.buy;
+        document.getElementById(`sellPrice_${rowId}`).value = normalizedProduct.sell;
         document.getElementById(`productId_${rowId}`).value = product.id;
       }
       
@@ -9439,8 +9302,8 @@ window.calculateCurrentMonthCommitments = calculateCurrentMonthCommitments;
         const row = [
           product.id,
           product.name || '',
-          product.buy || 0,
-          product.sell || 0,
+          product.buyPrice ?? product.buy ?? 0,
+          product.sellPrice ?? product.sell ?? 0,
           product.stock || 0,
           dateOnly(product.createdAt)
         ].map(field => `"${field}"`).join(',');
@@ -10253,8 +10116,13 @@ async function syncStoreProductsToInventory() {
 
     const existing = currentProducts.find(p => p.name === name || p.storeId === sp.id);
     if (existing) {
-      existing.stock = sp.stock || existing.stock;
-      existing.sellPrice = sp.sell || sp.price || existing.sellPrice;
+      const nextSell = toNumber(sp.sell ?? sp.price ?? existing.sellPrice ?? existing.sell ?? 0);
+      const nextBuy = toNumber(existing.buyPrice ?? existing.buy ?? 0);
+      existing.stock = toNumber(sp.stock ?? existing.stock ?? 0);
+      existing.sell = nextSell;
+      existing.sellPrice = nextSell;
+      existing.buy = nextBuy;
+      existing.buyPrice = nextBuy;
       existing.storeId = sp.id;
     } else {
       const newProduct = {
@@ -10262,9 +10130,11 @@ async function syncStoreProductsToInventory() {
         storeId: sp.id,
         name: name,
         category: sp.category || 'عام',
+        buy: 0,
         buyPrice: 0,
-        sellPrice: sp.sell || sp.price || 0,
-        stock: sp.stock || 0,
+        sell: toNumber(sp.sell ?? sp.price ?? 0),
+        sellPrice: toNumber(sp.sell ?? sp.price ?? 0),
+        stock: toNumber(sp.stock ?? 0),
         minStock: 2,
         description: sp.description || '',
         image: sp.image || '',
