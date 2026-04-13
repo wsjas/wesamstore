@@ -1263,6 +1263,23 @@ function normalizePD(){
 }
 normalizePD();
 
+function getOrderItemsText(order){
+  if(Array.isArray(order?.items) && order.items.length){
+    return order.items.map(item=>`${item?.name||item?.n||'منتج'} × ${item?.qty||1}`).join(' | ');
+  }
+  if(typeof order?.itemsText==='string' && order.itemsText.trim()) return order.itemsText.trim();
+  if(typeof order?.items==='string' && order.items.trim()) return order.items.trim();
+  return '—';
+}
+function getOrderItemsLines(order){
+  if(Array.isArray(order?.items) && order.items.length){
+    return order.items.map(item=>`${item?.name||item?.n||'منتج'} × ${item?.qty||1}`);
+  }
+  const text=getOrderItemsText(order);
+  if(text==='—') return [];
+  return text.split(/\s*\|\s*|\n+/).map(x=>x.trim()).filter(Boolean);
+}
+
 const ORDERS=[
   {id:'ORD-001',customer:'أحمد خالد',items:'Arduino Uno × 2',total:17.0,status:'new',date:'2025-04-08'},
   {id:'ORD-002',customer:'سارة محمد',items:'Raspberry Pi 4 × 1',total:57.0,status:'processing',date:'2025-04-07'},
@@ -1403,7 +1420,7 @@ function setSyncBadge(state){
 
 function openStore(){
   pushToStore();
-  setTimeout(()=>window.open('electronics-store.html','_blank'),600);
+  setTimeout(()=>window.open('electronics-store.html','_blank','noopener,noreferrer'),600);
 }
 
 /* ── AUTH ── */
@@ -1511,7 +1528,7 @@ function renderChart(){
 /* ── RECENT ORDERS ── */
 function renderRecentOrders(){
   const sm={new:'os-new جديد',processing:'os-proc قيد المعالجة',shipped:'os-ship مشحون',done:'os-done مكتمل',cancel:'os-cancel ملغي'};
-  document.getElementById('recentOrdTbl').innerHTML=`<table><thead><tr><th>#</th><th>العميل</th><th>المنتجات</th><th>المجموع</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody>${ORDERS.slice(0,4).map(o=>{const[c,l]=(sm[o.status]||'os-new جديد').split(' ');return`<tr><td style="font-family:'Space Mono',monospace;font-size:.7rem;color:var(--t3)">${o.id}</td><td style="font-weight:700">${o.customer}</td><td style="color:var(--t2);font-size:.76rem">${o.items}</td><td class="td-pr">${o.total.toFixed(2)} JD</td><td><span class="os ${c}">${l}</span></td><td style="color:var(--t3);font-size:.72rem">${o.date}</td></tr>`;}).join('')}</tbody></table>`;
+  document.getElementById('recentOrdTbl').innerHTML=`<table><thead><tr><th>#</th><th>العميل</th><th>المنتجات</th><th>المجموع</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody>${ORDERS.slice(0,4).map(o=>{const[c,l]=(sm[o.status]||'os-new جديد').split(' ');return`<tr><td style="font-family:'Space Mono',monospace;font-size:.7rem;color:var(--t3)">${o.id||'—'}</td><td style="font-weight:700">${o.customer||'—'}</td><td style="color:var(--t2);font-size:.76rem">${getOrderItemsText(o)}</td><td class="td-pr">${parseFloat(o.total||0).toFixed(2)} JD</td><td><span class="os ${c}">${l}</span></td><td style="color:var(--t3);font-size:.72rem">${o.date||'—'}</td></tr>`;}).join('')}</tbody></table>`;
 }
 
 /* ── TOP PRODUCTS ── */
@@ -1571,7 +1588,7 @@ function renderOrders(){
       <td style="font-family:'Space Mono',monospace;font-size:.68rem;color:var(--t3)">${o.id}</td>
       <td style="font-weight:700">${o.customer||'—'}</td>
       <td style="font-size:.75rem;color:var(--t2)">${o.phone||'—'}</td>
-      <td style="color:var(--t2);font-size:.75rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.items||'—'}</td>
+      <td style="color:var(--t2);font-size:.75rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${getOrderItemsText(o)}</td>
       <td class="td-pr">${parseFloat(o.total||0).toFixed(2)} JD</td>
       <td>
         <select style="background:var(--bg3);border:1px solid var(--brd2);border-radius:6px;padding:.26rem .5rem;color:var(--t);font-family:'Cairo',sans-serif;font-size:.72rem;outline:none;cursor:pointer"
@@ -1758,7 +1775,7 @@ function openOrderModal(id=null){
     document.getElementById('o-phone').value=o.phone||'';
     document.getElementById('o-email').value=o.email||'';
     document.getElementById('o-addr').value=o.addr||'';
-    document.getElementById('o-items').value=o.items||'';
+    document.getElementById('o-items').value=getOrderItemsLines(o).join('\n');
     document.getElementById('o-total').value=o.total||'';
     document.getElementById('o-status').value=o.status||'new';
     document.getElementById('o-notes').value=o.notes||'';
@@ -1796,19 +1813,19 @@ function saveOrder(){
 function viewOrder(id){
   const o=ORDERS.find(x=>x.id===id);if(!o)return;
   const sm={new:'جديد',processing:'قيد المعالجة',shipped:'مشحون',done:'مكتمل',cancel:'ملغي'};
-  alert(`📦 تفاصيل الطلب: ${o.id}\n\n👤 العميل: ${o.customer||'—'}\n📞 الهاتف: ${o.phone||'—'}\n📍 العنوان: ${o.addr||'—'}\n\n🛍️ المنتجات:\n${o.items||'—'}\n\n💰 المجموع: ${o.total} JD\n📌 الحالة: ${sm[o.status]||o.status}\n📅 التاريخ: ${o.date||'—'}\n📝 ملاحظات: ${o.notes||'—'}`);
+  alert(`📦 تفاصيل الطلب: ${o.id}\n\n👤 العميل: ${o.customer||'—'}\n📞 الهاتف: ${o.phone||'—'}\n📍 العنوان: ${o.addr||'—'}\n\n🛍️ المنتجات:\n${getOrderItemsText(o)}\n\n💰 المجموع: ${o.total} JD\n📌 الحالة: ${sm[o.status]||o.status}\n📅 التاريخ: ${o.date||'—'}\n📝 ملاحظات: ${o.notes||'—'}`);
 }
 
 /* ── PRINT INVOICE ── */
 function printInvoice(id){
   const o=ORDERS.find(x=>x.id===id);if(!o)return;
-  const w=window.open('','_blank','width=600,height=700');
+  const w=window.open('','_blank','noopener,noreferrer,width=600,height=700');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>فاتورة ${o.id}</title>
   <style>body{font-family:Cairo,sans-serif;padding:2rem;color:#1e293b}h1{color:#f97316;font-size:1.4rem;margin-bottom:.5rem}.logo{font-size:1.6rem;font-weight:900;margin-bottom:1.5rem}.info{background:#f8fafc;padding:1rem;border-radius:8px;margin-bottom:1.5rem;font-size:.9rem;line-height:1.8}.items{margin-bottom:1.5rem}.items table{width:100%;border-collapse:collapse}.items td,.items th{padding:.5rem .75rem;border-bottom:1px solid #e2e8f0;font-size:.85rem;text-align:right}.items th{background:#f1f5f9;font-weight:700}.total{text-align:left;font-size:1.1rem;font-weight:800;color:#f97316}.footer{margin-top:2rem;font-size:.75rem;color:#94a3b8;text-align:center;border-top:1px solid #e2e8f0;padding-top:1rem}</style></head>
   <body><div class="logo">⚡ تك ستور</div><h1>فاتورة رقم: ${o.id}</h1>
   <div class="info"><strong>العميل:</strong> ${o.customer||'—'}<br><strong>الهاتف:</strong> ${o.phone||'—'}<br><strong>العنوان:</strong> ${o.addr||'—'}<br><strong>التاريخ:</strong> ${o.date||'—'}</div>
   <div class="items"><table><thead><tr><th>المنتج</th><th>التفاصيل</th></tr></thead><tbody>
-  ${(o.items||'').split('\n').map(item=>`<tr><td>${item}</td><td>—</td></tr>`).join('')}
+  ${getOrderItemsLines(o).map(item=>`<tr><td>${item}</td><td>—</td></tr>`).join('')}
   </tbody></table></div>
   <div class="total">الإجمالي: ${parseFloat(o.total||0).toFixed(2)} JD</div>
   ${o.notes?`<p style="margin-top:1rem;font-size:.82rem;color:#64748b">ملاحظات: ${o.notes}</p>`:''}
@@ -1833,7 +1850,7 @@ function exportOrdersCSV(){
   const headers=['رقم الطلب','العميل','الهاتف','المنتجات','المجموع','الحالة','التاريخ','الملاحظات'];
   const rows=ORDERS.map(o=>[
     o.id||'',o.customer||'',o.phone||'',
-    (o.items||'').replace(/\n/g,' | '),
+    getOrderItemsText(o),
     parseFloat(o.total||0).toFixed(2),
     o.status||'',o.date||'',o.notes||''
   ]);

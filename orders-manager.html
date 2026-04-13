@@ -68,12 +68,14 @@ onAuthStateChanged(auth,user=>{
 
 function startListening(){
   try{
+    if(ordersUnsub){try{ordersUnsub();}catch(_){ } ordersUnsub=null;}
     ordersUnsub=onSnapshot(query(collection(db,'orders'),orderBy('date','desc')),snap=>{
       window._orders=[];
       snap.forEach(d=>{const data=d.data();data._docId=d.id;window._orders.push(data);});
       window.renderOrders();
     },err=>{
       console.warn('orders orderBy failed, fallback:',err);
+      if(ordersUnsub){try{ordersUnsub();}catch(_){ } ordersUnsub=null;}
       ordersUnsub=onSnapshot(collection(db,'orders'),snap=>{
         window._orders=[];
         snap.forEach(d=>{const data=d.data();data._docId=d.id;window._orders.push(data);});
@@ -374,9 +376,9 @@ setInterval(()=>{
 
 /* ── MANUAL REFRESH ── */
 window.manualRefresh=function(){
-  window._lastRefresh=Date.now();
-  const el=document.getElementById('lastRefresh');
-  if(el)el.textContent=new Date().toLocaleTimeString('ar-JO');
+  if(ordersUnsub){try{ordersUnsub();}catch(_){ } ordersUnsub=null;}
+  startListening();
+  updateRefreshTimer();
   window.t('🔄 تم التحديث','i');
 };
 
@@ -480,7 +482,7 @@ window.renderOrders=function(){
             <option value="done" ${o.status==='done'?'selected':''}>✅ مكتمل</option>
             <option value="cancel" ${o.status==='cancel'?'selected':''}>❌ ملغي</option>
           </select>
-          ${waPhone?`<a class="wa-btn" href="https://wa.me/${waPhone}?text=${waMsg}" target="_blank">💬 واتساب</a>`:''}
+          ${waPhone?`<a class="wa-btn" href="https://wa.me/${waPhone}?text=${waMsg}" target="_blank" rel="noopener noreferrer">💬 واتساب</a>`:''}
           <button class="del-btn" onclick="confirmDelOrder('${o._docId||o.id}','${(o.customer||'').replace(/'/g,'\\\'')}')">🗑️ حذف</button>
         </div>
       </div>
@@ -524,6 +526,15 @@ document.getElementById('cfYes').onclick=async()=>{
   await window.deleteOrder(delOrderId);
   closeCf();
 };
+
+function hardenBlankLinks(){
+  document.querySelectorAll('a[target="_blank"]').forEach(a=>{
+    const rel=new Set((a.getAttribute('rel')||'').split(/\s+/).filter(Boolean));
+    rel.add('noopener');rel.add('noreferrer');
+    a.setAttribute('rel',[...rel].join(' '));
+  });
+}
+hardenBlankLinks();
 
 /* ── KEYBOARD ── */
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCf();});

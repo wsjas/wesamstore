@@ -24,6 +24,7 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 window._db=db; window._auth=auth;
+let productsUnsub=null;
 
 /* ── Auth ── */
 window.doLogin=async()=>{
@@ -50,23 +51,29 @@ onAuthStateChanged(auth,user=>{
   if(user){
     document.getElementById('userBadge').textContent=user.email;
     window.loadProducts();
+  }else if(productsUnsub){
+    try{productsUnsub();}catch(_){ }
+    productsUnsub=null;
+    window._prods=[];
   }
 });
 
 /* ── Products CRUD ── */
 window.loadProducts=()=>{
   try{
-    onSnapshot(query(collection(db,'products'),orderBy('id')),snap=>{
+    if(productsUnsub){try{productsUnsub();}catch(_){ } productsUnsub=null;}
+    productsUnsub=onSnapshot(query(collection(db,'products'),orderBy('id')),snap=>{
       window._prods=[];
       snap.forEach(d=>{const data=d.data();data._docId=d.id;window._prods.push(data);});
       window.renderTable();
     },err=>{
-      onSnapshot(collection(db,'products'),snap=>{
+      if(productsUnsub){try{productsUnsub();}catch(_){ } productsUnsub=null;}
+      productsUnsub=onSnapshot(collection(db,'products'),snap=>{
         window._prods=[];
         snap.forEach(d=>{const data=d.data();data._docId=d.id;window._prods.push(data);});
         window._prods.sort((a,b)=>(a.id||0)-(b.id||0));
         window.renderTable();
-      });
+      },err2=>window.t('خطأ في التحميل: '+err2.message,'e'));
     });
   }catch(e){window.t('خطأ في التحميل','e');}
 };
