@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>البث المباشر - متابعة إصلاح الشاشة | Wesam Store</title>
+  <meta name="description" content="متابعة عملية إصلاح الشاشة مباشرة عبر البث المباشر." />
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="shared-firebase.js"></script>
+  <style>
+    :root{
+      --bg1:#0b1220;
+      --bg2:#111827;
+      --card:#171f31;
+      --line:rgba(255,255,255,.08);
+      --text:#f8fafc;
+      --muted:#cbd5e1;
+      --red:#ef4444;
+      --red2:#dc2626;
+      --blue:#2563eb;
+      --blue2:#1d4ed8;
+      --shadow:0 12px 34px rgba(0,0,0,.28);
+      --radius:22px;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Tahoma, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(37,99,235,.18), transparent 32%),
+        radial-gradient(circle at top left, rgba(239,68,68,.14), transparent 28%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      min-height:100vh;
+    }
+
+    a{color:inherit;text-decoration:none}
+
+    .container{
+      width:min(1180px, calc(100% - 28px));
+      margin:auto;
+      padding:22px 0 40px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom:18px;
+      flex-wrap:wrap;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .brand-badge{
+      width:46px;
+      height:46px;
+      border-radius:14px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg, #2563eb, #0ea5e9);
+      box-shadow:var(--shadow);
+      font-size:20px;
+      font-weight:bold;
+    }
+
+    .brand-text h1{
+      margin:0;
+      font-size:22px;
+      line-height:1.2;
+    }
+
+    .brand-text p{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .nav-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .nav-btn{
+      padding:12px 16px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      font-weight:bold;
+      transition:.2s ease;
+    }
+
+    .nav-btn:hover{
+      transform:translateY(-1px);
+      background:rgba(255,255,255,.09);
+    }
+
+    .hero{
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.025));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:22px;
+      box-shadow:var(--shadow);
+    }
+
+    .hero-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-bottom:16px;
+    }
+
+    .hero h2{
+      margin:0;
+      font-size:28px;
+      line-height:1.3;
+    }
+
+    .hero p{
+      margin:10px 0 0;
+      color:var(--muted);
+      line-height:1.9;
+      font-size:15px;
+    }
+
+    .live-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      background:rgba(239,68,68,.14);
+      color:#fff;
+      border:1px solid rgba(239,68,68,.28);
+      padding:12px 16px;
+      border-radius:999px;
+      font-weight:bold;
+      white-space:nowrap;
+    }
+
+    .dot{
+      width:11px;
+      height:11px;
+      border-radius:50%;
+      background:var(--red);
+      box-shadow:0 0 0 0 rgba(239,68,68,.85);
+      animation:pulse 1.8s infinite;
+    }
+
+    @keyframes pulse{
+      0%{box-shadow:0 0 0 0 rgba(239,68,68,.75)}
+      70%{box-shadow:0 0 0 14px rgba(239,68,68,0)}
+      100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:18px;
+      margin-top:18px;
+    }
+
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+
+    .player-card{
+      padding:16px;
+    }
+
+    .player-wrap{
+      position:relative;
+      width:100%;
+      padding-top:56.25%;
+      border-radius:18px;
+      overflow:hidden;
+      background:#000;
+      border:1px solid rgba(255,255,255,.06);
+    }
+
+    .player-wrap iframe,
+    .player-wrap .placeholder{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      border:0;
+    }
+
+    .placeholder{
+      display:none;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      text-align:center;
+      padding:20px;
+      background:linear-gradient(145deg, #0f172a, #111827);
+      color:#fff;
+    }
+
+    .placeholder h3{
+      margin:0 0 10px;
+      font-size:22px;
+    }
+
+    .placeholder p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.9;
+      max-width:520px;
+    }
+
+    .actions{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      min-height:48px;
+      padding:0 18px;
+      border-radius:14px;
+      font-weight:bold;
+      transition:.2s ease;
+      border:none;
+      cursor:pointer;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+    }
+
+    .btn-yt{
+      background:linear-gradient(135deg, var(--red), var(--red2));
+      color:#fff;
+    }
+
+    .btn-fb{
+      background:linear-gradient(135deg, var(--blue), var(--blue2));
+      color:#fff;
+    }
+
+    .btn-home{
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      border:1px solid var(--line);
+    }
+
+
+    .videos-section{
+      margin-top:18px;
+    }
+
+    .videos-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+
+    .videos-head h3{
+      margin:0;
+      font-size:22px;
+    }
+
+    .videos-head p{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.8;
+    }
+
+    .videos-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+      gap:16px;
+    }
+
+    .video-card{
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      position:relative;
+    }
+
+    .video-thumb{
+      position:relative;
+      aspect-ratio:16/9;
+      background:
+        radial-gradient(circle at top left, rgba(37,99,235,.22), transparent 35%),
+        linear-gradient(135deg, #10192a, #17243d);
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .video-thumb img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .video-thumb .play{
+      position:absolute;
+      width:58px;
+      height:58px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      background:rgba(0,0,0,.55);
+      border:1px solid rgba(255,255,255,.16);
+      font-size:22px;
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(4px);
+    }
+
+    .video-body{
+      padding:14px;
+    }
+
+    .video-title{
+      margin:0 0 8px;
+      font-size:16px;
+      line-height:1.7;
+    }
+
+    .video-link{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      color:#fff;
+      font-weight:bold;
+      opacity:.92;
+    }
+
+    .video-link:hover{
+      opacity:1;
+    }
+
+    .videos-empty{
+      display:none;
+      text-align:center;
+      color:var(--muted);
+      padding:18px;
+      border:1px dashed var(--line);
+      border-radius:18px;
+      background:rgba(255,255,255,.03);
+    }
+
+    .footer{
+      text-align:center;
+      color:#94a3b8;
+      font-size:13px;
+      margin-top:18px;
+      padding:8px;
+    }
+
+    @media (max-width: 560px){
+      .container{
+        width:min(100% - 18px, 100%);
+      }
+
+      .hero,
+      .player-card{
+        padding:14px;
+      }
+
+      .brand-text h1{
+        font-size:19px;
+      }
+
+      .hero h2{
+        font-size:21px;
+      }
+
+      .nav-btn,
+      .btn{
+        width:100%;
+      }
+
+      .actions,
+      .nav-actions{
+        display:grid;
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-badge">WS</div>
+        <div class="brand-text">
+          <h1>Wesam Store</h1>
+          <p>متابعة مباشرة لعملية إصلاح الشاشة</p>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <a class="nav-btn" href="index.html">الصفحة الرئيسية</a>
+        <a class="nav-btn" id="serviceRequestBtn" href="index.html?openService=1">طلب صيانة</a>
+        <a class="nav-btn" id="trackOrderPageBtn" href="index.html#trackOrderSection">تتبع الطلب</a>
+      </div>
+    </div>
+
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <h2>البث المباشر لعملية الإصلاح</h2>
+          <p>
+            هذه الصفحة مخصصة لعرض البث المباشر للعميل أثناء إصلاح الشاشة.
+            يتم تشغيل البث من يوتيوب داخل الموقع، مع إمكانية فتحه أيضًا على فيسبوك.
+          </p>
+        </div>
+
+        <div class="live-badge">
+          <span class="dot"></span>
+          <span>LIVE</span>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card player-card">
+          <div class="player-wrap">
+            <iframe
+              id="youtubeFrame"
+              src=""
+              title="البث المباشر"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen>
+            </iframe>
+
+            <div class="placeholder" id="placeholderBox">
+              <h3>لم يتم إدخال رابط البث بعد</h3>
+              <p>
+                  البث هنا مباشرة.
+                رابط البث على فيسبوك في الزر الأزرق أسفل المشغل.
+              </p>
+            </div>
+          </div>
+
+          <div class="actions">
+            <a class="btn btn-yt" id="youtubeBtn" href="#" target="_blank" rel="noopener">مشاهدة على يوتيوب</a>
+            <a class="btn btn-fb" id="facebookBtn" href="#" target="_blank" rel="noopener">مشاهدة على فيسبوك</a>
+            <a class="btn btn-home" href="index.html">العودة للرئيسية</a>
+          </div>
+        </div>
+
+        <div class="card player-card videos-section" id="videosSection">
+          <div class="videos-head">
+            <div>
+              <h3 id="videosSectionTitle">فيديوهات إضافية</h3>
+              <p id="videosSectionSub">فيديوهات مفيدة للعميل في هذه البطاقات.</p>
+            </div>
+          </div>
+          <div class="videos-empty" id="videosEmpty">لا توجد فيديوهات إضافية حالياً.</div>
+          <div class="videos-grid" id="videosGrid"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      © Wesam Store - صفحة بث مباشر لمتابعة إصلاح الشاشة
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_CONFIG = {
+      youtubeVideoId: "YOUTUBE_VIDEO_ID_HERE",
+      facebookVideoUrl: "https://www.facebook.com/",
+      serviceRequestHref: "index.html?openService=1",
+      trackOrderHref: "index.html#trackOrderSection",
+      videosSectionTitle: "فيديوهات إضافية",
+      videosSectionSub: " روابط فيديوهات مفيدة للعميل في هذه البطاقات.",
+      videos: []
+    };
+
+    const youtubeFrame = document.getElementById("youtubeFrame");
+    const youtubeBtn = document.getElementById("youtubeBtn");
+    const facebookBtn = document.getElementById("facebookBtn");
+    const placeholderBox = document.getElementById("placeholderBox");
+    const serviceRequestBtn = document.getElementById("serviceRequestBtn");
+    const trackOrderPageBtn = document.getElementById("trackOrderPageBtn");
+    const videosGrid = document.getElementById("videosGrid");
+    const videosEmpty = document.getElementById("videosEmpty");
+    const videosSectionTitle = document.getElementById("videosSectionTitle");
+    const videosSectionSub = document.getElementById("videosSectionSub");
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function extractYouTubeId(input) {
+      const value = (input || "").trim();
+      if (!value) return "";
+      if (/^[a-zA-Z0-9_-]{11}$/.test(value)) return value;
+      try {
+        const url = new URL(value);
+        if (url.hostname.includes("youtu.be")) {
+          return (url.pathname || "/").replace("/", "").trim();
+        }
+        if (url.searchParams.get("v")) {
+          return url.searchParams.get("v").trim();
+        }
+        const parts = (url.pathname || "").split("/").filter(Boolean);
+        const embedIndex = parts.findIndex(part => part === "embed" || part === "shorts" || part === "live");
+        if (embedIndex !== -1 && parts[embedIndex + 1]) {
+          return parts[embedIndex + 1].trim();
+        }
+      } catch (_) {}
+      return "";
+    }
+
+    function getYouTubeThumb(input) {
+      const id = extractYouTubeId(input);
+      return id ? ("https://img.youtube.com/vi/" + encodeURIComponent(id) + "/hqdefault.jpg") : "";
+    }
+
+    function renderPlayer(config) {
+      const youtubeId = extractYouTubeId(config.youtubeVideoId);
+      if (youtubeId) {
+        const embedUrl =
+          "https://www.youtube-nocookie.com/embed/" +
+          encodeURIComponent(youtubeId) +
+          "?autoplay=1&rel=0&modestbranding=1";
+
+        const watchUrl =
+          "https://www.youtube.com/watch?v=" +
+          encodeURIComponent(youtubeId);
+
+        youtubeFrame.src = embedUrl;
+        youtubeBtn.href = watchUrl;
+        placeholderBox.style.display = "none";
+        youtubeFrame.style.display = "block";
+      } else {
+        youtubeFrame.style.display = "none";
+        placeholderBox.style.display = "flex";
+        youtubeBtn.href = "#";
+        youtubeBtn.onclick = function(e){ e.preventDefault(); };
+      }
+
+      if (config.facebookVideoUrl && config.facebookVideoUrl.trim() && config.facebookVideoUrl !== "https://www.facebook.com/") {
+        facebookBtn.href = config.facebookVideoUrl.trim();
+        facebookBtn.style.opacity = "1";
+      } else {
+        facebookBtn.href = "#";
+        facebookBtn.onclick = function(e){ e.preventDefault(); };
+        facebookBtn.style.opacity = ".6";
+      }
+
+      serviceRequestBtn.href = (config.serviceRequestHref || DEFAULT_CONFIG.serviceRequestHref).trim();
+      trackOrderPageBtn.href = (config.trackOrderHref || DEFAULT_CONFIG.trackOrderHref).trim();
+    }
+
+    function renderVideos(config) {
+      const videos = Array.isArray(config.videos)
+        ? config.videos.filter(item => item && String(item.url || "").trim())
+        : [];
+
+      videosSectionTitle.textContent = config.videosSectionTitle || DEFAULT_CONFIG.videosSectionTitle;
+      videosSectionSub.textContent = config.videosSectionSub || DEFAULT_CONFIG.videosSectionSub;
+
+      if (!videos.length) {
+        videosGrid.innerHTML = "";
+        videosEmpty.style.display = "block";
+        return;
+      }
+
+      videosEmpty.style.display = "none";
+      videosGrid.innerHTML = videos.map((video, index) => {
+        const url = String(video.url || "").trim();
+        const title = String(video.title || ("فيديو " + (index + 1))).trim();
+        const thumb = getYouTubeThumb(url);
+        const thumbHtml = thumb
+          ? `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(title)}" loading="lazy">`
+          : `<div style="font-size:40px;opacity:.9;"><i class="fas fa-circle-play"></i></div>`;
+
+        return `
+          <a class="card video-card" href="${escapeHtml(url)}" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              ${thumbHtml}
+              <div class="play"><i class="fas fa-play"></i></div>
+            </div>
+            <div class="video-body">
+              <h4 class="video-title">${escapeHtml(title)}</h4>
+              <span class="video-link"><i class="fas fa-up-right-from-square"></i> مشاهدة الفيديو</span>
+            </div>
+          </a>
+        `;
+      }).join("");
+    }
+
+    async function loadRemoteConfig() {
+      const config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+
+      try {
+        if (window.WesamFirebase && typeof window.WesamFirebase.init === "function") {
+          window.WesamFirebase.init();
+        }
+
+        const db = window.WesamFirebase && window.WesamFirebase.db;
+        if (db) {
+          const pageDoc = await db.collection("settings").doc("page_content").get();
+          if (pageDoc.exists) {
+            const data = pageDoc.data() || {};
+            config.youtubeVideoId = (data.livePageYoutubeVideoId || config.youtubeVideoId);
+            config.facebookVideoUrl = (data.livePageFacebookVideoUrl || config.facebookVideoUrl);
+            config.serviceRequestHref = (data.livePageServiceLink || config.serviceRequestHref);
+            config.trackOrderHref = (data.livePageTrackLink || config.trackOrderHref);
+            config.videosSectionTitle = (data.liveVideosSectionTitle || config.videosSectionTitle);
+            config.videosSectionSub = (data.liveVideosSectionSub || config.videosSectionSub);
+
+            const videos = [];
+            for (let i = 1; i <= 6; i++) {
+              const title = (data["liveVideo" + i + "Title"] || "").trim();
+              const url = (data["liveVideo" + i + "Url"] || "").trim();
+              if (url) videos.push({ title, url });
+            }
+            config.videos = videos;
+          }
+        }
+      } catch (error) {
+        console.warn("Live page settings load failed:", error);
+      }
+
+      renderPlayer(config);
+      renderVideos(config);
+    }
+
+    loadRemoteConfig();
+  </script>
+</body>
+</html>
