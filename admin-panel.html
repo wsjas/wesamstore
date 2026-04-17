@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- أمان: Content Security Policy — يقلل خطر XSS ويمنع تحميل سكربتات من نطاقات غير موثوقة -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com wss://*.firebaseio.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>لوحة التحكم — Aielectronics</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <!-- Firebase SDK — إعدادات مدمجة مباشرة -->
@@ -58,35 +62,45 @@
           if (typeof loadFromFirebase === 'function') loadFromFirebase();
           toast('🔥 مرحباً ' + (user.email || 'المدير') + ' — Firebase متصل', 'ts');
 
-          // ── تشغيل listeners الطلبات بعد تسجيل الدخول (تحتاج auth) ──
+          // ── تشغيل listeners الطلبات بعد تسجيل الدخول (tحتاج auth) ──
           if (!_ordersUnsubscribe) {
             try {
-              _ordersUnsubscribe = onSnapshot(query(collection(db, 'orders'), orderBy('date', 'desc')), snap => {
-                if (!snap.empty) {
-                  const arr = [];
-                  snap.forEach(d => arr.push(d.data()));
-                  ORDERS.length = 0; arr.forEach(o => ORDERS.push(o));
-                }
+              const applyOrderChanges = (snap) => {
+                if (snap.metadata && snap.metadata.hasPendingWrites) return;
+                const changes = snap.docChanges();
+                if (!changes.length) return;
+                let touched = false;
+                changes.forEach(ch => {
+                  const data = ch.doc.data();
+                  const idx = ORDERS.findIndex(o => o.id === data.id || o.id === ch.doc.id);
+                  if (ch.type === 'added' || ch.type === 'modified') {
+                    if (idx !== -1) ORDERS[idx] = data; else ORDERS.push(data);
+                    touched = true;
+                  } else if (ch.type === 'removed') {
+                    if (idx !== -1) { ORDERS.splice(idx, 1); touched = true; }
+                  }
+                });
+                if (!touched) return;
+                // Keep ORDERS sorted newest-first
+                ORDERS.sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
                 if (typeof renderOrders === 'function') renderOrders();
                 if (typeof renderRecentOrders === 'function') renderRecentOrders();
                 if (typeof initDash === 'function') initDash();
                 const pending = ORDERS.filter(o => o.status === 'new').length;
                 const b = document.getElementById('ordBadge');
                 if (b) b.textContent = pending || '';
-              }, err => {
-                console.warn('orders orderBy failed, retrying without order:', err);
-                _ordersUnsubscribe = onSnapshot(collection(db, 'orders'), snap2 => {
-                  if (!snap2.empty) {
-                    const arr = [];
-                    snap2.forEach(d => arr.push(d.data()));
-                    arr.sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
-                    ORDERS.length = 0; arr.forEach(o => ORDERS.push(o));
-                  }
-                  if (typeof renderOrders === 'function') renderOrders();
-                  if (typeof renderRecentOrders === 'function') renderRecentOrders();
-                  if (typeof initDash === 'function') initDash();
-                }, err2 => console.warn('orders fallback error:', err2));
-              });
+              };
+
+              _ordersUnsubscribe = onSnapshot(
+                query(collection(db, 'orders'), orderBy('date', 'desc')),
+                applyOrderChanges,
+                err => {
+                  console.warn('orders orderBy failed, retrying without order:', err);
+                  _ordersUnsubscribe = onSnapshot(collection(db, 'orders'),
+                    applyOrderChanges,
+                    err2 => console.warn('orders fallback error:', err2));
+                }
+              );
             } catch(e) { console.warn('orders listener setup error:', e); }
           }
 
@@ -102,38 +116,42 @@
         }
       });
 
-      /* ─ Real-time listener on products ─ */
+      /* ─ Real-time listener on products — INCREMENTAL updates only ─ */
       try {
-        const q = query(collection(db, 'products'), orderBy('id'));
-        onSnapshot(q, snap => {
-          if (snap.empty) return;
-          const arr = [];
-          snap.forEach(d => arr.push(d.data()));
-          if (arr.length) {
-            PD = arr;
-            if (typeof normalizePD === 'function') normalizePD();
-            localStorage.setItem('TECHSTORE_PRODUCTS', JSON.stringify(PD));
-            if (typeof renderProds === 'function') renderProds();
-            if (typeof renderTopProds === 'function') renderTopProds();
-            if (typeof initDash === 'function') initDash();
-          }
-        }, err => {
-          console.warn('products orderBy failed, retrying without order:', err);
-          // fallback: بدون ترتيب إذا لم يكن هناك index
-          onSnapshot(collection(db, 'products'), snap2 => {
-            if (snap2.empty) return;
-            const arr = [];
-            snap2.forEach(d => arr.push(d.data()));
-            if (arr.length) {
-              arr.sort((a,b) => (a.id||0) - (b.id||0));
-              PD = arr;
-              if (typeof normalizePD === 'function') normalizePD();
-              localStorage.setItem('TECHSTORE_PRODUCTS', JSON.stringify(PD));
-              if (typeof renderProds === 'function') renderProds();
-              if (typeof renderTopProds === 'function') renderTopProds();
-              if (typeof initDash === 'function') initDash();
+        const applyProductChanges = (snap) => {
+          // Ignore events that are just echoes of our own local writes
+          if (snap.metadata && snap.metadata.hasPendingWrites) return;
+          const changes = snap.docChanges();
+          if (!changes.length) return;
+          let touched = false;
+          changes.forEach(ch => {
+            const data = ch.doc.data();
+            const matchIdx = PD.findIndex(p =>
+              (p.sku && data.sku && p.sku === data.sku) ||
+              (p.id != null && data.id != null && String(p.id) === String(data.id)) ||
+              String(p.id) === ch.doc.id || p.sku === ch.doc.id
+            );
+            if (ch.type === 'added' || ch.type === 'modified') {
+              if (matchIdx !== -1) PD[matchIdx] = data; else PD.push(data);
+              touched = true;
+            } else if (ch.type === 'removed') {
+              if (matchIdx !== -1) { PD.splice(matchIdx, 1); touched = true; }
             }
-          }, err2 => console.warn('products fallback listener error:', err2));
+          });
+          if (!touched) return;
+          if (typeof normalizePD === 'function') normalizePD();
+          localStorage.setItem('TECHSTORE_PRODUCTS', JSON.stringify(PD));
+          if (typeof renderProds === 'function') renderProds();
+          if (typeof renderTopProds === 'function') renderTopProds();
+          // initDash is expensive — only call it when the set actually changed
+          if (typeof initDash === 'function') initDash();
+        };
+
+        const q = query(collection(db, 'products'), orderBy('id'));
+        onSnapshot(q, applyProductChanges, err => {
+          console.warn('products orderBy failed, retrying without order:', err);
+          onSnapshot(collection(db, 'products'), applyProductChanges,
+            err2 => console.warn('products fallback listener error:', err2));
         });
       } catch(e) {
         console.warn('products listener setup error:', e);
@@ -157,11 +175,24 @@
         }
       }, err => console.warn('config snapshot error:', err));
 
-      /* ─ Real-time listener on coupons ─ */
+      /* ─ Real-time listener on coupons — INCREMENTAL ─ */
       onSnapshot(collection(db, 'coupons'), snap => {
-        const arr = [];
-        snap.forEach(d => arr.push(d.data()));
-        COUPONS_DATA = arr.length ? arr : COUPONS_DATA;
+        if (snap.metadata && snap.metadata.hasPendingWrites) return;
+        const changes = snap.docChanges();
+        if (!changes.length) return;
+        let touched = false;
+        changes.forEach(ch => {
+          const data = ch.doc.data();
+          const code = data.code || ch.doc.id;
+          const idx = COUPONS_DATA.findIndex(c => c.code === code);
+          if (ch.type === 'added' || ch.type === 'modified') {
+            if (idx !== -1) COUPONS_DATA[idx] = data; else COUPONS_DATA.push(data);
+            touched = true;
+          } else if (ch.type === 'removed') {
+            if (idx !== -1) { COUPONS_DATA.splice(idx, 1); touched = true; }
+          }
+        });
+        if (!touched) return;
         localStorage.setItem('TECHSTORE_COUPONS', JSON.stringify(COUPONS_DATA));
         if (typeof renderCoupons === 'function') renderCoupons();
       }, err => console.warn('coupons snapshot error:', err));
@@ -220,16 +251,22 @@
     try { await deleteDoc(doc(window._db, 'products', String(id))); } catch(e) {}
   };
 
-  /* ─ Save config ─ */
+  /* ─ Save config — ALWAYS merge so we don't overwrite other fields ─ */
   window.fbSaveConfig = async function(cfg) {
     if (!window._db) return;
-    await setDoc(doc(window._db, 'config', 'site'), { ...cfg, updatedAt: serverTimestamp() });
+    await setDoc(doc(window._db, 'config', 'site'), { ...cfg, updatedAt: serverTimestamp() }, { merge: true });
   };
 
-  /* ─ Save coupons ─ */
+  /* ─ Save ONE coupon (partial, not the whole list) ─ */
+  window.fbSaveCoupon = async function(c) {
+    if (!window._db || !c || !c.code) return;
+    await setDoc(doc(window._db, 'coupons', c.code), c, { merge: true });
+  };
+
+  /* ─ Save coupons (legacy: still writes each individually with merge) ─ */
   window.fbSaveCoupons = async function(arr) {
     if (!window._db) return;
-    const batch = arr.map(c => setDoc(doc(window._db, 'coupons', c.code), c));
+    const batch = arr.map(c => setDoc(doc(window._db, 'coupons', c.code), c, { merge: true }));
     await Promise.all(batch);
   };
 
@@ -237,6 +274,13 @@
   window.fbDeleteCoupon = async function(code) {
     if (!window._db) return;
     await deleteDoc(doc(window._db, 'coupons', code));
+  };
+
+  /* ─ Save ONE product (partial update) ─ */
+  window.fbSaveProduct = async function(p) {
+    if (!window._db || !p) return;
+    const docId = p.sku || p.SKU || String(p.id);
+    await setDoc(doc(window._db, 'products', docId), p, { merge: true });
   };
 
   /* ─ Save/update order ─ */
@@ -291,13 +335,17 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--t);min-heig
 
 /* ─── APP LAYOUT ─── */
 #app{display:none;min-height:100vh}
-.sb{width:235px;background:var(--bg2);border-left:1px solid var(--brd);position:fixed;top:0;right:0;height:100vh;display:flex;flex-direction:column;z-index:100;transition:transform .3s}
+.sb{width:235px;background:var(--bg2);border-left:1px solid var(--brd);position:fixed;top:0;right:0;height:100vh;display:flex;flex-direction:column;z-index:100;transition:transform .3s;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+.sb::-webkit-scrollbar{width:5px}
+.sb::-webkit-scrollbar-track{background:transparent}
+.sb::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+.sb::-webkit-scrollbar-thumb:hover{background:var(--o)}
 .sb.off{transform:translateX(235px)}
 .main{margin-right:235px;min-height:100vh;display:flex;flex-direction:column;transition:margin .3s}
 .main.wide{margin-right:0}
 
 /* ─── SIDEBAR ─── */
-.sb-top{padding:1.25rem 1rem;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:.7rem}
+.sb-top{padding:1.25rem 1rem;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:.7rem;position:sticky;top:0;background:var(--bg2);z-index:2}
 .sb-logo-ico{width:36px;height:36px;background:linear-gradient(135deg,var(--o),var(--od));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
 .sb-logo-txt{font-family:'Space Mono',monospace;font-size:.95rem;font-weight:700;color:var(--o)}
 .sb-logo-sub{font-size:.62rem;color:var(--t3)}
@@ -310,7 +358,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--t);min-heig
 .si-badge{margin-right:auto;font-size:.58rem;font-weight:700;padding:.1rem .42rem;border-radius:10px;min-width:18px;text-align:center}
 .si-badge.o{background:var(--om);color:var(--o)}
 .si-badge.r{background:var(--rel);color:var(--re)}
-.sb-bot{margin-top:auto;padding:.7rem;border-top:1px solid var(--brd)}
+.sb-bot{margin-top:auto;padding:.7rem;border-top:1px solid var(--brd);position:sticky;bottom:0;background:var(--bg2);z-index:2}
 .sb-user{display:flex;align-items:center;gap:.6rem;background:var(--bg3);border-radius:9px;padding:.6rem .75rem}
 .sb-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--o),var(--b));display:flex;align-items:center;justify-content:center;color:#fff;font-size:.78rem;font-weight:700;flex-shrink:0}
 .sb-un{font-size:.78rem;font-weight:700}
@@ -827,9 +875,9 @@ ESP32 / ESP8266
           <div class="scard">
             <div class="scard-hd"><span class="scard-hd-ico">📲</span><h3>روابط مواقع التواصل</h3></div>
             <div class="scard-bd">
-              <div class="soc-row"><div class="soc-ico" style="background:#1877f2;color:#fff">f</div><input id="sc-fb" value="https://facebook.com/mikroelectron" dir="ltr" placeholder="رابط فيسبوك"></div>
-              <div class="soc-row"><div class="soc-ico" style="background:#e1306c;color:#fff">📸</div><input id="sc-ig" value="https://instagram.com/mikroelectron" dir="ltr" placeholder="رابط انستغرام"></div>
-              <div class="soc-row"><div class="soc-ico" style="background:#ff0000;color:#fff">▶</div><input id="sc-yt" value="https://youtube.com/@mikroelectron" dir="ltr" placeholder="رابط يوتيوب"></div>
+              <div class="soc-row"><div class="soc-ico" style="background:#1877f2;color:#fff">f</div><input id="sc-fb" value="" dir="ltr" placeholder="رابط فيسبوك"></div>
+              <div class="soc-row"><div class="soc-ico" style="background:#e1306c;color:#fff">📸</div><input id="sc-ig" value="" dir="ltr" placeholder="رابط انستغرام"></div>
+              <div class="soc-row"><div class="soc-ico" style="background:#ff0000;color:#fff">▶</div><input id="sc-yt" value="" dir="ltr" placeholder="رابط يوتيوب"></div>
               <div class="soc-row"><div class="soc-ico" style="background:#0a66c2;color:#fff">in</div><input id="sc-li" value="" dir="ltr" placeholder="رابط لينكدإن"></div>
               <div class="soc-row"><div class="soc-ico" style="background:#000;color:#fff">X</div><input id="sc-tw" value="" dir="ltr" placeholder="رابط تويتر/X"></div>
               <div class="soc-row"><div class="soc-ico" style="background:#25d366;color:#fff">💬</div><input id="sc-wa" value="https://wa.me/96279006219" dir="ltr" placeholder="رابط واتساب"></div>
@@ -841,7 +889,7 @@ ESP32 / ESP8266
             <div class="scard-hd"><span class="scard-hd-ico">🗺️</span><h3>الموقع الجغرافي</h3></div>
             <div class="scard-bd">
               <div class="sf"><label>العنوان الكامل</label><textarea id="sc-addr" rows="2">شارع الجامعة الأردنية، مبنى خليفة، الطابق الثالث، عمّان</textarea></div>
-              <div class="sf"><label>رابط خريطة Google Maps</label><input id="sc-map" value="https://maps.google.com/?q=mikroelectron+amman" dir="ltr"></div>
+              <div class="sf"><label>رابط خريطة Google Maps</label><input id="sc-map" value="" placeholder="https://maps.google.com/?q=..." dir="ltr"></div>
               <button class="ssave" onclick="saveConfig('location')">💾 حفظ</button>
             </div>
           </div>
@@ -854,19 +902,19 @@ ESP32 / ESP8266
           <div class="scard">
             <div class="scard-hd"><span class="scard-hd-ico">📞</span><h3>أرقام الهاتف</h3></div>
             <div class="scard-bd">
-              <div class="ph-row"><span class="ph-label">الرئيسي</span><input id="ph1" value="+962 6 222 5522" dir="ltr"></div>
-              <div class="ph-row"><span class="ph-label">واتساب</span><input id="ph2" value="+962 7900 621 96" dir="ltr"></div>
-              <div class="ph-row"><span class="ph-label">ثانٍ</span><input id="ph3" value="+962 6 534 4772" dir="ltr"></div>
-              <div class="ph-row"><span class="ph-label">فاكس</span><input id="ph4" value="+962 6 534 4778" dir="ltr"></div>
+              <div class="ph-row"><span class="ph-label">الرئيسي</span><input id="ph1" value="" placeholder="+962 ..." dir="ltr"></div>
+              <div class="ph-row"><span class="ph-label">واتساب</span><input id="ph2" value="" placeholder="+962 ..." dir="ltr"></div>
+              <div class="ph-row"><span class="ph-label">ثانٍ</span><input id="ph3" value="" placeholder="+962 ..." dir="ltr"></div>
+              <div class="ph-row"><span class="ph-label">فاكس</span><input id="ph4" value="" placeholder="+962 ..." dir="ltr"></div>
               <button class="ssave" onclick="saveConfig('phones')">💾 حفظ</button>
             </div>
           </div>
           <div class="scard">
             <div class="scard-hd"><span class="scard-hd-ico">📧</span><h3>البريد الإلكتروني</h3></div>
             <div class="scard-bd">
-              <div class="sf"><label>البريد الرئيسي</label><input id="em1" value="info@mikroelectron.com" dir="ltr"></div>
-              <div class="sf"><label>بريد الدعم التقني</label><input id="em2" value="support@mikroelectron.com" dir="ltr"></div>
-              <div class="sf"><label>بريد الشراكات</label><input id="em3" value="partner@mikroelectron.com" dir="ltr"></div>
+              <div class="sf"><label>البريد الرئيسي</label><input id="em1" value="" placeholder="example@domain.com" dir="ltr"></div>
+              <div class="sf"><label>بريد الدعم التقني</label><input id="em2" value="" placeholder="support@domain.com" dir="ltr"></div>
+              <div class="sf"><label>بريد الشراكات</label><input id="em3" value="" placeholder="partner@domain.com" dir="ltr"></div>
               <button class="ssave" onclick="saveConfig('emails')">💾 حفظ</button>
             </div>
           </div>
@@ -1112,107 +1160,7 @@ ESP32 / ESP8266
 /* ════════════════════════════
    FULL PRODUCT DATA
 ════════════════════════════ */
-let PD=[
-  {id:1,n:'Arduino Uno R3 الأصلي',sku:'ARD-UNO-R3',p:8.5,op:null,cat:'arduino',ic:'🤖',b:'hot',st:'in-stock',stx:'متوفر',rat:4.8,rcnt:124,
-   imgs:['https://store.arduino.cc/cdn/shop/products/A000066_iso_1_3f47da08-8b4a-453e-b8c4-4e8ef9d47b7c_643x483.jpg?v=1629028814'],
-   desc:'لوحة Arduino Uno R3 هي الأكثر مبيعاً في العالم ونقطة البداية المثالية لكل من يريد تعلم الإلكترونيات والبرمجة.',
-   features:['14 منفذ رقمي (6 منها PWM)','ذاكرة Flash 32KB وSRAM 2KB','دعم UART، SPI، وI2C','توصيل USB مباشر'],
-   useCases:['مشاريع تخرج','روبوتات','تعلم البرمجة'],
-   sp:{المعالج:'ATmega328P',التردد:'16 MHz',الجهد:'5V',الحجم:'68.6×53.4mm'},reviews:[]},
-  {id:2,n:'Arduino Mega 2560 Rev3',sku:'ARD-MEGA-2560',p:14.0,op:18.0,cat:'arduino',ic:'🤖',b:'sale',st:'in-stock',stx:'متوفر',rat:4.7,rcnt:89,
-   imgs:['https://store.arduino.cc/cdn/shop/products/A000047_iso_643x483.jpg?v=1629028824'],
-   desc:'Arduino Mega 2560 مع 54 منفذاً رقمياً — مثالية للمشاريع الكبيرة.',
-   features:['54 منفذ رقمي','16 منفذ تناظري','Flash 256KB'],useCases:['CNC','طباعة 3D'],
-   sp:{المعالج:'ATmega2560',التردد:'16 MHz',الجهد:'5V'},reviews:[]},
-  {id:3,n:'Arduino Nano V3.0',sku:'ARD-NANO-V3',p:4.5,op:null,cat:'arduino',ic:'🤖',b:'',st:'in-stock',stx:'متوفر',rat:4.6,rcnt:203,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Arduino-nano-overview.jpg/400px-Arduino-nano-overview.jpg'],
-   desc:'نسخة مدمجة من Arduino Uno بحجم أصغر بكثير.',features:['حجم صغير جداً','مناسب للـ Breadboard'],useCases:['مشاريع مدمجة'],
-   sp:{المعالج:'ATmega328P',الحجم:'45×18mm',الوزن:'7g'},reviews:[]},
-  {id:4,n:'Arduino Starter Kit Complete',sku:'ARD-KIT-FULL',p:28.0,op:35.0,cat:'arduino',ic:'🎁',b:'sale',st:'low-stock',stx:'كمية محدودة',rat:4.9,rcnt:56,
-   imgs:['https://m.media-amazon.com/images/I/91PQ9tNRpGL._AC_SL1500_.jpg'],
-   desc:'كيت Arduino المتكامل للمبتدئين — 30+ مكون.',features:['Arduino Uno أصلي','Breadboard 830','30+ مكوّن'],useCases:['هدية تعليمية'],
-   sp:{المحتوى:'30+ مكوّن',المستوى:'مبتدئ'},reviews:[]},
-  {id:5,n:'Raspberry Pi 4 Model B 4GB',sku:'RPI-4B-4G',p:55.0,op:60.0,cat:'raspberry',ic:'🍓',b:'sale',st:'low-stock',stx:'كمية محدودة',rat:4.9,rcnt:78,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Raspberry-Pi-4-Model-B-02.jpg/800px-Raspberry-Pi-4-Model-B-02.jpg'],
-   desc:'Raspberry Pi 4 بذاكرة 4GB — يعمل كحاسوب كامل.',features:['معالج Cortex-A72','ذاكرة 4GB','دعم 4K'],useCases:['ذكاء اصطناعي','Linux'],
-   sp:{المعالج:'Cortex-A72 1.8GHz',الذاكرة:'4GB LPDDR4X'},reviews:[]},
-  {id:6,n:'Raspberry Pi Zero 2W',sku:'RPI-ZERO-2W',p:18.0,op:null,cat:'raspberry',ic:'🍓',b:'new',st:'in-stock',stx:'متوفر',rat:4.7,rcnt:34,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Raspberry_Pi_Zero_2_W_Diagram.jpg/640px-Raspberry_Pi_Zero_2_W_Diagram.jpg'],
-   desc:'أصغر Pi مع WiFi وBluetooth مدمجَين.',features:['WiFi+BT مدمج','حجم بطاقة ائتمان'],useCases:['أجهزة ارتداء'],
-   sp:{المعالج:'Cortex-A53 1GHz',الذاكرة:'512MB'},reviews:[]},
-  {id:7,n:'ESP32 Dev Board 38-Pin',sku:'ESP-32-DEV-38',p:5.5,op:null,cat:'esp',ic:'📶',b:'hot',st:'in-stock',stx:'متوفر',rat:4.8,rcnt:312,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/ESP32_Espressif_ESP-WROOM-32_Dev_Board.jpg/640px-ESP32_Espressif_ESP-WROOM-32_Dev_Board.jpg'],
-   desc:'ESP32 مع WiFi وBluetooth — الأكثر مبيعاً في IoT.',features:['WiFi+BT4.2 مدمج','معالج مزدوج 240MHz'],useCases:['IoT','WiFi'],
-   sp:{المعالج:'Xtensa LX6 240MHz',الاتصال:'WiFi+BT4.2'},reviews:[]},
-  {id:8,n:'ESP32-S3 WROOM-1 Module',sku:'ESP-S3-WROOM-1',p:7.0,op:null,cat:'esp',ic:'📶',b:'new',st:'in-stock',stx:'متوفر',rat:4.7,rcnt:45,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/ESP32_Espressif_ESP-WROOM-32_Dev_Board.jpg/640px-ESP32_Espressif_ESP-WROOM-32_Dev_Board.jpg'],
-   desc:'أحدث ESP مع USB OTG ودعم AI.',features:['USB OTG نيتيف','دعم Neural Network'],useCases:['رؤية حاسوبية','AI'],
-   sp:{المعالج:'Xtensa LX7 240MHz',USB:'OTG نيتيف'},reviews:[]},
-  {id:9,n:'ESP8266 NodeMCU V3',sku:'ESP-8266-NCU',p:3.5,op:4.5,cat:'esp',ic:'📶',b:'sale',st:'in-stock',stx:'متوفر',rat:4.5,rcnt:287,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/ESP8266_01.jpg/640px-ESP8266_01.jpg'],
-   desc:'WiFi رخيص ومجرّب لمشاريع IoT.',features:['WiFi مدمج','11 GPIO','Arduino IDE'],useCases:['WiFi بسيط'],
-   sp:{المعالج:'Xtensa L106 80MHz',WiFi:'802.11 b/g/n'},reviews:[]},
-  {id:10,n:'HC-SR04 Ultrasonic Distance Sensor',sku:'SNS-HC-SR04',p:1.5,op:null,cat:'sensors',ic:'📡',b:'',st:'in-stock',stx:'متوفر',rat:4.5,rcnt:445,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Ultrasound_sensor.jpg/640px-Ultrasound_sensor.jpg'],
-   desc:'قياس مسافة 2-400cm بدقة 3mm.',features:['مدى 2-400cm','دقة 3mm','4 أطراف فقط'],useCases:['روبوتات','قياس مسافة'],
-   sp:{المدى:'2-400cm',الدقة:'3mm',الجهد:'5V'},reviews:[]},
-  {id:11,n:'DHT22 Temperature & Humidity Sensor',sku:'SNS-DHT22',p:2.8,op:null,cat:'sensors',ic:'🌡️',b:'hot',st:'in-stock',stx:'متوفر',rat:4.7,rcnt:189,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/AM2302.jpg/640px-AM2302.jpg'],
-   desc:'حساس دقيق للحرارة والرطوبة — أفضل من DHT11.',features:['دقة ±0.5°C','مدى -40 إلى 80°C','رطوبة 0-100%'],useCases:['محطات طقس'],
-   sp:{الحرارة:'-40–80°C',الرطوبة:'0-100%',الدقة:'±0.5°C'},reviews:[]},
-  {id:12,n:'MPU-6050 6-Axis IMU Gyroscope',sku:'SNS-MPU6050',p:3.0,op:null,cat:'sensors',ic:'📡',b:'',st:'in-stock',stx:'متوفر',rat:4.6,rcnt:134,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/GY-521_MPU-6050_3-Axis_Gyro_Accelerometer_Module.jpg/640px-GY-521_MPU-6050_3-Axis_Gyro_Accelerometer_Module.jpg'],
-   desc:'جيروسكوب وتسارع 6 محاور عبر I2C.',features:['6 محاور','I2C 400kHz','ADC 16-bit'],useCases:['طيارات','روبوتات'],
-   sp:{المحاور:'6',البروتوكول:'I2C',الدقة:'16-bit ADC'},reviews:[]},
-  {id:13,n:'PIR Motion Sensor HC-SR501',sku:'SNS-PIR-SR501',p:1.8,op:null,cat:'sensors',ic:'👁️',b:'',st:'in-stock',stx:'متوفر',rat:4.4,rcnt:276,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/PIR_motion_sensor.jpg/640px-PIR_motion_sensor.jpg'],
-   desc:'حساس حركة بالأشعة تحت الحمراء — مدى 7م.',features:['مدى 7م','زاوية 120°','خرج رقمي'],useCases:['أضواء تلقائية','إنذار'],
-   sp:{المدى:'7m',الزاوية:'120°'},reviews:[]},
-  {id:14,n:'OLED Display 0.96" I2C SSD1306',sku:'DSP-OLED-096',p:4.0,op:5.0,cat:'displays',ic:'🖥️',b:'sale',st:'in-stock',stx:'متوفر',rat:4.7,rcnt:167,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/SSD1306-front.jpg/640px-SSD1306-front.jpg'],
-   desc:'شاشة OLED واضحة جداً عبر I2C.',features:['128×64px','I2C منفذين فقط','بدون إضاءة خلفية'],useCases:['عرض بيانات'],
-   sp:{الدقة:'128×64px',البروتوكول:'I2C'},reviews:[]},
-  {id:15,n:'LCD 16×2 Blue Backlight + I2C PCF8574',sku:'DSP-LCD-162',p:3.5,op:null,cat:'displays',ic:'🖥️',b:'',st:'in-stock',stx:'متوفر',rat:4.5,rcnt:223,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/LCD_16x2.jpg/640px-LCD_16x2.jpg'],
-   desc:'شاشة LCD مع I2C — 4 أسلاك فقط.',features:['16×2 حرف','I2C PCF8574','إضاءة زرقاء'],useCases:['واجهات مستخدم'],
-   sp:{الأحرف:'16×2',البروتوكول:'I2C'},reviews:[]},
-  {id:16,n:'TFT Color LCD 2.4" SPI 240×320 Touch',sku:'DSP-TFT-24',p:9.0,op:null,cat:'displays',ic:'🖥️',b:'new',st:'low-stock',stx:'كمية محدودة',rat:4.6,rcnt:88,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/LCD_TFT_2.4_display.jpg/640px-LCD_TFT_2.4_display.jpg'],
-   desc:'شاشة ملونة مع لمس مقاوم وكارت SD.',features:['240×320px','65K لون','لمس مقاوم','microSD'],useCases:['واجهات GUI'],
-   sp:{الدقة:'240×320px',اللمس:'مقاوم'},reviews:[]},
-  {id:17,n:'Servo Motor SG90 9g Micro',sku:'MOT-SG90',p:2.0,op:null,cat:'motors',ic:'⚙️',b:'',st:'in-stock',stx:'متوفر',rat:4.5,rcnt:334,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/SG90.jpg/640px-SG90.jpg'],
-   desc:'محرك سيرفو صغير 0-180° بـ 9 جرام.',features:['0-180°','9g وزن','PWM 50Hz'],useCases:['طيارات','روبوتات'],
-   sp:{الزاوية:'0-180°',الوزن:'9g',العزم:'1.8 kg.cm'},reviews:[]},
-  {id:18,n:'Stepper Motor 28BYJ-48 + ULN2003 Driver',sku:'MOT-28BYJ',p:3.5,op:null,cat:'motors',ic:'⚙️',b:'',st:'in-stock',stx:'متوفر',rat:4.4,rcnt:198,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/28byj-48.jpg/640px-28byj-48.jpg'],
-   desc:'محرك خطوي مع مشغل — 4096 خطوة.',features:['1:64 تروس','ULN2003 مدمج','5V مباشر'],useCases:['CNC','ساعات'],
-   sp:{الخطوات:'4096',التروس:'1:64'},reviews:[]},
-  {id:19,n:'Li-Po Battery 3.7V 2000mAh JST',sku:'PWR-LIPO-2K',p:6.0,op:null,cat:'power',ic:'🔋',b:'',st:'in-stock',stx:'متوفر',rat:4.5,rcnt:112,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/LiPo_EMAX.jpg/640px-LiPo_EMAX.jpg'],
-   desc:'بطارية ليثيوم 3.7V 2000mAh خفيفة الوزن.',features:['2000mAh','JST 2.0mm','38g خفيفة'],useCases:['روبوتات متنقلة'],
-   sp:{الجهد:'3.7V',الطاقة:'2000mAh',الوزن:'38g'},reviews:[]},
-  {id:20,n:'DC-DC Buck Converter XL4016 8A',sku:'PWR-XL4016',p:2.5,op:null,cat:'power',ic:'⚡',b:'',st:'in-stock',stx:'متوفر',rat:4.6,rcnt:145,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/DC_DC_converter.jpg/640px-DC_DC_converter.jpg'],
-   desc:'محول جهد 4-40V إلى 1.25-36V بـ 8A.',features:['8A تيار','96% كفاءة','حماية حرارة'],useCases:['مصادر طاقة'],
-   sp:{الدخل:'4-40V',الخرج:'1.25-36V',التيار:'8A'},reviews:[]},
-  {id:21,n:'NRF24L01+ PA+LNA 2.4GHz Wireless',sku:'WL-NRF24L01',p:3.0,op:null,cat:'wireless',ic:'📡',b:'hot',st:'in-stock',stx:'متوفر',rat:4.6,rcnt:267,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/NRF24L01.jpg/640px-NRF24L01.jpg'],
-   desc:'اتصال لاسلكي 100م — 2.4GHz.',features:['100م مدى','126 قناة','2Mbps'],useCases:['تحكم لاسلكي'],
-   sp:{التردد:'2.4GHz',المدى:'100m',الجهد:'3.3V'},reviews:[]},
-  {id:22,n:'HC-05 Bluetooth Serial Module',sku:'WL-HC05',p:4.5,op:null,cat:'wireless',ic:'🔵',b:'',st:'in-stock',stx:'متوفر',rat:4.4,rcnt:189,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/HC-05.jpg/640px-HC-05.jpg'],
-   desc:'بلوتوث UART سهل للربط بالهاتف.',features:['Master/Slave','أوامر AT','10م مدى'],useCases:['تحكم عبر الهاتف'],
-   sp:{البلوتوث:'2.0+EDR',المدى:'10m'},reviews:[]},
-  {id:23,n:'Soldering Station 60W + 5 Tips',sku:'TL-SOLDER-60',p:12.0,op:15.0,cat:'tools',ic:'🔧',b:'sale',st:'in-stock',stx:'متوفر',rat:4.7,rcnt:67,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Soldering_station.jpg/640px-Soldering_station.jpg'],
-   desc:'محطة لحام 60W مع 5 رؤوس وحامل.',features:['60W','200-480°C','5 رؤوس'],useCases:['لحام إلكترونيات'],
-   sp:{الطاقة:'60W',الحرارة:'200-480°C'},reviews:[]},
-  {id:24,n:'3D Printer Filament PLA+ 1.75mm 1KG',sku:'3D-PLA-PLUS-1KG',p:18.0,op:22.0,cat:'3dprint',ic:'🖨️',b:'sale',st:'in-stock',stx:'متوفر',rat:4.6,rcnt:93,
-   imgs:['https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Prusa_Mendel_Filament_Spool.jpg/640px-Prusa_Mendel_Filament_Spool.jpg'],
-   desc:'PLA+ 1.75mm 1KG — جودة عالية.',features:['قطر 1.75mm','1KG','190-220°C'],useCases:['طباعة 3D'],
-   sp:{القطر:'1.75mm',الوزن:'1KG',الطباعة:'190-220°C'},reviews:[]},
-];
+let PD=[];
 
 /* ══════════════════════════════
    NORMALIZE: توحيد بنية المنتج
@@ -1263,42 +1211,36 @@ function normalizePD(){
 }
 normalizePD();
 
-function getOrderItemsText(order){
-  if(Array.isArray(order?.items) && order.items.length){
-    return order.items.map(item=>`${item?.name||item?.n||'منتج'} × ${item?.qty||1}`).join(' | ');
-  }
-  if(typeof order?.itemsText==='string' && order.itemsText.trim()) return order.itemsText.trim();
-  if(typeof order?.items==='string' && order.items.trim()) return order.items.trim();
-  return '—';
-}
-function getOrderItemsLines(order){
-  if(Array.isArray(order?.items) && order.items.length){
-    return order.items.map(item=>`${item?.name||item?.n||'منتج'} × ${item?.qty||1}`);
-  }
-  const text=getOrderItemsText(order);
-  if(text==='—') return [];
-  return text.split(/\s*\|\s*|\n+/).map(x=>x.trim()).filter(Boolean);
-}
+const ORDERS=[];
 
-const ORDERS=[
-  {id:'ORD-001',customer:'أحمد خالد',items:'Arduino Uno × 2',total:17.0,status:'new',date:'2025-04-08'},
-  {id:'ORD-002',customer:'سارة محمد',items:'Raspberry Pi 4 × 1',total:57.0,status:'processing',date:'2025-04-07'},
-  {id:'ORD-003',customer:'محمد العلي',items:'ESP32 × 3, DHT22 × 2',total:22.1,status:'shipped',date:'2025-04-06'},
-  {id:'ORD-004',customer:'نور الدين',items:'Arduino Starter Kit',total:30.0,status:'done',date:'2025-04-05'},
-  {id:'ORD-005',customer:'ريم النور',items:'OLED × 2, LCD × 1',total:11.5,status:'done',date:'2025-04-04'},
-  {id:'ORD-006',customer:'خالد السعيد',items:'Soldering Station × 1',total:14.0,status:'cancel',date:'2025-04-03'},
-];
-
-let COUPONS_DATA=[
-  {code:'STUDENT10',pct:10,max:200,uses:45,active:true},
-  {code:'TECH20',pct:20,max:50,uses:12,active:true},
-  {code:'JORDAN15',pct:15,max:100,uses:8,active:false},
-];
+let COUPONS_DATA=[];
 
 let NAV_LINKS=['الرئيسية','المتجر','العروض','من نحن','تواصل معنا'];
 let TOPBAR_ITEMS=['🚚 شحن مجاني فوق <strong>25 دينار</strong>','🎓 خصم <strong>10%</strong> للطلاب','🔥 عروض ESP32 خصم <strong>20%</strong>','⭐ تقييم عملائنا <strong>4.8/5</strong>','🔄 إرجاع مجاني <strong>7 أيام</strong>'];
 
 let editId=null,sbOpen=true,imgCount=0,featCount=0;
+
+/* ══════════════════════════════
+   XSS PROTECTION — تهريب البيانات قبل حقنها في HTML
+   استخدمها كلما بناء innerHTML من بيانات قادمة من Firestore أو من المستخدم
+══════════════════════════════ */
+function esc(v){
+  if(v==null) return '';
+  return String(v)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+/* للاستخدام داخل attribute value (href/src) — يمنع javascript: */
+function escUrl(v){
+  if(v==null) return '';
+  const s = String(v).trim();
+  // allow only http(s), mailto, tel, data:image, and relative paths
+  if(/^(https?:|mailto:|tel:|\/|#|data:image\/)/i.test(s)) return esc(s);
+  return '';
+}
 
 /* ── Firebase مدمج مباشرة — لا حاجة لإعادة الإعداد ── */
 /* Project: wesamarduino | Auth: Email/Password | Firestore enabled */
@@ -1346,7 +1288,12 @@ async function loadFromFirebase(){
   }
 }
 
-/* ── PUSH TO FIREBASE ── */
+/* ── PUSH TO FIREBASE — FULL MANUAL SYNC ONLY ──
+   هذا يرفع كل شيء دفعة واحدة (المنتجات + الكوبونات + كل الإعدادات).
+   لا يُستخدم تلقائياً — فقط عند الضغط على زر "💾 حفظ ومزامنة" أو Ctrl+S.
+   كل الحفظ اليومي (منتج واحد، قسم واحد من الإعدادات، كوبون واحد) يمر
+   عبر fbSaveProduct / saveConfig(section) / fbSaveCoupon بدون اللمس هنا.
+*/
 async function pushToStore(){
   if(!window.__fbReady||!window._db){
     toast('⚠️ Firebase غير متصل','tw'); return;
@@ -1361,10 +1308,10 @@ async function pushToStore(){
     const cfg={
       topbarItems:TOPBAR_ITEMS,
       navLinks:NAV_LINKS,
-      phone1:document.getElementById('ph1')?.value||'+962 6 222 5522',
+      phone1:document.getElementById('ph1')?.value||'',
       phone2:document.getElementById('ph2')?.value||'',
-      email:document.getElementById('em1')?.value||'info@mikroelectron.com',
-      addr:document.getElementById('sc-addr')?.value||'عمّان، الأردن',
+      email:document.getElementById('em1')?.value||'',
+      addr:document.getElementById('sc-addr')?.value||'',
       mapLink:document.getElementById('sc-map')?.value||'',
       social:{
         fb:document.getElementById('sc-fb')?.value||'',
@@ -1420,7 +1367,7 @@ function setSyncBadge(state){
 
 function openStore(){
   pushToStore();
-  setTimeout(()=>window.open('electronics-store.html','_blank','noopener,noreferrer'),600);
+  setTimeout(()=>window.open('electronics-store.html','_blank'),600);
 }
 
 /* ── AUTH ── */
@@ -1528,13 +1475,13 @@ function renderChart(){
 /* ── RECENT ORDERS ── */
 function renderRecentOrders(){
   const sm={new:'os-new جديد',processing:'os-proc قيد المعالجة',shipped:'os-ship مشحون',done:'os-done مكتمل',cancel:'os-cancel ملغي'};
-  document.getElementById('recentOrdTbl').innerHTML=`<table><thead><tr><th>#</th><th>العميل</th><th>المنتجات</th><th>المجموع</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody>${ORDERS.slice(0,4).map(o=>{const[c,l]=(sm[o.status]||'os-new جديد').split(' ');return`<tr><td style="font-family:'Space Mono',monospace;font-size:.7rem;color:var(--t3)">${o.id||'—'}</td><td style="font-weight:700">${o.customer||'—'}</td><td style="color:var(--t2);font-size:.76rem">${getOrderItemsText(o)}</td><td class="td-pr">${parseFloat(o.total||0).toFixed(2)} JD</td><td><span class="os ${c}">${l}</span></td><td style="color:var(--t3);font-size:.72rem">${o.date||'—'}</td></tr>`;}).join('')}</tbody></table>`;
+  document.getElementById('recentOrdTbl').innerHTML=`<table><thead><tr><th>#</th><th>العميل</th><th>المنتجات</th><th>المجموع</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody>${ORDERS.slice(0,4).map(o=>{const[c,l]=(sm[o.status]||'os-new جديد').split(' ');return`<tr><td style="font-family:'Space Mono',monospace;font-size:.7rem;color:var(--t3)">${esc(o.id)}</td><td style="font-weight:700">${esc(o.customer)}</td><td style="color:var(--t2);font-size:.76rem">${esc(o.items)}</td><td class="td-pr">${(parseFloat(o.total)||0).toFixed(2)} JD</td><td><span class="os ${esc(c)}">${esc(l)}</span></td><td style="color:var(--t3);font-size:.72rem">${esc(o.date)}</td></tr>`;}).join('')}</tbody></table>`;
 }
 
 /* ── TOP PRODUCTS ── */
 function renderTopProds(){
   const top=[...PD].sort((a,b)=>b.rcnt-a.rcnt).slice(0,5);
-  document.getElementById('topProdTbl').innerHTML=`<table><thead><tr><th>#</th><th>المنتج</th><th>SKU</th><th>السعر</th><th>المبيعات</th><th>التقييم</th></tr></thead><tbody>${top.map((p,i)=>`<tr><td style="font-weight:800;color:var(--o);font-family:'Space Mono',monospace">#${i+1}</td><td><div class="td-prod"><div class="td-ico" style="overflow:hidden"><img src="${(p.imgs&&p.imgs[0])||''}" alt="${p.n}" style="width:100%;height:100%;object-fit:contain;padding:3px" onerror="this.style.display='none';this.parentNode.textContent='${p.ic||'📦'}'"></div><div class="td-nm">${p.n}</div></div></td><td class="td-sku">${p.sku}</td><td class="td-pr">${p.p.toFixed(2)} JD</td><td style="font-size:.76rem">${p.rcnt} طلب</td><td style="color:#f59e0b">${p.rat}★</td></tr>`).join('')}</tbody></table>`;
+  document.getElementById('topProdTbl').innerHTML=`<table><thead><tr><th>#</th><th>المنتج</th><th>SKU</th><th>السعر</th><th>المبيعات</th><th>التقييم</th></tr></thead><tbody>${top.map((p,i)=>`<tr><td style="font-weight:800;color:var(--o);font-family:'Space Mono',monospace">#${i+1}</td><td><div class="td-prod"><div class="td-ico" style="overflow:hidden">${(p.imgs&&p.imgs[0])?`<img src="${escUrl(p.imgs[0])}" alt="${esc(p.n)}" style="width:100%;height:100%;object-fit:contain;padding:3px">`:esc(p.ic||'📦')}</div><div class="td-nm">${esc(p.n)}</div></div></td><td class="td-sku">${esc(p.sku)}</td><td class="td-pr">${(parseFloat(p.p)||0).toFixed(2)} JD</td><td style="font-size:.76rem">${parseInt(p.rcnt)||0} طلب</td><td style="color:#f59e0b">${esc(p.rat)}★</td></tr>`).join('')}</tbody></table>`;
 }
 
 /* ── PRODUCTS TABLE ── */
@@ -1584,15 +1531,17 @@ function renderOrders(){
   tb.innerHTML=list.map((o,i)=>{
     const idx=ORDERS.indexOf(o);
     const[c,l]=(sm[o.status]||'os-new جديد').split(' ');
+    // JSON.stringify safely escapes the id for use inside a JS string literal in onclick
+    const oidJs = JSON.stringify(String(o.id||''));
     return`<tr>
-      <td style="font-family:'Space Mono',monospace;font-size:.68rem;color:var(--t3)">${o.id}</td>
-      <td style="font-weight:700">${o.customer||'—'}</td>
-      <td style="font-size:.75rem;color:var(--t2)">${o.phone||'—'}</td>
-      <td style="color:var(--t2);font-size:.75rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${getOrderItemsText(o)}</td>
-      <td class="td-pr">${parseFloat(o.total||0).toFixed(2)} JD</td>
+      <td style="font-family:'Space Mono',monospace;font-size:.68rem;color:var(--t3)">${esc(o.id)}</td>
+      <td style="font-weight:700">${esc(o.customer||'—')}</td>
+      <td style="font-size:.75rem;color:var(--t2)">${esc(o.phone||'—')}</td>
+      <td style="color:var(--t2);font-size:.75rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(o.items||'—')}</td>
+      <td class="td-pr">${(parseFloat(o.total)||0).toFixed(2)} JD</td>
       <td>
         <select style="background:var(--bg3);border:1px solid var(--brd2);border-radius:6px;padding:.26rem .5rem;color:var(--t);font-family:'Cairo',sans-serif;font-size:.72rem;outline:none;cursor:pointer"
-          onchange="ORDERS[${idx}].status=this.value;window.fbUpdateOrderStatus&&window.fbUpdateOrderStatus('${o.id}',this.value);initDash();toast('تم تحديث الحالة ✓','ts')">
+          onchange="ORDERS[${idx}].status=this.value;window.fbUpdateOrderStatus&&window.fbUpdateOrderStatus(${oidJs.replace(/"/g,'&quot;')},this.value);initDash();toast('تم تحديث الحالة ✓','ts')">
           <option value="new" ${o.status==='new'?'selected':''}>جديد</option>
           <option value="processing" ${o.status==='processing'?'selected':''}>قيد المعالجة</option>
           <option value="shipped" ${o.status==='shipped'?'selected':''}>مشحون</option>
@@ -1600,11 +1549,11 @@ function renderOrders(){
           <option value="cancel" ${o.status==='cancel'?'selected':''}>ملغي</option>
         </select>
       </td>
-      <td style="color:var(--t3);font-size:.72rem">${o.date||'—'}</td>
+      <td style="color:var(--t3);font-size:.72rem">${esc(o.date||'—')}</td>
       <td><div class="ra">
-        <button class="rb" onclick="viewOrder('${o.id}')" title="تفاصيل">👁️</button>
-        <button class="rb" onclick="printInvoice('${o.id}')" title="طباعة فاتورة">🖨️</button>
-        <button class="rb d" onclick="deleteOrder('${o.id}')" title="حذف">🗑️</button>
+        <button class="rb" onclick="viewOrder(${oidJs.replace(/"/g,'&quot;')})" title="تفاصيل">👁️</button>
+        <button class="rb" onclick="printInvoice(${oidJs.replace(/"/g,'&quot;')})" title="طباعة فاتورة">🖨️</button>
+        <button class="rb d" onclick="deleteOrder(${oidJs.replace(/"/g,'&quot;')})" title="حذف">🗑️</button>
       </div></td>
     </tr>`;
   }).join('');
@@ -1614,22 +1563,51 @@ function renderOrders(){
 function renderCoupons(){
   const el=document.getElementById('cpnList');if(!el)return;
   el.innerHTML=COUPONS_DATA.map((c,i)=>`<div style="background:var(--bg3);border-radius:9px;padding:.7rem .9rem;margin-bottom:.5rem;border:1px solid var(--brd);display:flex;align-items:center;gap:.65rem">
-    <div style="font-family:'Space Mono',monospace;font-weight:700;font-size:.86rem;color:var(--o);flex:1">${c.code}</div>
-    <span class="tag ${c.active?'t-in':'t-out'}">${c.pct}% خصم</span>
-    <span style="font-size:.68rem;color:var(--t3)">${c.uses}/${c.max}</span>
-    <button class="toggle ${c.active?'on':''}" onclick="COUPONS_DATA[${i}].active=!COUPONS_DATA[${i}].active;renderCoupons();toast('تم تحديث الكوبون ✓','ts')"></button>
-    <button class="rb d" onclick="COUPONS_DATA.splice(${i},1);renderCoupons();toast('تم حذف الكوبون','ti')" style="width:26px;height:26px;font-size:.72rem">✕</button>
+    <div style="font-family:'Space Mono',monospace;font-weight:700;font-size:.86rem;color:var(--o);flex:1">${esc(c.code)}</div>
+    <span class="tag ${c.active?'t-in':'t-out'}">${parseInt(c.pct)||0}% خصم</span>
+    <span style="font-size:.68rem;color:var(--t3)">${parseInt(c.uses)||0}/${parseInt(c.max)||0}</span>
+    <button class="toggle ${c.active?'on':''}" onclick="toggleCoupon(${i})"></button>
+    <button class="rb d" onclick="deleteCoupon(${i})" style="width:26px;height:26px;font-size:.72rem">✕</button>
   </div>`).join('')||'<div style="color:var(--t3);text-align:center;padding:1.5rem;font-size:.8rem">لا توجد كوبونات</div>';
+}
+function toggleCoupon(i){
+  const c=COUPONS_DATA[i]; if(!c) return;
+  c.active=!c.active;
+  renderCoupons();
+  // Save ONLY this coupon
+  if(window.fbSaveCoupon){
+    window.fbSaveCoupon(c).then(()=>toast('تم تحديث الكوبون ✓','ts'))
+      .catch(e=>toast('❌ '+e.message,'te'));
+  }
+  localStorage.setItem('TECHSTORE_COUPONS', JSON.stringify(COUPONS_DATA));
+}
+function deleteCoupon(i){
+  const c=COUPONS_DATA[i]; if(!c) return;
+  const code=c.code;
+  COUPONS_DATA.splice(i,1);
+  renderCoupons();
+  // Delete ONLY this coupon
+  if(window.fbDeleteCoupon){
+    window.fbDeleteCoupon(code).then(()=>toast('تم حذف الكوبون','ti'))
+      .catch(e=>toast('❌ '+e.message,'te'));
+  }
+  localStorage.setItem('TECHSTORE_COUPONS', JSON.stringify(COUPONS_DATA));
 }
 function addCoupon(){
   const code=document.getElementById('cpnCode').value.trim().toUpperCase();
   const pct=parseInt(document.getElementById('cpnPct').value);
   const max=parseInt(document.getElementById('cpnMax').value)||100;
   if(!code||!pct){toast('يرجى ملء الكود والنسبة','tw');return;}
-  COUPONS_DATA.push({code,pct,max,uses:0,active:true});
+  const c={code,pct,max,uses:0,active:true};
+  COUPONS_DATA.push(c);
   renderCoupons();
   document.getElementById('cpnCode').value='';document.getElementById('cpnPct').value='';
-  toast('✓ تم إضافة الكوبون','ts');
+  // Save ONLY this coupon
+  if(window.fbSaveCoupon){
+    window.fbSaveCoupon(c).then(()=>toast('✓ تم إضافة الكوبون','ts'))
+      .catch(e=>toast('❌ '+e.message,'te'));
+  }
+  localStorage.setItem('TECHSTORE_COUPONS', JSON.stringify(COUPONS_DATA));
 }
 
 /* ── HEADER INPUTS ── */
@@ -1642,10 +1620,90 @@ function renderHeaderInputs(){
 function addTopbarItem(){TOPBAR_ITEMS.push('نص جديد');renderHeaderInputs();}
 function addNavLink(){NAV_LINKS.push('رابط جديد');renderHeaderInputs();}
 
-/* ── SAVE CONFIG ── */
-function saveConfig(section){
-  pushToStore();
-  toast(`✓ تم حفظ "${section==='logo'?'الشعار':section==='topbar'?'شريط الإعلانات':section==='nav'?'روابط التنقل':section==='hero'?'البانر':section==='footer'?'الفوتر':section==='social'?'التواصل':section==='phones'?'أرقام الهاتف':section==='emails'?'البريد':section==='hours'?'ساعات العمل':section==='location'?'الموقع':section}" ومزامنته`,'ts');
+/* ── SAVE CONFIG — partial, only the section being edited ── */
+async function saveConfig(section){
+  if(!window.__fbReady||!window._db){toast('⚠️ Firebase غير متصل','tw');return;}
+  const labels={logo:'الشعار',topbar:'شريط الإعلانات',nav:'روابط التنقل',hero:'البانر',footer:'الفوتر',fc1:'عمود الفوتر 1',fc2:'عمود الفوتر 2',pay:'طرق الدفع',social:'التواصل',phones:'أرقام الهاتف',emails:'البريد',hours:'ساعات العمل',location:'الموقع'};
+  // Build only the part that changed
+  let partial={};
+  try{
+    if(section==='logo'){
+      partial={logo:document.getElementById('sc-logo')?.value||'',brandName:document.getElementById('sc-brand')?.value||''};
+    } else if(section==='topbar'){
+      partial={topbarItems:TOPBAR_ITEMS};
+    } else if(section==='nav'){
+      partial={navLinks:NAV_LINKS};
+    } else if(section==='hero'){
+      partial={
+        heroTag:document.getElementById('h-tag')?.value||'',
+        heroH1:document.getElementById('h-h1')?.value||'',
+        heroH2:document.getElementById('h-h2')?.value||'',
+        heroDesc:document.getElementById('h-desc')?.value||'',
+        heroBtn1:document.getElementById('h-btn1')?.value||'',
+        heroBtn2:document.getElementById('h-btn2')?.value||'',
+        heroNums:[
+          {v:document.getElementById('n1v')?.value||'6,000+',l:document.getElementById('n1l')?.value||'منتج'},
+          {v:document.getElementById('n2v')?.value||'4.8★',l:document.getElementById('n2l')?.value||'تقييم'},
+          {v:document.getElementById('n3v')?.value||'24h',l:document.getElementById('n3l')?.value||'توصيل'},
+        ],
+      };
+    } else if(section==='footer'){
+      partial={
+        footerDesc:document.getElementById('f-desc')?.value||'',
+        footerCopy:document.getElementById('f-copy')?.value||'',
+        footerRight:document.getElementById('f-right')?.value||'',
+      };
+    } else if(section==='fc1'){
+      partial={fc1:{title:document.getElementById('fc1t')?.value||'',links:(document.getElementById('fc1l')?.value||'').split('\n').filter(Boolean)}};
+    } else if(section==='fc2'){
+      partial={fc2:{title:document.getElementById('fc2t')?.value||'',links:(document.getElementById('fc2l')?.value||'').split('\n').filter(Boolean)}};
+    } else if(section==='pay'){
+      partial={payMethods:document.getElementById('sc-pay')?.value||''};
+    } else if(section==='social'){
+      partial={social:{
+        fb:document.getElementById('sc-fb')?.value||'',
+        ig:document.getElementById('sc-ig')?.value||'',
+        yt:document.getElementById('sc-yt')?.value||'',
+        wa:document.getElementById('sc-wa')?.value||'',
+        tw:document.getElementById('sc-tw')?.value||'',
+        li:document.getElementById('sc-li')?.value||'',
+        tg:document.getElementById('sc-tg')?.value||'',
+      }};
+    } else if(section==='location'){
+      partial={
+        addr:document.getElementById('sc-addr')?.value||'',
+        mapLink:document.getElementById('sc-map')?.value||'',
+      };
+    } else if(section==='phones'){
+      partial={
+        phone1:document.getElementById('ph1')?.value||'',
+        phone2:document.getElementById('ph2')?.value||'',
+      };
+    } else if(section==='emails'){
+      partial={email:document.getElementById('em1')?.value||''};
+    } else if(section==='hours'){
+      partial={hours:{
+        wd:document.getElementById('hw1')?.value||'',
+        fr:document.getElementById('hw2')?.value||'',
+        sa:document.getElementById('hw3')?.value||'',
+      }};
+    } else {
+      // Unknown section → fallback: don't blast the DB, just tell the user
+      toast('⚠️ قسم غير معروف — لم يتم الحفظ','tw');
+      return;
+    }
+
+    setSyncBadge('loading');
+    await fbSaveConfig(partial);
+    // Update local cache with just the changed keys
+    const cached=JSON.parse(localStorage.getItem('TECHSTORE_CONFIG')||'{}');
+    localStorage.setItem('TECHSTORE_CONFIG', JSON.stringify({...cached, ...partial}));
+    setSyncBadge('ok');
+    toast(`✅ تم حفظ "${labels[section]||section}" فقط`,'ts');
+  }catch(e){
+    setSyncBadge('err');
+    toast('❌ خطأ: '+e.message,'te');
+  }
 }
 
 /* ── PRODUCT MODAL ── */
@@ -1731,11 +1789,15 @@ function saveProd(){
   document.getElementById('prodBadge').textContent=PD.length;
   document.getElementById('s-prod').textContent=PD.length;
   renderProds();
-  // Save to Firebase
-  window.fbSaveProducts([prod]).then(()=>{
+  // Save ONLY this product to Firebase (not all products, not the whole config)
+  setSyncBadge('loading');
+  window.fbSaveProduct(prod).then(()=>{
+    // Update local cache so store loads instantly
+    localStorage.setItem('TECHSTORE_PRODUCTS', JSON.stringify(PD));
+    setSyncBadge('ok');
     toast('✅ '+(editId?'تم تحديث':'تم إضافة')+' المنتج على Firebase','ts');
-  }).catch(e=>toast('❌ خطأ Firebase: '+e.message,'te'));
-  pushToStore();closeModal();
+  }).catch(e=>{setSyncBadge('err');toast('❌ خطأ Firebase: '+e.message,'te');});
+  closeModal();
 }
 
 /* ── DELETE ── */
@@ -1775,7 +1837,7 @@ function openOrderModal(id=null){
     document.getElementById('o-phone').value=o.phone||'';
     document.getElementById('o-email').value=o.email||'';
     document.getElementById('o-addr').value=o.addr||'';
-    document.getElementById('o-items').value=getOrderItemsLines(o).join('\n');
+    document.getElementById('o-items').value=o.items||'';
     document.getElementById('o-total').value=o.total||'';
     document.getElementById('o-status').value=o.status||'new';
     document.getElementById('o-notes').value=o.notes||'';
@@ -1813,23 +1875,26 @@ function saveOrder(){
 function viewOrder(id){
   const o=ORDERS.find(x=>x.id===id);if(!o)return;
   const sm={new:'جديد',processing:'قيد المعالجة',shipped:'مشحون',done:'مكتمل',cancel:'ملغي'};
-  alert(`📦 تفاصيل الطلب: ${o.id}\n\n👤 العميل: ${o.customer||'—'}\n📞 الهاتف: ${o.phone||'—'}\n📍 العنوان: ${o.addr||'—'}\n\n🛍️ المنتجات:\n${getOrderItemsText(o)}\n\n💰 المجموع: ${o.total} JD\n📌 الحالة: ${sm[o.status]||o.status}\n📅 التاريخ: ${o.date||'—'}\n📝 ملاحظات: ${o.notes||'—'}`);
+  alert(`📦 تفاصيل الطلب: ${o.id}\n\n👤 العميل: ${o.customer||'—'}\n📞 الهاتف: ${o.phone||'—'}\n📍 العنوان: ${o.addr||'—'}\n\n🛍️ المنتجات:\n${o.items||'—'}\n\n💰 المجموع: ${o.total} JD\n📌 الحالة: ${sm[o.status]||o.status}\n📅 التاريخ: ${o.date||'—'}\n📝 ملاحظات: ${o.notes||'—'}`);
 }
 
 /* ── PRINT INVOICE ── */
 function printInvoice(id){
   const o=ORDERS.find(x=>x.id===id);if(!o)return;
-  const w=window.open('','_blank','noopener,noreferrer,width=600,height=700');
-  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>فاتورة ${o.id}</title>
+  const w=window.open('','_blank','width=600,height=700');
+  const brand = esc(window._siteConfig?.brandName||'المتجر');
+  const brandEmail = window._siteConfig?.email ? ' — '+esc(window._siteConfig.email) : '';
+  const brandPhone = window._siteConfig?.phone1 ? ' — '+esc(window._siteConfig.phone1) : '';
+  w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>فاتورة ${esc(o.id)}</title>
   <style>body{font-family:Cairo,sans-serif;padding:2rem;color:#1e293b}h1{color:#f97316;font-size:1.4rem;margin-bottom:.5rem}.logo{font-size:1.6rem;font-weight:900;margin-bottom:1.5rem}.info{background:#f8fafc;padding:1rem;border-radius:8px;margin-bottom:1.5rem;font-size:.9rem;line-height:1.8}.items{margin-bottom:1.5rem}.items table{width:100%;border-collapse:collapse}.items td,.items th{padding:.5rem .75rem;border-bottom:1px solid #e2e8f0;font-size:.85rem;text-align:right}.items th{background:#f1f5f9;font-weight:700}.total{text-align:left;font-size:1.1rem;font-weight:800;color:#f97316}.footer{margin-top:2rem;font-size:.75rem;color:#94a3b8;text-align:center;border-top:1px solid #e2e8f0;padding-top:1rem}</style></head>
-  <body><div class="logo">⚡ تك ستور</div><h1>فاتورة رقم: ${o.id}</h1>
-  <div class="info"><strong>العميل:</strong> ${o.customer||'—'}<br><strong>الهاتف:</strong> ${o.phone||'—'}<br><strong>العنوان:</strong> ${o.addr||'—'}<br><strong>التاريخ:</strong> ${o.date||'—'}</div>
+  <body><div class="logo">⚡ ${brand}</div><h1>فاتورة رقم: ${esc(o.id)}</h1>
+  <div class="info"><strong>العميل:</strong> ${esc(o.customer||'—')}<br><strong>الهاتف:</strong> ${esc(o.phone||'—')}<br><strong>العنوان:</strong> ${esc(o.addr||'—')}<br><strong>التاريخ:</strong> ${esc(o.date||'—')}</div>
   <div class="items"><table><thead><tr><th>المنتج</th><th>التفاصيل</th></tr></thead><tbody>
-  ${getOrderItemsLines(o).map(item=>`<tr><td>${item}</td><td>—</td></tr>`).join('')}
+  ${(o.items||'').split('\n').map(item=>`<tr><td>${esc(item)}</td><td>—</td></tr>`).join('')}
   </tbody></table></div>
-  <div class="total">الإجمالي: ${parseFloat(o.total||0).toFixed(2)} JD</div>
-  ${o.notes?`<p style="margin-top:1rem;font-size:.82rem;color:#64748b">ملاحظات: ${o.notes}</p>`:''}
-  <div class="footer">تك ستور — info@techstore.jo — +962 6 222 5522<br>شكراً لتسوقك معنا!</div>
+  <div class="total">الإجمالي: ${(parseFloat(o.total)||0).toFixed(2)} JD</div>
+  ${o.notes?`<p style="margin-top:1rem;font-size:.82rem;color:#64748b">ملاحظات: ${esc(o.notes)}</p>`:''}
+  <div class="footer">${brand}${brandEmail}${brandPhone}<br>شكراً لتسوقك معنا!</div>
   <script>window.onload=()=>{window.print();}<\/script></body></html>`);
   w.document.close();
 }
@@ -1850,7 +1915,7 @@ function exportOrdersCSV(){
   const headers=['رقم الطلب','العميل','الهاتف','المنتجات','المجموع','الحالة','التاريخ','الملاحظات'];
   const rows=ORDERS.map(o=>[
     o.id||'',o.customer||'',o.phone||'',
-    getOrderItemsText(o),
+    (o.items||'').replace(/\n/g,' | '),
     parseFloat(o.total||0).toFixed(2),
     o.status||'',o.date||'',o.notes||''
   ]);
@@ -1865,21 +1930,9 @@ function exportOrdersCSV(){
 /* ══════════════════════════════
    SLIDER MANAGEMENT
 ══════════════════════════════ */
-let ADMIN_SLIDES=[
-  {id:1,tag:'🔥 عروض حصرية',title:'كل ما يحتاجه\nمشروعك الإلكتروني',desc:'أفضل قطع الإلكترونيات بأسعار لا تُنافس',btn1Text:'تصفح المنتجات',btn1Link:'shop',btn2Text:'العروض',btn2Link:'shop',bg:'linear-gradient(125deg,#0f2460 0%,#1d4ed8 55%,#2563eb 100%)',overlay:'rgba(0,0,0,0.2)',imgUrl:'',active:true},
-  {id:2,tag:'📶 وصلت كميات جديدة',title:'ESP32 & IoT\nأفضل الأسعار',desc:'معالجات ESP32 وESP8266 لمشاريع IoT',btn1Text:'تسوق الآن',btn1Link:'shop',btn2Text:'',btn2Link:'',bg:'linear-gradient(125deg,#064e3b 0%,#065f46 50%,#047857 100%)',overlay:'rgba(0,0,0,0.15)',imgUrl:'',active:true},
-  {id:3,tag:'🍓 جديد',title:'Raspberry Pi\nأحدث الإصدارات',desc:'Raspberry Pi 4 و Zero 2W',btn1Text:'اكتشف',btn1Link:'shop',btn2Text:'',btn2Link:'',bg:'linear-gradient(125deg,#7c1d6f 0%,#a21caf 50%,#86198f 100%)',overlay:'rgba(0,0,0,0.15)',imgUrl:'',active:true},
-  {id:4,tag:'🎓 خصم طلابي',title:'خصم 10% لطلاب\nالجامعات',desc:'أبرز بطاقتك الجامعية واحصل على خصم فوري',btn1Text:'تسوق بخصم',btn1Link:'shop',btn2Text:'',btn2Link:'',bg:'linear-gradient(125deg,#92400e 0%,#b45309 50%,#d97706 100%)',overlay:'rgba(0,0,0,0.2)',imgUrl:'',active:true},
-  {id:5,tag:'🚚 شحن مجاني',title:'توصيل مجاني\nللطلبات فوق 25 دينار',desc:'اطلب الآن واستلم خلال 24 ساعة في عمّان',btn1Text:'ابدأ التسوق',btn1Link:'shop',btn2Text:'',btn2Link:'',bg:'linear-gradient(125deg,#1e3a5f 0%,#1e40af 50%,#1d4ed8 100%)',overlay:'rgba(0,0,0,0.15)',imgUrl:'',active:true}
-];
+let ADMIN_SLIDES=[];
 
-let NEWS_ITEMS=[
-  '📞 للتواصل: 00962790781206',
-  '🚚 شحن مجاني للطلبات فوق 25 دينار',
-  '🎓 خصم 10% لطلاب الجامعات',
-  '🔄 إرجاع مجاني خلال 7 أيام',
-  '⭐ أكثر من 6000 منتج إلكتروني'
-];
+let NEWS_ITEMS=[];
 
 let editSlideId=null;
 
