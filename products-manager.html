@@ -3,9 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com wss://*.firebaseio.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
-<meta http-equiv="X-Content-Type-Options" content="nosniff">
-<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>إدارة المنتجات — Aielectronics</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script type="module">
@@ -27,6 +24,7 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 window._db=db; window._auth=auth;
+let productsUnsub=null;
 
 /* ── Auth ── */
 window.doLogin=async()=>{
@@ -53,36 +51,29 @@ onAuthStateChanged(auth,user=>{
   if(user){
     document.getElementById('userBadge').textContent=user.email;
     window.loadProducts();
+  }else if(productsUnsub){
+    try{productsUnsub();}catch(_){ }
+    productsUnsub=null;
+    window._prods=[];
   }
 });
 
 /* ── Products CRUD ── */
 window.loadProducts=()=>{
   try{
-    // Ensure we have an array to patch in place
-    if(!Array.isArray(window._prods)) window._prods=[];
-    const apply=(snap)=>{
-      // Ignore echoes of our own local writes
-      if(snap.metadata && snap.metadata.hasPendingWrites) return;
-      const changes=snap.docChanges();
-      if(!changes.length) return;
-      let touched=false;
-      changes.forEach(ch=>{
-        const data=ch.doc.data(); data._docId=ch.doc.id;
-        const idx=window._prods.findIndex(p=>p._docId===ch.doc.id);
-        if(ch.type==='added'||ch.type==='modified'){
-          if(idx!==-1) window._prods[idx]=data; else window._prods.push(data);
-          touched=true;
-        } else if(ch.type==='removed'){
-          if(idx!==-1){ window._prods.splice(idx,1); touched=true; }
-        }
-      });
-      if(!touched) return;
-      window._prods.sort((a,b)=>(a.id||0)-(b.id||0));
+    if(productsUnsub){try{productsUnsub();}catch(_){ } productsUnsub=null;}
+    productsUnsub=onSnapshot(query(collection(db,'products'),orderBy('id')),snap=>{
+      window._prods=[];
+      snap.forEach(d=>{const data=d.data();data._docId=d.id;window._prods.push(data);});
       window.renderTable();
-    };
-    onSnapshot(query(collection(db,'products'),orderBy('id')), apply, err=>{
-      onSnapshot(collection(db,'products'), apply);
+    },err=>{
+      if(productsUnsub){try{productsUnsub();}catch(_){ } productsUnsub=null;}
+      productsUnsub=onSnapshot(collection(db,'products'),snap=>{
+        window._prods=[];
+        snap.forEach(d=>{const data=d.data();data._docId=d.id;window._prods.push(data);});
+        window._prods.sort((a,b)=>(a.id||0)-(b.id||0));
+        window.renderTable();
+      },err2=>window.t('خطأ في التحميل: '+err2.message,'e'));
     });
   }catch(e){window.t('خطأ في التحميل','e');}
 };
@@ -460,11 +451,6 @@ window.t=function(msg,type='i'){const d=document.createElement('div');d.classNam
 window._prods=[];
 let editDocId=null, curPage=1, scrapedProducts=[];
 const PER_PAGE=15;
-
-/* XSS sanitizers */
-function esc(v){if(v==null)return'';return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function escUrl(v){if(v==null)return'';const s=String(v).trim();return /^(https?:|data:image\/|\/|#)/i.test(s)?esc(s):'';}
-function jsStr(v){return JSON.stringify(String(v==null?'':v));}
 const CAT_NAMES={arduino:'Arduino',raspberry:'Raspberry Pi',esp:'ESP32',sensors:'حساسات',displays:'شاشات',motors:'موتورات',power:'طاقة',wireless:'لاسلكي',tools:'أدوات','3dprint':'طباعة 3D'};
 const ST_NAMES={'in-stock':'متوفر','low-stock':'محدود','out-of-stock':'غير متوفر','out-stock':'غير متوفر'};
 const BADGE_NAMES={new:'جديد',sale:'خصم',hot:'رائج'};
@@ -505,14 +491,7 @@ window.renderTable=function(){
   const page=filtered.slice(start,start+PER_PAGE);
   const tbody=document.getElementById('tbody');
   if(!filtered.length){tbody.innerHTML=`<tr><td colspan="9"><div class="empty-state"><div class="ei">📭</div><p>لا توجد منتجات${q||cf||sf?' تطابق الفلاتر':''}</p></div></td></tr>`;document.getElementById('pag').innerHTML='';return;}
-  tbody.innerHTML=page.map((p,i)=>{
-    const stClass=p.st==='in-stock'?'t-in':p.st==='low-stock'?'t-low':'t-out';
-    const bClass=p.b==='new'?'t-new':p.b==='sale'?'t-sale':p.b==='hot'?'t-hot':'';
-    const imgSrc=(p.imgs&&p.imgs[0])||'';
-    const docIdJs=jsStr(p._docId||'').replace(/"/g,'&quot;');
-    const nJs=jsStr(p.n||'').replace(/"/g,'&quot;');
-    return`<tr><td style="color:var(--t3);font-family:'Space Mono',monospace;font-size:.72rem">${start+i+1}</td><td><div style="display:flex;align-items:center;gap:.6rem"><div class="td-img">${imgSrc?`<img src="${escUrl(imgSrc)}" alt="">`:esc(p.ic||'📦')}</div><div><div class="td-name">${esc(p.n)}</div></div></div></td><td class="td-sku">${esc(p.sku)}</td><td><span class="tag" style="background:var(--bl);color:var(--b)">${esc(CAT_NAMES[p.cat]||p.cat)}</span></td><td><span class="td-pr">${(parseFloat(p.p)||0).toFixed(2)}</span>${p.op?`<div class="td-old">${(parseFloat(p.op)||0).toFixed(2)}</div>`:''}</td><td><span class="tag ${stClass}">${esc(ST_NAMES[p.st]||p.stx||p.st)}</span></td><td>${p.b?`<span class="tag ${bClass}">${esc(BADGE_NAMES[p.b]||p.b)}</span>`:'—'}</td><td style="color:#f59e0b;font-size:.8rem">${esc(p.rat||5)}★</td><td><div class="acts"><button class="ab" onclick="openModal(${docIdJs})" title="تعديل">✏️</button><button class="ab del" onclick="confirmDel(${docIdJs},${nJs})">🗑️</button></div></td></tr>`;
-  }).join('');
+  tbody.innerHTML=page.map((p,i)=>{const stClass=p.st==='in-stock'?'t-in':p.st==='low-stock'?'t-low':'t-out';const bClass=p.b==='new'?'t-new':p.b==='sale'?'t-sale':p.b==='hot'?'t-hot':'';const imgSrc=(p.imgs&&p.imgs[0])||'';return`<tr><td style="color:var(--t3);font-family:'Space Mono',monospace;font-size:.72rem">${start+i+1}</td><td><div style="display:flex;align-items:center;gap:.6rem"><div class="td-img">${imgSrc?`<img src="${imgSrc}" alt="" onerror="this.style.display='none';this.parentNode.textContent='${p.ic||'📦'}'">`:p.ic||'📦'}</div><div><div class="td-name">${p.n}</div></div></div></td><td class="td-sku">${p.sku}</td><td><span class="tag" style="background:var(--bl);color:var(--b)">${CAT_NAMES[p.cat]||p.cat}</span></td><td><span class="td-pr">${(p.p||0).toFixed(2)}</span>${p.op?`<div class="td-old">${p.op.toFixed(2)}</div>`:''}</td><td><span class="tag ${stClass}">${ST_NAMES[p.st]||p.stx||p.st}</span></td><td>${p.b?`<span class="tag ${bClass}">${BADGE_NAMES[p.b]||p.b}</span>`:'—'}</td><td style="color:#f59e0b;font-size:.8rem">${p.rat||5}★</td><td><div class="acts"><button class="ab" onclick="openModal('${p._docId}')" title="تعديل">✏️</button><button class="ab del" onclick="confirmDel('${p._docId}','${(p.n||'').replace(/'/g,"\\'")}')">🗑️</button></div></td></tr>`;}).join('');
   let pagH='';if(totalPages>1){pagH+=`<button class="pg" onclick="goPage(${curPage-1})" ${curPage===1?'disabled':''}>→</button>`;for(let i=1;i<=totalPages;i++){if(i===1||i===totalPages||Math.abs(i-curPage)<=2)pagH+=`<button class="pg${i===curPage?' on':''}" onclick="goPage(${i})">${i}</button>`;else if(Math.abs(i-curPage)===3)pagH+=`<span class="pg-info">...</span>`;}pagH+=`<button class="pg" onclick="goPage(${curPage+1})" ${curPage===totalPages?'disabled':''}>←</button><span class="pg-info">${filtered.length} منتج</span>`;}
   document.getElementById('pag').innerHTML=pagH;
 };

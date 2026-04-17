@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>صور المنتجات - وسام ستور</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo','Segoe UI',sans-serif;}
+:root{
+  --primary:#0f1b4c;
+  --primary-light:#1a2d7a;
+  --accent:#ff8c00;
+  --accent-light:#ffa733;
+  --success:#22c55e;
+  --danger:#ef4444;
+  --warning:#f59e0b;
+  --bg:#f0f2f8;
+  --card:#fff;
+  --text:#1e293b;
+  --text-muted:#64748b;
+  --border:#e2e8f0;
+  --shadow:0 4px 24px rgba(15,27,76,.08);
+  --radius:16px;
+}
+body{background:var(--bg);color:var(--text);min-height:100vh;}
+a{text-decoration:none}
+
+/* Login */
+.login-overlay{
+  position:fixed;inset:0;background:rgba(15,27,76,.45);display:flex;align-items:center;justify-content:center;z-index:2000;
+}
+.login-box{
+  width:min(92vw,420px);background:#fff;border-radius:24px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.18);
+}
+.login-box img{width:82px;height:82px;display:block;margin:0 auto 12px;object-fit:contain}
+.login-box h2{text-align:center;color:var(--primary);margin-bottom:6px;font-size:1.5rem}
+.login-box p{text-align:center;color:var(--text-muted);margin-bottom:18px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;margin-bottom:6px;font-size:.9rem;font-weight:700}
+.form-group input,.form-group textarea{
+  width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:12px;background:#fff;color:var(--text);font-size:.95rem
+}
+.form-group input:focus,.form-group textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,140,0,.12)}
+.login-btn{
+  width:100%;padding:12px 16px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-weight:800;cursor:pointer;font-size:1rem
+}
+.login-error{display:none;margin-top:12px;background:#fee2e2;color:#991b1b;border-radius:12px;padding:10px 12px;font-size:.9rem}
+
+/* Layout */
+.mobile-toggle{
+  position:fixed;top:16px;right:16px;z-index:1100;width:48px;height:48px;border:none;border-radius:14px;background:var(--primary);color:#fff;
+  display:none;align-items:center;justify-content:center;box-shadow:var(--shadow);cursor:pointer;
+}
+.mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:998;display:none}
+.sidebar{
+  position:fixed;top:0;right:0;width:260px;height:100vh;background:linear-gradient(180deg,var(--primary) 0%,#0a1338 100%);
+  color:#fff;z-index:1000;display:flex;flex-direction:column;transition:transform .3s ease;
+}
+.sidebar-header{
+  padding:24px 20px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.08);
+}
+.sidebar-header img{width:44px;height:44px;border-radius:10px;background:#fff;padding:4px;object-fit:contain}
+.sidebar-header .brand{font-size:1.08rem;font-weight:800}
+.sidebar-header .brand span{display:block;color:var(--accent);font-size:.84rem;font-weight:400}
+.sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto}
+.sidebar-nav a{
+  display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;color:rgba(255,255,255,.74);font-weight:700;transition:all .2s;margin-bottom:4px
+}
+.sidebar-nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.sidebar-nav a.active{background:rgba(255,140,0,.18);color:var(--accent)}
+.sidebar-nav .nav-divider{height:1px;background:rgba(255,255,255,.08);margin:12px 8px}
+.sidebar-footer{
+  padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;gap:10px
+}
+.status-badge{background:rgba(34,197,94,.16);color:#86efac;border:1px solid rgba(34,197,94,.25);padding:6px 10px;border-radius:999px;font-size:.78rem;font-weight:700}
+.sidebar-footer button{
+  border:none;background:rgba(239,68,68,.14);color:#fecaca;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:700
+}
+
+.main{margin-right:260px;padding:24px 32px 60px;min-height:100vh}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:24px}
+.topbar h1{font-size:1.6rem;color:var(--primary);font-weight:800}
+.topbar h1 i{color:var(--accent);margin-left:8px}
+.topbar-actions{display:flex;gap:10px;flex-wrap:wrap}
+.topbar-btn{
+  padding:10px 16px;border-radius:12px;border:1px solid var(--border);background:#fff;color:var(--text);font-weight:700;display:flex;align-items:center;gap:8px
+}
+.topbar-btn:hover{border-color:var(--accent);color:var(--accent)}
+.topbar-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.notice-card{
+  background:linear-gradient(135deg,#fff7ed,#fff);border:1px solid #fed7aa;border-radius:18px;padding:16px 18px;margin-bottom:20px;box-shadow:var(--shadow)
+}
+.notice-card h3{font-size:1rem;color:#9a3412;margin-bottom:8px}
+.notice-card p{color:#7c2d12;line-height:1.7;font-size:.93rem}
+
+.workspace{
+  display:grid;grid-template-columns:360px minmax(0,1fr);gap:20px;align-items:start
+}
+.section-card{
+  background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow);overflow:hidden
+}
+.section-header{
+  padding:16px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap
+}
+.section-header h2{font-size:1.05rem;font-weight:800;color:var(--primary);display:flex;align-items:center;gap:10px}
+.section-header h2 i{color:var(--accent)}
+.section-body{padding:18px}
+
+.search-box{
+  position:relative
+}
+.search-box input{
+  width:100%;padding:12px 42px 12px 14px;border:2px solid var(--border);border-radius:14px;font-size:.94rem;background:#fff
+}
+.search-box i{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--text-muted)}
+.search-box input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,140,0,.12)}
+
+.products-list{display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 270px);overflow:auto;padding-left:4px}
+.product-item{
+  border:1px solid var(--border);border-radius:16px;padding:12px;background:#fff;display:grid;grid-template-columns:70px 1fr;gap:12px;cursor:pointer;transition:all .2s
+}
+.product-item:hover{transform:translateY(-1px);border-color:#cbd5e1;box-shadow:0 10px 24px rgba(15,27,76,.06)}
+.product-item.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,140,0,.12)}
+.product-thumb{
+  width:70px;height:70px;border-radius:14px;background:#f8fafc;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden
+}
+.product-thumb img{width:100%;height:100%;object-fit:contain;background:#fff}
+.product-meta h4{font-size:.95rem;line-height:1.5;margin-bottom:4px}
+.product-meta .sub{font-size:.8rem;color:var(--text-muted);margin-bottom:6px}
+.product-badges{display:flex;gap:6px;flex-wrap:wrap}
+.pill{
+  display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;font-size:.74rem;font-weight:700
+}
+.pill.orange{background:rgba(255,140,0,.12);color:#c2410c}
+.pill.blue{background:rgba(59,130,246,.12);color:#2563eb}
+.pill.green{background:rgba(34,197,94,.12);color:#15803d}
+.pill.gray{background:#f1f5f9;color:#475569}
+
+.editor-empty{
+  padding:50px 20px;text-align:center;color:var(--text-muted)
+}
+.editor-empty i{font-size:3rem;color:#cbd5e1;margin-bottom:12px}
+
+.product-head{
+  display:grid;grid-template-columns:96px 1fr;gap:16px;align-items:center;margin-bottom:18px
+}
+.product-head .preview-box{
+  width:96px;height:96px;border-radius:18px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden
+}
+.product-head .preview-box img{width:100%;height:100%;object-fit:contain}
+.product-head h3{font-size:1.25rem;color:var(--primary);margin-bottom:6px}
+.product-head p{color:var(--text-muted);font-size:.9rem;line-height:1.7}
+.helper-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.helper-links a{
+  background:#fff7ed;border:1px solid #fed7aa;color:#c2410c;padding:8px 12px;border-radius:999px;font-size:.8rem;font-weight:700
+}
+.helper-links a:hover{background:#ffedd5}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group textarea{min-height:94px;resize:vertical}
+.form-note{font-size:.8rem;color:var(--text-muted);line-height:1.8;margin-top:6px}
+
+.gallery-rows{display:flex;flex-direction:column;gap:10px}
+.gallery-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.small-btn{
+  border:none;border-radius:12px;padding:11px 14px;cursor:pointer;font-weight:800
+}
+.small-btn.add{background:#eff6ff;color:#1d4ed8}
+.small-btn.remove{background:#fef2f2;color:#dc2626}
+.small-btn.secondary{background:#f8fafc;color:#334155;border:1px solid var(--border)}
+.small-btn.save{background:var(--accent);color:#fff}
+.small-btn:disabled{opacity:.65;cursor:not-allowed}
+
+.preview-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-top:18px
+}
+.preview-card{
+  border:1px solid var(--border);border-radius:16px;background:#fff;overflow:hidden
+}
+.preview-card .imgbox{
+  height:120px;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden
+}
+.preview-card .imgbox img{width:100%;height:100%;object-fit:contain;background:#fff}
+.preview-card .label{padding:10px 12px;font-size:.82rem;font-weight:700;color:#475569;border-top:1px solid var(--border)}
+.toolbar{
+  display:flex;gap:10px;flex-wrap:wrap;margin-top:18px
+}
+.inline-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.id-box{
+  background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;padding:8px 10px;border-radius:10px;font-size:.82rem;font-weight:800
+}
+.success-box,.warning-box{
+  display:none;margin-top:14px;border-radius:14px;padding:12px 14px;font-weight:700
+}
+.success-box{background:#dcfce7;color:#166534}
+.warning-box{background:#fff7ed;color:#9a3412}
+
+@media(max-width:1100px){
+  .workspace{grid-template-columns:1fr}
+  .products-list{max-height:none}
+}
+@media(max-width:900px){
+  .mobile-toggle{display:flex}
+  .mobile-overlay.show{display:block}
+  .sidebar{transform:translateX(100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-right:0;padding:20px 16px 80px}
+  .topbar h1{font-size:1.25rem}
+}
+@media(max-width:640px){
+  .form-grid{grid-template-columns:1fr}
+  .product-head{grid-template-columns:1fr}
+  .gallery-row{grid-template-columns:1fr}
+}
+</style>
+<script src="shared-admin-auth.js"></script>
+<script src="shared-firebase.js"></script>
+<script src="shared-utils.js"></script>
+</head>
+<body>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <img src="wesam-logo.png" alt="وسام ستور"/>
+    <h2>إدارة صور المنتجات</h2>
+    <p>تسجيل الدخول كمدير المتجر</p>
+    <div class="form-group"><label>البريد الإلكتروني</label><input id="adminEmail" type="email" placeholder="example@email.com"/></div>
+    <div class="form-group"><label>كلمة المرور</label><input id="adminPassword" type="password" placeholder="••••••••"/></div>
+    <button class="login-btn" id="loginBtn">تسجيل الدخول</button>
+    <p class="login-error" id="loginError"></p>
+  </div>
+</div>
+
+<button class="mobile-toggle" id="mobileToggle"><i class="fas fa-bars"></i></button>
+<div class="mobile-overlay" id="mobileOverlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <img src="wesam-logo.png" alt="وسام"/>
+    <div class="brand">Wesam Store<span>صور المنتجات</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="admin.html"><i class="fas fa-chart-pie"></i> لوحة التحكم</a>
+    <a href="orders.html"><i class="fas fa-shopping-bag"></i> الطلبات</a>
+    <a href="add-product.html"><i class="fas fa-plus-circle"></i> إضافة منتج</a>
+    <a href="#" class="active"><i class="fas fa-images"></i> صور المنتجات</a>
+    <a href="accounting.html"><i class="fas fa-calculator"></i> نظام المحاسبة</a>
+    <div class="nav-divider"></div>
+    <a href="index.html"><i class="fas fa-store"></i> المتجر</a>
+  </nav>
+  <div class="sidebar-footer">
+    <span class="status-badge">روابط خارجية فقط</span>
+    <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> خروج</button>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <h1><i class="fas fa-images"></i> إدارة صور المنتجات عبر روابط خارجية</h1>
+    <div class="topbar-actions">
+      <a class="topbar-btn" href="admin.html"><i class="fas fa-arrow-right"></i> لوحة التحكم</a>
+      <a class="topbar-btn" href="add-product.html"><i class="fas fa-plus-circle"></i> إضافة منتج</a>
+      <button class="topbar-btn primary" id="reloadBtn"><i class="fas fa-rotate"></i> تحديث القائمة</button>
+    </div>
+  </div>
+
+  <div class="notice-card">
+    <h3><i class="fas fa-circle-info"></i> هذه الصفحة مخصّصة للصور فقط</h3>
+    <p>
+      هنا تضع رابط الصورة الرئيسية وروابط الصور الإضافية لكل منتج، وسيتم الحفظ مباشرة داخل نفس بيانات المنتج
+      المستخدمة حالياً في المتجر. الصفحة لا ترفع ملفات إلى Firebase Storage، بل تحفظ روابط خارجية فقط.
+    </p>
+  </div>
+
+  <div class="workspace">
+    <section class="section-card">
+      <div class="section-header">
+        <h2><i class="fas fa-boxes-stacked"></i> المنتجات</h2>
+        <span class="pill gray" id="productsCount">0 منتج</span>
+      </div>
+      <div class="section-body">
+        <div class="search-box" style="margin-bottom:14px;">
+          <i class="fas fa-search"></i>
+          <input id="searchInput" type="text" placeholder="ابحث باسم المنتج أو الفئة"/>
+        </div>
+        <div class="products-list" id="productsList">
+          <div class="editor-empty">
+            <i class="fas fa-spinner fa-spin"></i>
+            <div>جاري تحميل المنتجات...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card">
+      <div class="section-header">
+        <h2><i class="fas fa-pen-to-square"></i> محرر الصور</h2>
+        <div class="inline-meta" id="selectedMeta" style="display:none;">
+          <span class="pill orange" id="selectedImageCount">0 صورة</span>
+          <span class="pill blue" id="selectedStock">المخزون: 0</span>
+        </div>
+      </div>
+      <div class="section-body" id="editorContainer">
+        <div class="editor-empty">
+          <i class="fas fa-image"></i>
+          <div style="font-size:1rem;font-weight:800;color:var(--primary);margin-bottom:6px;">اختر منتجاً من القائمة</div>
+          <div>بعد اختيار المنتج ستظهر هنا جميع روابط صوره لتعديلها وحفظها.</div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+window.WesamFirebase.init();
+const db = window.WesamFirebase.db;
+const auth = window.WesamFirebase.auth;
+const ADMIN_EMAILS = ['wesam@store.store'];
+const $ = window.WesamUtils.$id;
+const escapeHtml = window.WesamUtils.escapeHtml;
+const getServerTimestamp = window.WesamFirebase.getServerTimestamp;
+
+let allProducts = [];
+let filteredProducts = [];
+let selectedProductId = null;
+let initRan = false;
+
+function showToast(message, type='success'){
+  const box = document.createElement('div');
+  const bg = type === 'error' ? '#fee2e2' : type === 'warning' ? '#fff7ed' : '#dcfce7';
+  const color = type === 'error' ? '#991b1b' : type === 'warning' ? '#9a3412' : '#166534';
+  box.style.cssText = 'position:fixed;left:20px;bottom:20px;z-index:3000;padding:12px 16px;border-radius:14px;font-weight:800;box-shadow:0 12px 30px rgba(0,0,0,.16);';
+  box.style.background = bg;
+  box.style.color = color;
+  box.textContent = message;
+  document.body.appendChild(box);
+  setTimeout(()=>box.remove(), 2800);
+}
+
+const adminAuth = window.WesamAdminAuth.build({
+  auth,
+  db,
+  adminEmails: ADMIN_EMAILS,
+  mapAuthError(err){
+    if (err && err.code === 'auth/not-admin') return 'هذا الحساب ليس مديراً';
+    return window.WesamAdminAuth.defaultMapAuthError(err);
+  }
+});
+
+adminAuth.bindSimpleUI({
+  loginButton: $('loginBtn'),
+  emailInput: $('adminEmail'),
+  passwordInput: $('adminPassword'),
+  errorBox: $('loginError'),
+  overlay: $('loginOverlay'),
+  logoutButton: $('logoutBtn'),
+  onAuthorized: async () => {
+    if (!initRan) {
+      initRan = true;
+      await initPage();
+    }
+  }
+});
+
+// mobile
+$('mobileToggle').addEventListener('click', () => {
+  $('sidebar').classList.toggle('open');
+  $('mobileOverlay').classList.toggle('show');
+});
+$('mobileOverlay').addEventListener('click', () => {
+  $('sidebar').classList.remove('open');
+  $('mobileOverlay').classList.remove('show');
+});
+
+$('reloadBtn').addEventListener('click', async () => {
+  await loadProducts();
+  renderProductsList();
+  if (selectedProductId) renderEditor(selectedProductId);
+});
+
+$('searchInput').addEventListener('input', () => {
+  renderProductsList($('searchInput').value.trim());
+});
+
+async function initPage(){
+  await loadProducts();
+  renderProductsList();
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id');
+  if (id && allProducts.some(p => p.id === id)) {
+    renderEditor(id);
+  }
+}
+
+async function loadProducts(){
+  try{
+    const snap = await db.collection('products').orderBy('createdAt', 'desc').get();
+    allProducts = [];
+    snap.forEach(doc => {
+      allProducts.push({ id: doc.id, ...doc.data() });
+    });
+    filteredProducts = [...allProducts];
+    $('productsCount').textContent = allProducts.length + ' منتج';
+  }catch(e){
+    console.error(e);
+    $('productsList').innerHTML = '<div class="editor-empty"><i class="fas fa-triangle-exclamation"></i><div>تعذر تحميل المنتجات</div></div>';
+  }
+}
+
+function getProductImageCount(product){
+  const extras = Array.isArray(product.additionalImages) ? product.additionalImages.filter(Boolean) : [];
+  return (product.image ? 1 : 0) + extras.length;
+}
+
+function renderProductsList(query=''){
+  const q = String(query || '').trim().toLowerCase();
+  filteredProducts = !q ? [...allProducts] : allProducts.filter(p => {
+    const name = String(p.name || '').toLowerCase();
+    const cat = String(p.category || '').toLowerCase();
+    return name.includes(q) || cat.includes(q);
+  });
+
+  const list = $('productsList');
+  if (!filteredProducts.length) {
+    list.innerHTML = '<div class="editor-empty"><i class="fas fa-box-open"></i><div>لا توجد منتجات مطابقة</div></div>';
+    return;
+  }
+
+  list.innerHTML = filteredProducts.map(p => {
+    const img = p.image || '';
+    const active = p.id === selectedProductId ? 'active' : '';
+    return `
+      <div class="product-item ${active}" data-id="${p.id}">
+        <div class="product-thumb">
+          ${img ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(p.name || 'منتج')}" onerror="this.style.display='none';this.parentNode.innerHTML='<i class=&quot;fas fa-image&quot; style=&quot;color:#94a3b8;font-size:1.4rem&quot;></i>';">` : '<i class="fas fa-image" style="color:#94a3b8;font-size:1.4rem"></i>'}
+        </div>
+        <div class="product-meta">
+          <h4>${escapeHtml(p.name || 'منتج بدون اسم')}</h4>
+          <div class="sub">${escapeHtml(p.category || 'بدون فئة')}</div>
+          <div class="product-badges">
+            <span class="pill orange"><i class="fas fa-images"></i> ${getProductImageCount(p)}</span>
+            <span class="pill blue"><i class="fas fa-box"></i> ${Number(p.stock || 0)}</span>
+            <span class="pill green"><i class="fas fa-money-bill-wave"></i> ${Number(p.sell || 0)} د.أ</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  list.querySelectorAll('.product-item').forEach(item => {
+    item.addEventListener('click', () => renderEditor(item.dataset.id));
+  });
+}
+
+function renderEditor(id){
+  selectedProductId = id;
+  renderProductsList($('searchInput').value.trim());
+
+  const product = allProducts.find(p => p.id === id);
+  const editor = $('editorContainer');
+  if (!product) {
+    editor.innerHTML = '<div class="editor-empty"><i class="fas fa-circle-xmark"></i><div>المنتج غير موجود</div></div>';
+    return;
+  }
+
+  const extras = Array.isArray(product.additionalImages) && product.additionalImages.length ? product.additionalImages : [''];
+  $('selectedMeta').style.display = 'flex';
+  $('selectedImageCount').textContent = getProductImageCount(product) + ' صورة';
+  $('selectedStock').textContent = 'المخزون: ' + Number(product.stock || 0);
+
+  editor.innerHTML = `
+    <div class="product-head">
+      <div class="preview-box">
+        ${product.image ? `<img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name || 'منتج')}" onerror="this.style.display='none';this.parentNode.innerHTML='<i class=&quot;fas fa-image&quot; style=&quot;color:#94a3b8;font-size:2rem&quot;></i>';">` : '<i class="fas fa-image" style="color:#94a3b8;font-size:2rem"></i>'}
+      </div>
+      <div>
+        <h3>${escapeHtml(product.name || 'منتج')}</h3>
+        <p>من هنا تستطيع حفظ روابط خارجية للصورة الرئيسية وصور المعرض لهذا المنتج فقط.</p>
+        <div class="inline-meta">
+          <span class="id-box">Product ID: ${escapeHtml(product.id)}</span>
+          <span class="pill gray">${escapeHtml(product.category || 'بدون فئة')}</span>
+        </div>
+        <div class="helper-links">
+          <a href="https://postimages.org" target="_blank" rel="noopener">Postimages</a>
+          <a href="https://imgbb.com" target="_blank" rel="noopener">ImgBB</a>
+          <a href="add-product.html?edit=${encodeURIComponent(product.id)}">فتح صفحة تعديل المنتج</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="mainImageInput">رابط الصورة الرئيسية *</label>
+        <input id="mainImageInput" type="url" placeholder="https://example.com/image.jpg" value="${escapeHtml(product.image || '')}"/>
+        <div class="form-note">هذه الصورة تظهر كبطاقة المنتج والصورة الأولى في المعرض.</div>
+      </div>
+      <div class="form-group">
+        <label for="imageNotesInput">ملاحظات سريعة</label>
+        <textarea id="imageNotesInput" readonly>الصفحة تحفظ فقط الحقول image و additionalImages داخل مجموعة products.</textarea>
+        <div class="form-note">لا يتم رفع ملفات هنا. فقط لصق الروابط الخارجية المباشرة.</div>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top:4px;">
+      <label>صور إضافية للمعرض</label>
+      <div class="gallery-rows" id="galleryRows"></div>
+      <div class="toolbar">
+        <button class="small-btn add" id="addGalleryBtn" type="button"><i class="fas fa-plus"></i> إضافة رابط صورة</button>
+        <button class="small-btn secondary" id="clearGalleryBtn" type="button"><i class="fas fa-broom"></i> مسح الصور الإضافية</button>
+      </div>
+      <div class="form-note">اترك الحقل فارغاً إذا لا تريد صوراً إضافية.</div>
+    </div>
+
+    <div class="toolbar">
+      <button class="small-btn save" id="saveImagesBtn" type="button"><i class="fas fa-save"></i> حفظ الصور</button>
+      <button class="small-btn secondary" id="openEditProductBtn" type="button"><i class="fas fa-pen"></i> تعديل المنتج الكامل</button>
+    </div>
+
+    <div class="success-box" id="saveSuccessBox">تم حفظ الصور بنجاح.</div>
+    <div class="warning-box" id="saveWarningBox">الرجاء وضع رابط صورة رئيسية صالح يبدأ بـ http أو https.</div>
+
+    <div class="preview-grid" id="previewGrid"></div>
+  `;
+
+  const galleryRows = $('galleryRows');
+  extras.forEach(url => addGalleryRow(url));
+  if (!galleryRows.children.length) addGalleryRow('');
+
+  $('addGalleryBtn').addEventListener('click', () => addGalleryRow(''));
+  $('clearGalleryBtn').addEventListener('click', () => {
+    galleryRows.innerHTML = '';
+    addGalleryRow('');
+    updatePreviews();
+  });
+  $('mainImageInput').addEventListener('input', updatePreviews);
+  $('openEditProductBtn').addEventListener('click', () => {
+    location.href = 'add-product.html?edit=' + encodeURIComponent(product.id);
+  });
+  $('saveImagesBtn').addEventListener('click', saveCurrentProductImages);
+
+  updatePreviews();
+  history.replaceState({}, '', 'product-images.html?id=' + encodeURIComponent(product.id));
+}
+
+function addGalleryRow(value=''){
+  const row = document.createElement('div');
+  row.className = 'gallery-row';
+  row.innerHTML = `
+    <input type="url" class="gallery-url-input" placeholder="https://example.com/image-2.jpg" value="${escapeHtml(value || '')}"/>
+    <button class="small-btn remove" type="button"><i class="fas fa-trash"></i></button>
+  `;
+  row.querySelector('.gallery-url-input').addEventListener('input', updatePreviews);
+  row.querySelector('.remove').addEventListener('click', () => {
+    row.remove();
+    if (!$('galleryRows').children.length) addGalleryRow('');
+    updatePreviews();
+  });
+  $('galleryRows').appendChild(row);
+}
+
+function updatePreviews(){
+  const main = $('mainImageInput') ? $('mainImageInput').value.trim() : '';
+  const extras = Array.from(document.querySelectorAll('.gallery-url-input'))
+    .map(inp => inp.value.trim())
+    .filter(Boolean);
+
+  const cards = [];
+  if (main) {
+    cards.push(`<div class="preview-card"><div class="imgbox"><img src="${escapeHtml(main)}" alt="" onerror="this.parentNode.innerHTML='<div style=&quot;color:#94a3b8;font-weight:700&quot;>رابط غير صالح</div>';"></div><div class="label">الصورة الرئيسية</div></div>`);
+  }
+  extras.forEach((url, index) => {
+    cards.push(`<div class="preview-card"><div class="imgbox"><img src="${escapeHtml(url)}" alt="" onerror="this.parentNode.innerHTML='<div style=&quot;color:#94a3b8;font-weight:700&quot;>رابط غير صالح</div>';"></div><div class="label">صورة إضافية ${index + 1}</div></div>`);
+  });
+
+  $('previewGrid').innerHTML = cards.length ? cards.join('') : '<div class="editor-empty" style="padding:18px 0;"><i class="fas fa-image"></i><div>لا توجد صور للمعاينة حالياً</div></div>';
+  const total = (main ? 1 : 0) + extras.length;
+  $('selectedImageCount').textContent = total + ' صورة';
+}
+
+async function saveCurrentProductImages(){
+  const product = allProducts.find(p => p.id === selectedProductId);
+  if (!product) return;
+
+  const main = $('mainImageInput').value.trim();
+  const extras = Array.from(document.querySelectorAll('.gallery-url-input'))
+    .map(inp => inp.value.trim())
+    .filter(url => url && /^https?:\/\//i.test(url));
+
+  $('saveSuccessBox').style.display = 'none';
+  $('saveWarningBox').style.display = 'none';
+
+  if (!/^https?:\/\//i.test(main)) {
+    $('saveWarningBox').style.display = 'block';
+    return;
+  }
+
+  const btn = $('saveImagesBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+
+  try {
+    await db.collection('products').doc(product.id).update({
+      image: main,
+      additionalImages: extras,
+      updatedAt: getServerTimestamp()
+    });
+
+    product.image = main;
+    product.additionalImages = extras;
+    $('saveSuccessBox').style.display = 'block';
+    $('selectedImageCount').textContent = (1 + extras.length) + ' صورة';
+    renderProductsList($('searchInput').value.trim());
+    showToast('✅ تم حفظ صور المنتج');
+  } catch (e) {
+    console.error(e);
+    showToast('❌ تعذر حفظ الصور: ' + (e.message || e), 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-save"></i> حفظ الصور';
+  }
+}
+</script>
+</body>
+</html>

@@ -321,6 +321,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
     <div class="nav-divider"></div>
     <a href="orders.html"><i class="fas fa-shopping-bag"></i> الطلبات</a>
     <a href="add-product.html"><i class="fas fa-plus-circle"></i> إضافة منتج</a>
+    <a href="product-images.html"><i class="fas fa-images"></i> صور المنتجات</a>
     <a href="accounting.html"><i class="fas fa-calculator"></i> نظام المحاسبة</a>
     <a href="index.html"><i class="fas fa-store"></i> المتجر</a>
   </nav>
@@ -337,6 +338,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
     <h1><i class="fas fa-chart-pie"></i> <span id="pageTitle">الرئيسية</span></h1>
     <div class="topbar-actions">
       <a href="add-product.html" class="topbar-btn primary"><i class="fas fa-plus"></i> إضافة منتج</a>
+      <a href="product-images.html" class="topbar-btn"><i class="fas fa-images"></i> صور المنتجات</a>
       <a href="orders.html" class="topbar-btn"><i class="fas fa-shopping-bag"></i> الطلبات</a>
       <button class="topbar-btn danger" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> خروج</button>
     </div>
@@ -381,7 +383,10 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
     <div class="section-card">
       <div class="section-header">
         <h2><i class="fas fa-boxes-stacked"></i> إدارة المنتجات</h2>
-        <a href="add-product.html" class="save-btn" style="font-size:.82rem;padding:8px 16px;"><i class="fas fa-plus"></i> إضافة منتج</a>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <a href="product-images.html" class="topbar-btn" style="font-size:.82rem;padding:8px 16px;"><i class="fas fa-images"></i> صور المنتجات</a>
+          <a href="add-product.html" class="save-btn" style="font-size:.82rem;padding:8px 16px;"><i class="fas fa-plus"></i> إضافة منتج</a>
+        </div>
       </div>
       <div class="section-body" style="overflow-x:auto;">
         <table class="data-table" id="productsTable">
@@ -563,41 +568,6 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
             <div class="form-group"><label>رابط البطاقة</label><input id="featuredElectronicsLink" type="text" placeholder="electronics-store.html"/></div>
           </div>
 
-          <h3 style="margin:28px 0 16px;font-size:1rem;"><i class="fas fa-video" style="color:var(--accent);margin-left:8px;"></i>بطاقة البث المباشر في الصفحة الرئيسية</h3>
-          <div class="settings-grid">
-            <div class="form-group"><label>عنوان: البث المباشر</label><input id="featuredLiveTitle" type="text" placeholder="البث المباشر"/></div>
-            <div class="form-group"><label>رابط صورة بطاقة البث</label><input id="featuredLiveImage" type="text" placeholder="https://.../live.jpg"/></div>
-            <div class="form-group"><label>وصف قصير: البث المباشر</label><input id="featuredLiveSub" type="text" placeholder="شاهد عملية الإصلاح مباشرة للعميل"/></div>
-            <div class="form-group"><label>نص الزر: البث المباشر</label><input id="featuredLiveBadge" type="text" placeholder="شاهد الآن"/></div>
-            <div class="form-group"><label>رابط البطاقة</label><input id="featuredLiveLink" type="text" placeholder="repair-live.html"/></div>
-          </div>
-
-          <h3 style="margin:28px 0 16px;font-size:1rem;"><i class="fas fa-tower-broadcast" style="color:var(--accent);margin-left:8px;"></i>صفحة البث المباشر</h3>
-          <div class="settings-grid">
-            <div class="form-group"><label for="livePageYoutubeVideoId">معرف أو رابط فيديو يوتيوب للبث</label><input id="livePageYoutubeVideoId" type="text" placeholder="مثال: abc123XYZ98 أو رابط يوتيوب الكامل"/></div>
-            <div class="form-group"><label for="livePageFacebookVideoUrl">رابط فيديو/بث فيسبوك</label><input id="livePageFacebookVideoUrl" type="text" placeholder="https://www.facebook.com/..."/></div>
-            <div class="form-group"><label for="livePageServiceLink">رابط زر طلب الصيانة</label><input id="livePageServiceLink" type="text" placeholder="index.html?openService=1"/></div>
-            <div class="form-group"><label for="livePageTrackLink">رابط زر تتبع الطلب</label><input id="livePageTrackLink" type="text" placeholder="index.html#trackOrderSection"/></div>
-            <div class="form-group"><label for="liveVideosSectionTitle">عنوان قسم الفيديوهات</label><input id="liveVideosSectionTitle" type="text" placeholder="فيديوهات إضافية"/></div>
-            <div class="form-group"><label for="liveVideosSectionSub">وصف قصير لقسم الفيديوهات</label><input id="liveVideosSectionSub" type="text" placeholder="يمكنك وضع روابط فيديوهات مفيدة للعميل في هذه البطاقات."/></div>
-          </div>
-
-          <h3 style="margin:22px 0 16px;font-size:1rem;"><i class="fas fa-video" style="color:var(--accent);margin-left:8px;"></i>بطاقات فيديوهات صفحة البث</h3>
-          <div class="settings-grid">
-            <div class="form-group"><label for="liveVideo1Title">عنوان الفيديو 1</label><input id="liveVideo1Title" type="text" placeholder="مثال: شرح حالة الشاشة قبل الإصلاح"/></div>
-            <div class="form-group"><label for="liveVideo1Url">رابط الفيديو 1</label><input id="liveVideo1Url" type="text" placeholder="https://youtu.be/..."/></div>
-            <div class="form-group"><label for="liveVideo2Title">عنوان الفيديو 2</label><input id="liveVideo2Title" type="text" placeholder="مثال: خطوات الفحص"/></div>
-            <div class="form-group"><label for="liveVideo2Url">رابط الفيديو 2</label><input id="liveVideo2Url" type="text" placeholder="https://youtu.be/..."/></div>
-            <div class="form-group"><label for="liveVideo3Title">عنوان الفيديو 3</label><input id="liveVideo3Title" type="text" placeholder="مثال: نتيجة الإصلاح"/></div>
-            <div class="form-group"><label for="liveVideo3Url">رابط الفيديو 3</label><input id="liveVideo3Url" type="text" placeholder="https://youtu.be/..."/></div>
-            <div class="form-group"><label for="liveVideo4Title">عنوان الفيديو 4</label><input id="liveVideo4Title" type="text" placeholder="عنوان إضافي"/></div>
-            <div class="form-group"><label for="liveVideo4Url">رابط الفيديو 4</label><input id="liveVideo4Url" type="text" placeholder="https://..."/></div>
-            <div class="form-group"><label for="liveVideo5Title">عنوان الفيديو 5</label><input id="liveVideo5Title" type="text" placeholder="عنوان إضافي"/></div>
-            <div class="form-group"><label for="liveVideo5Url">رابط الفيديو 5</label><input id="liveVideo5Url" type="text" placeholder="https://..."/></div>
-            <div class="form-group"><label for="liveVideo6Title">عنوان الفيديو 6</label><input id="liveVideo6Title" type="text" placeholder="عنوان إضافي"/></div>
-            <div class="form-group"><label for="liveVideo6Url">رابط الفيديو 6</label><input id="liveVideo6Url" type="text" placeholder="https://..."/></div>
-          </div>
-
           <div class="form-group">
             <label for="servicesList">قائمة الخدمات (كل خدمة في سطر)</label>
             <textarea id="servicesList" rows="4" placeholder="توصيل سريع لجميع مناطق عمان&#10;دفع عند الاستلام"></textarea>
@@ -773,24 +743,6 @@ async function loadSettings() {
       $('featuredElectronicsSub') && ($('featuredElectronicsSub').value = p.featuredElectronicsSub || '');
       $('featuredElectronicsBadge') && ($('featuredElectronicsBadge').value = p.featuredElectronicsBadge || '');
       $('featuredElectronicsLink') && ($('featuredElectronicsLink').value = p.featuredElectronicsLink || 'electronics-store.html');
-      $('livePageYoutubeVideoId') && ($('livePageYoutubeVideoId').value = p.livePageYoutubeVideoId || '');
-      $('livePageFacebookVideoUrl') && ($('livePageFacebookVideoUrl').value = p.livePageFacebookVideoUrl || '');
-      $('livePageServiceLink') && ($('livePageServiceLink').value = p.livePageServiceLink || 'index.html?openService=1');
-      $('livePageTrackLink') && ($('livePageTrackLink').value = p.livePageTrackLink || 'index.html#trackOrderSection');
-      $('liveVideosSectionTitle') && ($('liveVideosSectionTitle').value = p.liveVideosSectionTitle || 'فيديوهات إضافية');
-      $('liveVideosSectionSub') && ($('liveVideosSectionSub').value = p.liveVideosSectionSub || 'يمكنك وضع روابط فيديوهات مفيدة للعميل في هذه البطاقات.');
-      $('liveVideo1Title') && ($('liveVideo1Title').value = p.liveVideo1Title || '');
-      $('liveVideo1Url') && ($('liveVideo1Url').value = p.liveVideo1Url || '');
-      $('liveVideo2Title') && ($('liveVideo2Title').value = p.liveVideo2Title || '');
-      $('liveVideo2Url') && ($('liveVideo2Url').value = p.liveVideo2Url || '');
-      $('liveVideo3Title') && ($('liveVideo3Title').value = p.liveVideo3Title || '');
-      $('liveVideo3Url') && ($('liveVideo3Url').value = p.liveVideo3Url || '');
-      $('liveVideo4Title') && ($('liveVideo4Title').value = p.liveVideo4Title || '');
-      $('liveVideo4Url') && ($('liveVideo4Url').value = p.liveVideo4Url || '');
-      $('liveVideo5Title') && ($('liveVideo5Title').value = p.liveVideo5Title || '');
-      $('liveVideo5Url') && ($('liveVideo5Url').value = p.liveVideo5Url || '');
-      $('liveVideo6Title') && ($('liveVideo6Title').value = p.liveVideo6Title || '');
-      $('liveVideo6Url') && ($('liveVideo6Url').value = p.liveVideo6Url || '');
       $('servicesList') && ($('servicesList').value = p.servicesList || '');
     }
   } catch(e) { console.warn(e); }
@@ -843,8 +795,9 @@ function renderProductsTable() {
       <td>${isOnSale ? '<span style="color:var(--accent);font-weight:800;">✔</span>' : '-'}</td>
       <td>${p.videoUrl ? '<i class="fab fa-youtube" style="color:#f00;"></i>' : '-'}</td>
       <td>
-        <button class="action-btn edit" onclick="editProduct('${p.id}')"><i class="fas fa-edit"></i></button>
-        <button class="action-btn delete" onclick="deleteProduct('${p.id}')"><i class="fas fa-trash"></i></button>
+        <button class="action-btn view" onclick="editProductImages('${p.id}')" title="إدارة الصور"><i class="fas fa-images"></i></button>
+        <button class="action-btn edit" onclick="editProduct('${p.id}')" title="تعديل المنتج"><i class="fas fa-edit"></i></button>
+        <button class="action-btn delete" onclick="deleteProduct('${p.id}')" title="حذف المنتج"><i class="fas fa-trash"></i></button>
       </td>
     </tr>`;
   }).join('');
@@ -852,6 +805,10 @@ function renderProductsTable() {
 
 window.editProduct = function(id) {
   window.location.href = 'add-product.html?edit=' + id;
+};
+
+window.editProductImages = function(id) {
+  window.location.href = 'product-images.html?id=' + id;
 };
 
 window.deleteProduct = async function(id) {
@@ -1004,12 +961,7 @@ $('pageContentForm').addEventListener('submit', async e => {
      'featuredNewTitle','featuredNewImage','featuredOffersTitle','featuredOffersImage',
      'featuredServiceTitle','featuredServiceImage','featuredServiceSub',
      'featuredElectronicsTitle','featuredElectronicsImage','featuredElectronicsSub',
-     'featuredElectronicsBadge','featuredElectronicsLink',
-     'featuredLiveTitle','featuredLiveImage','featuredLiveSub','featuredLiveBadge','featuredLiveLink',
-     'livePageYoutubeVideoId','livePageFacebookVideoUrl','livePageServiceLink','livePageTrackLink',
-     'liveVideosSectionTitle','liveVideosSectionSub',
-     'liveVideo1Title','liveVideo1Url','liveVideo2Title','liveVideo2Url','liveVideo3Title','liveVideo3Url',
-     'liveVideo4Title','liveVideo4Url','liveVideo5Title','liveVideo5Url','liveVideo6Title','liveVideo6Url'].forEach(key => {
+     'featuredElectronicsBadge','featuredElectronicsLink'].forEach(key => {
       const el = $(key);
       if (el) data[key] = el.value.trim();
     });

@@ -3,9 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://*.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com wss://*.firebaseio.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
-<meta http-equiv="X-Content-Type-Options" content="nosniff">
-<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>الطلبات الواردة — Aielectronics</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script type="module">
@@ -71,30 +68,20 @@ onAuthStateChanged(auth,user=>{
 
 function startListening(){
   try{
-    if(!Array.isArray(window._orders)) window._orders=[];
-    const apply=(snap)=>{
-      // Ignore echoes of our own local writes to avoid double renders
-      if(snap.metadata && snap.metadata.hasPendingWrites) return;
-      const changes=snap.docChanges();
-      if(!changes.length) return;
-      let touched=false;
-      changes.forEach(ch=>{
-        const data=ch.doc.data(); data._docId=ch.doc.id;
-        const idx=window._orders.findIndex(o=>o._docId===ch.doc.id);
-        if(ch.type==='added'||ch.type==='modified'){
-          if(idx!==-1) window._orders[idx]=data; else window._orders.push(data);
-          touched=true;
-        } else if(ch.type==='removed'){
-          if(idx!==-1){ window._orders.splice(idx,1); touched=true; }
-        }
-      });
-      if(!touched) return;
-      window._orders.sort((a,b)=>new Date(b.date||b.createdAt||0)-new Date(a.date||a.createdAt||0));
+    if(ordersUnsub){try{ordersUnsub();}catch(_){ } ordersUnsub=null;}
+    ordersUnsub=onSnapshot(query(collection(db,'orders'),orderBy('date','desc')),snap=>{
+      window._orders=[];
+      snap.forEach(d=>{const data=d.data();data._docId=d.id;window._orders.push(data);});
       window.renderOrders();
-    };
-    ordersUnsub=onSnapshot(query(collection(db,'orders'),orderBy('date','desc')), apply, err=>{
+    },err=>{
       console.warn('orders orderBy failed, fallback:',err);
-      ordersUnsub=onSnapshot(collection(db,'orders'), apply, err2=>console.warn('orders fallback error:',err2));
+      if(ordersUnsub){try{ordersUnsub();}catch(_){ } ordersUnsub=null;}
+      ordersUnsub=onSnapshot(collection(db,'orders'),snap=>{
+        window._orders=[];
+        snap.forEach(d=>{const data=d.data();data._docId=d.id;window._orders.push(data);});
+        window._orders.sort((a,b)=>new Date(b.date||b.createdAt||0)-new Date(a.date||a.createdAt||0));
+        window.renderOrders();
+      },err2=>console.warn('orders fallback error:',err2));
     });
   }catch(e){window.t('خطأ في تحميل الطلبات','e');}
 }
@@ -367,12 +354,6 @@ window._orders=[];
 let curPage=1;
 const PER_PAGE=20;
 
-/* XSS sanitizers */
-function esc(v){if(v==null)return'';return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function escUrl(v){if(v==null)return'';const s=String(v).trim();return /^(https?:|data:image\/|\/|#)/i.test(s)?esc(s):'';}
-function escAttr(v){return esc(v).replace(/`/g,'&#96;');}
-function jsStr(v){return JSON.stringify(String(v==null?'':v)).replace(/"/g,'&quot;');}
-
 const STATUS_MAP={
   new:{label:'🆕 جديد',cls:'os-new'},
   processing:{label:'⏳ قيد المعالجة',cls:'os-processing'},
@@ -395,9 +376,9 @@ setInterval(()=>{
 
 /* ── MANUAL REFRESH ── */
 window.manualRefresh=function(){
-  window._lastRefresh=Date.now();
-  const el=document.getElementById('lastRefresh');
-  if(el)el.textContent=new Date().toLocaleTimeString('ar-JO');
+  if(ordersUnsub){try{ordersUnsub();}catch(_){ } ordersUnsub=null;}
+  startListening();
+  updateRefreshTimer();
   window.t('🔄 تم التحديث','i');
 };
 
@@ -453,59 +434,56 @@ window.renderOrders=function(){
     const st=STATUS_MAP[o.status]||STATUS_MAP.new;
     const items=Array.isArray(o.items)?o.items:[];
     const waPhone=(o.phone||'').replace(/[^0-9]/g,'');
-    const waMsg=encodeURIComponent(`مرحباً ${o.customer||''}، بخصوص طلبك رقم ${o.id||''} بقيمة ${(parseFloat(o.total)||0).toFixed(2)} JD`);
-    const docIdJs=jsStr(o._docId||o.id);
-    const custJs=jsStr(o.customer||'');
-    const statusSafe=esc(o.status||'new');
+    const waMsg=encodeURIComponent(`مرحباً ${o.customer}، بخصوص طلبك رقم ${o.id} بقيمة ${(o.total||0).toFixed(2)} JD`);
 
-    return`<div class="order-card st-${statusSafe}">
+    return`<div class="order-card st-${o.status||'new'}">
       <div class="oc-head" onclick="toggleOrder(this)">
-        <span class="oc-id">${esc(o.id||'—')}</span>
-        <span class="oc-customer">${esc(o.customer||'—')}</span>
-        <span class="oc-date">${esc(o.date||(o.createdAt&&String(o.createdAt).slice(0,10))||'—')}</span>
-        <span class="oc-total">${(parseFloat(o.total)||0).toFixed(2)} JD</span>
-        <span class="oc-status ${esc(st.cls)}">${esc(st.label)}</span>
+        <span class="oc-id">${o.id||'—'}</span>
+        <span class="oc-customer">${o.customer||'—'}</span>
+        <span class="oc-date">${o.date||o.createdAt?.slice(0,10)||'—'}</span>
+        <span class="oc-total">${(o.total||0).toFixed(2)} JD</span>
+        <span class="oc-status ${st.cls}">${st.label}</span>
         <button class="oc-toggle">▼</button>
       </div>
       <div class="oc-body">
         ${items.length?`<div class="oc-section"><h4>📦 المنتجات</h4>
           <div class="oc-items">${items.map(i=>`<div class="oc-item">
-            <div class="oc-item-img">${i.img?`<img src="${escUrl(i.img)}" alt="">`:'📦'}</div>
-            <span class="oc-item-name">${esc(i.name||'—')}</span>
-            <span class="oc-item-qty">×${parseInt(i.qty)||1}</span>
-            <span class="oc-item-pr">${(((parseFloat(i.price)||0)*(parseInt(i.qty)||1))).toFixed(2)} JD</span>
+            <div class="oc-item-img">${i.img?`<img src="${i.img}" onerror="this.style.display='none';this.parentNode.textContent='📦'">`:'📦'}</div>
+            <span class="oc-item-name">${i.name||'—'}</span>
+            <span class="oc-item-qty">×${i.qty||1}</span>
+            <span class="oc-item-pr">${((i.price||0)*(i.qty||1)).toFixed(2)} JD</span>
           </div>`).join('')}</div>
-        </div>`:`<div class="oc-section"><h4>📦 المنتجات</h4><p style="font-size:.8rem;color:var(--t3)">${esc(o.itemsText||'—')}</p></div>`}
+        </div>`:`<div class="oc-section"><h4>📦 المنتجات</h4><p style="font-size:.8rem;color:var(--t3)">${o.itemsText||'—'}</p></div>`}
 
         <div class="oc-section"><h4>👤 معلومات العميل</h4>
           <div class="oc-info">
-            <div class="oc-info-row"><span class="lbl">الاسم:</span><span class="val">${esc(o.customer||'—')}</span></div>
-            <div class="oc-info-row"><span class="lbl">الهاتف:</span><span class="val" dir="ltr">${esc(o.phone||'—')}</span></div>
-            <div class="oc-info-row"><span class="lbl">البريد:</span><span class="val">${esc(o.email||'—')}</span></div>
-            <div class="oc-info-row"><span class="lbl">العنوان:</span><span class="val">${esc(o.addr||'—')}</span></div>
-            ${o.notes?`<div class="oc-info-row" style="grid-column:1/-1"><span class="lbl">ملاحظات:</span><span class="val" style="color:var(--ye)">${esc(o.notes)}</span></div>`:''}
+            <div class="oc-info-row"><span class="lbl">الاسم:</span><span class="val">${o.customer||'—'}</span></div>
+            <div class="oc-info-row"><span class="lbl">الهاتف:</span><span class="val" dir="ltr">${o.phone||'—'}</span></div>
+            <div class="oc-info-row"><span class="lbl">البريد:</span><span class="val">${o.email||'—'}</span></div>
+            <div class="oc-info-row"><span class="lbl">العنوان:</span><span class="val">${o.addr||'—'}</span></div>
+            ${o.notes?`<div class="oc-info-row" style="grid-column:1/-1"><span class="lbl">ملاحظات:</span><span class="val" style="color:var(--ye)">${o.notes}</span></div>`:''}
           </div>
         </div>
 
         <div class="oc-summary">
-          <div class="oc-sum-item"><span class="lbl">المجموع:</span><span class="val">${(parseFloat(o.subtotal||o.total)||0).toFixed(2)}</span></div>
-          ${o.discount?`<div class="oc-sum-item"><span class="lbl">الخصم:</span><span class="val" style="color:var(--re)">-${(parseFloat(o.discount)||0).toFixed(2)}</span></div>`:''}
-          ${o.coupon?`<div class="oc-sum-item"><span class="lbl">كوبون:</span><span class="val" style="color:var(--pu)">${esc(o.coupon)}</span></div>`:''}
-          <div class="oc-sum-item"><span class="lbl">الشحن:</span><span class="val">${o.shipping===0?'مجاني':(parseFloat(o.shipping)||0).toFixed(2)}</span></div>
-          <div class="oc-sum-item"><span class="lbl">الإجمالي:</span><span class="val" style="color:var(--gr);font-size:.88rem">${(parseFloat(o.total)||0).toFixed(2)} JD</span></div>
+          <div class="oc-sum-item"><span class="lbl">المجموع:</span><span class="val">${(o.subtotal||o.total||0).toFixed(2)}</span></div>
+          ${o.discount?`<div class="oc-sum-item"><span class="lbl">الخصم:</span><span class="val" style="color:var(--re)">-${o.discount.toFixed(2)}</span></div>`:''}
+          ${o.coupon?`<div class="oc-sum-item"><span class="lbl">كوبون:</span><span class="val" style="color:var(--pu)">${o.coupon}</span></div>`:''}
+          <div class="oc-sum-item"><span class="lbl">الشحن:</span><span class="val">${o.shipping===0?'مجاني':(o.shipping||0).toFixed(2)}</span></div>
+          <div class="oc-sum-item"><span class="lbl">الإجمالي:</span><span class="val" style="color:var(--gr);font-size:.88rem">${(o.total||0).toFixed(2)} JD</span></div>
         </div>
 
         <div class="oc-actions">
           <label>تغيير الحالة:</label>
-          <select onchange="updateStatus(${docIdJs},this.value)">
+          <select onchange="updateStatus('${o._docId||o.id}',this.value)">
             <option value="new" ${o.status==='new'?'selected':''}>🆕 جديد</option>
             <option value="processing" ${o.status==='processing'?'selected':''}>⏳ قيد المعالجة</option>
             <option value="shipped" ${o.status==='shipped'?'selected':''}>📦 مشحون</option>
             <option value="done" ${o.status==='done'?'selected':''}>✅ مكتمل</option>
             <option value="cancel" ${o.status==='cancel'?'selected':''}>❌ ملغي</option>
           </select>
-          ${waPhone?`<a class="wa-btn" href="https://wa.me/${encodeURIComponent(waPhone)}?text=${waMsg}" target="_blank" rel="noopener noreferrer">💬 واتساب</a>`:''}
-          <button class="del-btn" onclick="confirmDelOrder(${docIdJs},${custJs})">🗑️ حذف</button>
+          ${waPhone?`<a class="wa-btn" href="https://wa.me/${waPhone}?text=${waMsg}" target="_blank" rel="noopener noreferrer">💬 واتساب</a>`:''}
+          <button class="del-btn" onclick="confirmDelOrder('${o._docId||o.id}','${(o.customer||'').replace(/'/g,'\\\'')}')">🗑️ حذف</button>
         </div>
       </div>
     </div>`;
@@ -548,6 +526,15 @@ document.getElementById('cfYes').onclick=async()=>{
   await window.deleteOrder(delOrderId);
   closeCf();
 };
+
+function hardenBlankLinks(){
+  document.querySelectorAll('a[target="_blank"]').forEach(a=>{
+    const rel=new Set((a.getAttribute('rel')||'').split(/\s+/).filter(Boolean));
+    rel.add('noopener');rel.add('noreferrer');
+    a.setAttribute('rel',[...rel].join(' '));
+  });
+}
+hardenBlankLinks();
 
 /* ── KEYBOARD ── */
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCf();});
