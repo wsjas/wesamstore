@@ -3305,6 +3305,25 @@ header{
   font-size: 22px;
 }
 
+.featured-cat-card-live{
+  background: linear-gradient(135deg, rgba(183,28,28,.96), rgba(229,57,53,.94) 45%, rgba(255,140,0,.92));
+}
+
+.featured-cat-card-live .featured-cat-overlay{
+  align-items: flex-start;
+}
+
+.featured-cat-card-live .featured-cat-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.featured-cat-card-live .featured-cat-title i{
+  color:#ffe082;
+  font-size: 22px;
+}
+
 /* Main products area */
 .shop-main{
   background:transparent;
@@ -4050,6 +4069,7 @@ header.glass i {
 <button class="m-link-btn" id="mGoCategories"><i class="fas fa-list"></i> الأقسام</button>
 <button class="m-link-btn" id="mGoProducts"><i class="fas fa-box-open"></i> المنتجات</button>
 <button class="m-link-btn" id="mOpenService"><i class="fas fa-screwdriver-wrench"></i> طلب صيانة</button>
+<button class="m-link-btn" id="mLiveBtn"><i class="fas fa-video"></i> البث المباشر</button>
 <button class="m-link-btn" id="mUserAccountBtn"><i class="fas fa-user"></i> حسابي</button>
 <button class="m-link-btn" id="mAdminPanelBtn" style="display:none !important;"><i class="fas fa-user-cog"></i> لوحة التحكم</button>
 </div>
@@ -4779,6 +4799,34 @@ header.glass i {
   </div>
 </div>
 
+<h4 style="margin:20px 0 12px;"><i class="fas fa-video" style="color:var(--accent-color); margin-left:8px;"></i>بطاقة البث المباشر</h4>
+<div class="form-grid">
+  <div class="form-group">
+    <label for="featuredLiveTitle">عنوان: البث المباشر</label>
+    <input id="featuredLiveTitle" type="text" placeholder="البث المباشر"/>
+  </div>
+  <div class="form-group">
+    <label for="featuredLiveImage">رابط صورة بطاقة البث (Direct URL)</label>
+    <input id="featuredLiveImage" type="text" placeholder="https://.../live.jpg"/>
+  </div>
+</div>
+
+<div class="form-grid">
+  <div class="form-group">
+    <label for="featuredLiveSub">وصف قصير (اختياري)</label>
+    <input id="featuredLiveSub" type="text" placeholder="شاهد عملية الإصلاح مباشرة للعميل"/>
+  </div>
+  <div class="form-group">
+    <label for="featuredLiveBadge">نص الزر (اختياري)</label>
+    <input id="featuredLiveBadge" type="text" placeholder="شاهد الآن"/>
+  </div>
+</div>
+
+<div class="form-group">
+  <label for="featuredLiveLink">رابط البطاقة (اختياري)</label>
+  <input id="featuredLiveLink" type="text" placeholder="repair-live.html"/>
+</div>
+
 <div class="form-group">
 <label for="servicesList">قائمة الخدمات (كل خدمة في سطر)</label>
 <textarea id="servicesList" placeholder="توصيل سريع لجميع مناطق عمان
@@ -4805,248 +4853,20 @@ header.glass i {
 <button class="active" id="navServiceBtn" type="button"><i class="fas fa-tools"></i> الصيانة</button>
 <button id="navShopBtn" type="button"><i class="fas fa-store"></i> المتجر</button>
 <button id="navElectronicsStoreBtn" type="button"><i class="fas fa-microchip"></i> متجر القطع والالكترونيات</button>
+<button id="navLiveBtn" type="button"><i class="fas fa-video"></i> البث المباشر</button>
 </div>
 <div class="nav-cta">
 <a href="https://wa.me/962790781206" id="navWhatsApp" rel="noopener" target="_blank">
 <i class="fab fa-whatsapp"></i> واتساب
-                </a>
+</a>
 <a href="/cdn-cgi/l/email-protection#fb8c9e889a969e979e988f899495929888bb9c969a9297d5989496" id="navEmail">
 <i class="fas fa-envelope"></i> ايميل
-                </a>
-<!-- Slider Manager Section -->
-<div class="admin-section" id="sliderSection">
-  <h4 style="margin-bottom:12px;"><i class="fas fa-images"></i> إدارة السلايدر</h4>
-  <p class="hint" style="margin-top:-6px; margin-bottom:14px;">
-    اختر الصور وارفعها على رابط خارجي (مثل Postimages) ثم ضع رابط الصورة المباشر هنا. بعد الحفظ سيظهر السلايدر في الصفحة الرئيسية تلقائيًا.
-  </p>
-
-  <div class="admin-grid" style="display:grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap:12px;">
-    
-<div class="card" style="background:#fff; border-radius:14px; padding:12px; box-shadow:0 6px 18px rgba(0,0,0,.06);">
-  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-    <strong>سلايد 1</strong>
-    <span style="opacity:.7; font-size:.85rem;">#1</span>
-  </div>
-  <div class="form-group" style="margin-top:10px;">
-    <label>رابط الصورة (مباشر)</label>
-    <input id="slide1ImageUrl" type="url" placeholder="https://..." />
-    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-      <input id="slide1File" type="file" accept="image/*" />
-      <button class="secondary-btn" id="slide1CopyBtn" type="button"><i class="fas fa-copy"></i> نسخ الرابط</button>
-    </div>
-    <small style="display:block; opacity:.75; margin-top:6px;">ارفع الصورة خارجيًا ثم ألصق الرابط هنا. (يمكنك فتح Postimages من الزر بالأسفل)</small>
-  </div>
-
-  <div class="form-group">
-    <label>العنوان</label>
-    <input id="slide1Title" type="text" placeholder="مثال: عروض قوية اليوم" />
-  </div>
-  <div class="form-group">
-    <label>الوصف</label>
-    <input id="slide1Subtitle" type="text" placeholder="مثال: خصومات على قطع الإلكترونيات" />
-  </div>
-  <div class="form-group">
-    <label>رابط الزر</label>
-    <input id="slide1Link" type="text" placeholder="#productsGrid" />
-  </div>
-
-  <div style="margin-top:10px;">
-    <img id="slide1Preview" alt="معاينة السلايد 1" style="width:100%; height:140px; object-fit:cover; border-radius:12px; display:none; background:#f1f3f5;" />
-  </div>
-</div>
-
-
-<div class="card" style="background:#fff; border-radius:14px; padding:12px; box-shadow:0 6px 18px rgba(0,0,0,.06);">
-  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-    <strong>سلايد 2</strong>
-    <span style="opacity:.7; font-size:.85rem;">#2</span>
-  </div>
-  <div class="form-group" style="margin-top:10px;">
-    <label>رابط الصورة (مباشر)</label>
-    <input id="slide2ImageUrl" type="url" placeholder="https://..." />
-    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-      <input id="slide2File" type="file" accept="image/*" />
-      <button class="secondary-btn" id="slide2CopyBtn" type="button"><i class="fas fa-copy"></i> نسخ الرابط</button>
-    </div>
-    <small style="display:block; opacity:.75; margin-top:6px;">ارفع الصورة خارجيًا ثم ألصق الرابط هنا. (يمكنك فتح Postimages من الزر بالأسفل)</small>
-  </div>
-
-  <div class="form-group">
-    <label>العنوان</label>
-    <input id="slide2Title" type="text" placeholder="مثال: عروض قوية اليوم" />
-  </div>
-  <div class="form-group">
-    <label>الوصف</label>
-    <input id="slide2Subtitle" type="text" placeholder="مثال: خصومات على قطع الإلكترونيات" />
-  </div>
-  <div class="form-group">
-    <label>رابط الزر</label>
-    <input id="slide2Link" type="text" placeholder="#productsGrid" />
-  </div>
-
-  <div style="margin-top:10px;">
-    <img id="slide2Preview" alt="معاينة السلايد 2" style="width:100%; height:140px; object-fit:cover; border-radius:12px; display:none; background:#f1f3f5;" />
-  </div>
-</div>
-
-
-<div class="card" style="background:#fff; border-radius:14px; padding:12px; box-shadow:0 6px 18px rgba(0,0,0,.06);">
-  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-    <strong>سلايد 3</strong>
-    <span style="opacity:.7; font-size:.85rem;">#3</span>
-  </div>
-  <div class="form-group" style="margin-top:10px;">
-    <label>رابط الصورة (مباشر)</label>
-    <input id="slide3ImageUrl" type="url" placeholder="https://..." />
-    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-      <input id="slide3File" type="file" accept="image/*" />
-      <button class="secondary-btn" id="slide3CopyBtn" type="button"><i class="fas fa-copy"></i> نسخ الرابط</button>
-    </div>
-    <small style="display:block; opacity:.75; margin-top:6px;">ارفع الصورة خارجيًا ثم ألصق الرابط هنا. (يمكنك فتح Postimages من الزر بالأسفل)</small>
-  </div>
-
-  <div class="form-group">
-    <label>العنوان</label>
-    <input id="slide3Title" type="text" placeholder="مثال: عروض قوية اليوم" />
-  </div>
-  <div class="form-group">
-    <label>الوصف</label>
-    <input id="slide3Subtitle" type="text" placeholder="مثال: خصومات على قطع الإلكترونيات" />
-  </div>
-  <div class="form-group">
-    <label>رابط الزر</label>
-    <input id="slide3Link" type="text" placeholder="#productsGrid" />
-  </div>
-
-  <div style="margin-top:10px;">
-    <img id="slide3Preview" alt="معاينة السلايد 3" style="width:100%; height:140px; object-fit:cover; border-radius:12px; display:none; background:#f1f3f5;" />
-  </div>
-</div>
-
-  </div>
-
-  <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
-    <button class="save-btn" id="saveSliderBtn" type="button"><i class="fas fa-save"></i> حفظ السلايدر</button>
-    <button class="secondary-btn" id="reloadSliderBtn" type="button"><i class="fas fa-sync"></i> إعادة تحميل</button>
-    <button class="secondary-btn" id="openUploadSiteBtn" type="button"><i class="fas fa-upload"></i> فتح موقع رفع خارجي</button>
-  </div>
-  <div id="sliderAdminMsg" class="admin-message" style="margin-top:10px; display:none;"></div>
-</div>
-
-</div>
-
-<!-- JSON Upload Section -->
-<div class="admin-section" id="jsonUploadSection">
-<h3><i class="fas fa-file-import"></i> رفع منتجات من ملف JSON</h3>
-<div class="json-upload-wrapper">
-  <p class="json-upload-desc">
-    يمكنك رفع ملف JSON يحتوي على قائمة بالمنتجات لإضافتها دفعة واحدة إلى المتجر. 
-    سيتم إضافة المنتجات تلقائياً إلى قاعدة البيانات مع تصنيفاتها وأوصافها.
-  </p>
-
-  <div class="json-format-guide">
-    <h4><i class="fas fa-info-circle"></i> صيغة ملف JSON المطلوبة:</h4>
-    <pre dir="ltr" class="json-example"><code>[
-  {
-    "name": "اسم المنتج",
-    "category": "التصنيف",
-    "sell": 25.00,
-    "stock": 10,
-    "description": "وصف المنتج والمواصفات",
-    "image": "https://example.com/image.jpg",
-    "oldPrice": 30.00,
-    "discountPercent": 15,
-    "onSale": true,
-    "featured": false,
-    "deliveryFee": 2,
-    "videoUrl": "",
-    "softwareUrl": "",
-    "additionalImages": [
-      "https://example.com/img2.jpg"
-    ]
-  }
-]</code></pre>
-    <div class="json-fields-info">
-      <h4><i class="fas fa-list-alt"></i> شرح الحقول:</h4>
-      <table class="json-fields-table">
-        <thead><tr><th>الحقل</th><th>مطلوب</th><th>الوصف</th></tr></thead>
-        <tbody>
-          <tr><td><code>name</code></td><td>✅ نعم</td><td>اسم المنتج</td></tr>
-          <tr><td><code>category</code></td><td>✅ نعم</td><td>تصنيف المنتج (مثال: سماعات، ريموتات، شواحن)</td></tr>
-          <tr><td><code>sell</code></td><td>✅ نعم</td><td>سعر البيع بالدينار</td></tr>
-          <tr><td><code>stock</code></td><td>✅ نعم</td><td>الكمية المتوفرة في المخزون</td></tr>
-          <tr><td><code>description</code></td><td>❌ اختياري</td><td>وصف تفصيلي للمنتج ومواصفاته</td></tr>
-          <tr><td><code>image</code></td><td>✅ نعم</td><td>رابط الصورة الرئيسية (URL مباشر)</td></tr>
-          <tr><td><code>oldPrice</code></td><td>❌ اختياري</td><td>السعر قبل الخصم</td></tr>
-          <tr><td><code>discountPercent</code></td><td>❌ اختياري</td><td>نسبة الخصم (0-99)</td></tr>
-          <tr><td><code>onSale</code></td><td>❌ اختياري</td><td>عرض ضمن العروض والخصومات (true/false)</td></tr>
-          <tr><td><code>featured</code></td><td>❌ اختياري</td><td>عرض ضمن المنتجات المختارة (true/false)</td></tr>
-          <tr><td><code>deliveryFee</code></td><td>❌ اختياري</td><td>رسوم التوصيل (افتراضي: 2 دينار)</td></tr>
-          <tr><td><code>videoUrl</code></td><td>❌ اختياري</td><td>رابط فيديو المنتج (يوتيوب)</td></tr>
-          <tr><td><code>softwareUrl</code></td><td>❌ اختياري</td><td>رابط سوفت وير المنتج</td></tr>
-          <tr><td><code>additionalImages</code></td><td>❌ اختياري</td><td>قائمة روابط صور إضافية</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="json-upload-area" id="jsonDropZone">
-    <i class="fas fa-cloud-upload-alt"></i>
-    <p>اسحب ملف JSON هنا أو اضغط لاختيار ملف</p>
-    <input type="file" id="jsonFileInput" accept=".json,application/json" style="display:none;" />
-    <button type="button" class="save-btn" id="jsonSelectBtn" style="margin-top:10px;">
-      <i class="fas fa-folder-open"></i> اختيار ملف JSON
-    </button>
-  </div>
-
-  <div id="jsonPreviewArea" style="display:none;">
-    <h4 style="margin:15px 0 10px;"><i class="fas fa-eye"></i> معاينة المنتجات (<span id="jsonProductCount">0</span> منتج)</h4>
-    
-    <div class="json-preview-filters" style="margin-bottom:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-      <span style="font-weight:600;">التصنيفات الموجودة:</span>
-      <div id="jsonCategoryBadges" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
-    </div>
-
-    <div class="json-preview-table-wrap">
-      <table class="products-table" id="jsonPreviewTable">
-        <thead>
-          <tr>
-            <th style="width:30px;"><input type="checkbox" id="jsonSelectAll" checked /></th>
-            <th>الصورة</th>
-            <th>الاسم</th>
-            <th>التصنيف</th>
-            <th>السعر</th>
-            <th>المخزون</th>
-            <th>الوصف</th>
-          </tr>
-        </thead>
-        <tbody id="jsonPreviewBody"></tbody>
-      </table>
-    </div>
-
-    <div class="json-upload-actions" style="margin-top:15px; display:flex; gap:10px; flex-wrap:wrap;">
-      <button type="button" class="save-btn" id="jsonImportBtn">
-        <i class="fas fa-upload"></i> رفع المنتجات المحددة إلى المتجر
-      </button>
-      <button type="button" class="delete-btn" id="jsonCancelBtn">
-        <i class="fas fa-times"></i> إلغاء
-      </button>
-    </div>
-
-    <div id="jsonImportProgress" style="display:none; margin-top:15px;">
-      <div class="json-progress-bar-wrap">
-        <div class="json-progress-bar" id="jsonProgressBar" style="width:0%;"></div>
-      </div>
-      <p id="jsonProgressText" style="text-align:center; margin-top:8px; font-weight:600;"></p>
-    </div>
-
-    <div id="jsonImportResult" style="display:none; margin-top:15px;"></div>
-  </div>
+</a>
 </div>
 </div>
 </div>
 </div>
-</div>
+
 <!-- Hero + Service Main Section (New) -->
 
 <!-- Slider Wrapper -->
@@ -5214,6 +5034,14 @@ header.glass i {
         </div>
       </button>
 
+      <button class="featured-cat-card featured-cat-card-live" id="featuredCatLive" type="button" data-action="live-stream" aria-label="البث المباشر">
+        <div class="featured-cat-overlay">
+          <div class="featured-cat-title" id="featuredLiveTitleText"><i class="fas fa-video"></i> البث المباشر</div>
+          <div class="featured-cat-sub" id="featuredLiveSubText">شاهد عملية الإصلاح مباشرة للعميل</div>
+          <div class="featured-cat-badge"><i class="fas fa-circle-play"></i> شاهد الآن</div>
+        </div>
+      </button>
+
     </div>
 
     <div class="featured-categories-row featured-categories-row-single">
@@ -5351,6 +5179,7 @@ header.glass i {
             mCartBtn: document.getElementById('mCartBtn'),
             mCartCount: document.getElementById('mCartCount'),
             mOpenService: document.getElementById('mOpenService'),
+            mLiveBtn: document.getElementById('mLiveBtn'),
             cartModal: document.getElementById('cartModal'),
             closeCart: document.getElementById('closeCart'),
             cartItems: document.getElementById('cartItems'),
@@ -5372,6 +5201,7 @@ header.glass i {
             navServiceBtn: document.getElementById('navServiceBtn'),
             navShopBtn: document.getElementById('navShopBtn'),
             navElectronicsStoreBtn: document.getElementById('navElectronicsStoreBtn'),
+            navLiveBtn: document.getElementById('navLiveBtn'),
             navWhatsApp: document.getElementById('navWhatsApp'),
             navEmail: document.getElementById('navEmail'),
             openServiceRequestBtn: document.getElementById('openServiceRequestBtn'),
@@ -5489,6 +5319,11 @@ header.glass i {
             featuredElectronicsSub: document.getElementById('featuredElectronicsSub'),
             featuredElectronicsBadge: document.getElementById('featuredElectronicsBadge'),
             featuredElectronicsLink: document.getElementById('featuredElectronicsLink'),
+            featuredLiveTitle: document.getElementById('featuredLiveTitle'),
+            featuredLiveImage: document.getElementById('featuredLiveImage'),
+            featuredLiveSub: document.getElementById('featuredLiveSub'),
+            featuredLiveBadge: document.getElementById('featuredLiveBadge'),
+            featuredLiveLink: document.getElementById('featuredLiveLink'),
 
             savePageContentBtn: document.getElementById('savePageContentBtn'),
             footerAboutText: document.getElementById('footerAboutText'),
@@ -5553,6 +5388,11 @@ header.glass i {
                 featuredElectronicsImage: '',
                 featuredElectronicsBadge: 'ادخل الآن',
                 featuredElectronicsLink: 'electronics-store.html',
+                featuredLiveTitle: 'البث المباشر',
+                featuredLiveSub: 'شاهد عملية الإصلاح مباشرة للعميل',
+                featuredLiveImage: '',
+                featuredLiveBadge: 'شاهد الآن',
+                featuredLiveLink: 'repair-live.html',
 
                 footerAbout: 'متجر وسام للإلكترونيات هو الوجهة المفضلة في عمان لشراء جميع المنتجات الإلكترونية والاكسسوارات ذات الجودة العالية. نقدم أفضل الأسعار مع استبدال فوري.',
                 storeEmail: 'wesamelectronics@gmail.com',
@@ -6173,6 +6013,11 @@ header.glass i {
                     featuredElectronicsSub: (elements.featuredElectronicsSub ? elements.featuredElectronicsSub.value.trim() : 'تسوق القطع الإلكترونية والإكسسوارات والمنتجات المتخصصة') || 'تسوق القطع الإلكترونية والإكسسوارات والمنتجات المتخصصة',
                     featuredElectronicsBadge: (elements.featuredElectronicsBadge ? elements.featuredElectronicsBadge.value.trim() : 'ادخل الآن') || 'ادخل الآن',
                     featuredElectronicsLink: (elements.featuredElectronicsLink ? elements.featuredElectronicsLink.value.trim() : 'electronics-store.html') || 'electronics-store.html',
+                    featuredLiveTitle: (elements.featuredLiveTitle ? elements.featuredLiveTitle.value.trim() : 'البث المباشر') || 'البث المباشر',
+                    featuredLiveImage: (elements.featuredLiveImage ? elements.featuredLiveImage.value.trim() : '') || '',
+                    featuredLiveSub: (elements.featuredLiveSub ? elements.featuredLiveSub.value.trim() : 'شاهد عملية الإصلاح مباشرة للعميل') || 'شاهد عملية الإصلاح مباشرة للعميل',
+                    featuredLiveBadge: (elements.featuredLiveBadge ? elements.featuredLiveBadge.value.trim() : 'شاهد الآن') || 'شاهد الآن',
+                    featuredLiveLink: (elements.featuredLiveLink ? elements.featuredLiveLink.value.trim() : 'repair-live.html') || 'repair-live.html',
 
                     updatedAt: getServerTimestamp()
                 };
@@ -6240,6 +6085,7 @@ header.glass i {
             const newCard = document.getElementById('featuredCatNew');
             const offersCard = document.getElementById('featuredCatOffers');
             const serviceCard = document.getElementById('featuredCatService');
+            const liveCard = document.getElementById('featuredCatLive');
             const electronicsCard = document.getElementById('featuredCatElectronics');
 
             const setCard = (card, cfg) => {
@@ -6328,6 +6174,15 @@ header.glass i {
                 title: (state.pageContent.featuredServiceTitle || 'قسم الصيانة'),
                 sub: (state.pageContent.featuredServiceSub || 'قدّم طلبك خلال دقيقة'),
                 image: (state.pageContent.featuredServiceImage || '')
+            });
+
+            setCard(liveCard, {
+                type: 'link',
+                href: (state.pageContent.featuredLiveLink || 'repair-live.html'),
+                titleHtml: `<i class="fas fa-video"></i> ${escapeHtml(state.pageContent.featuredLiveTitle || 'البث المباشر')}`,
+                sub: (state.pageContent.featuredLiveSub || 'شاهد عملية الإصلاح مباشرة للعميل'),
+                badgeHtml: `<i class="fas fa-circle-play"></i> ${escapeHtml(state.pageContent.featuredLiveBadge || 'شاهد الآن')}`,
+                image: (state.pageContent.featuredLiveImage || '')
             });
 
             setCard(electronicsCard, {
@@ -9250,10 +9105,23 @@ if (elements.navElectronicsStoreBtn) {
     });
 }
 
+if (elements.navLiveBtn) {
+    bind(elements.navLiveBtn, 'click', () => {
+        window.location.href = 'repair-live.html';
+    });
+}
+
 if (elements.mOpenService) {
     bind(elements.mOpenService, 'click', () => {
         const modal = elements.serviceRequestModal || document.getElementById('serviceRequestModal');
         if (modal) openModal(modal);
+    });
+}
+
+if (elements.mLiveBtn) {
+    bind(elements.mLiveBtn, 'click', () => {
+        try { closeMobileDrawer(); } catch (e) {}
+        window.location.href = 'repair-live.html';
     });
 }
 
@@ -9922,6 +9790,20 @@ body.ads-mode .buy-btn{
   const params = new URLSearchParams(location.search);
   if(params.get('ads')==='1'){
     document.body.classList.add('ads-mode');
+  }
+
+  if(params.get('openService') === '1'){
+    setTimeout(()=>{
+      try{
+        const modal = document.getElementById('serviceRequestModal');
+        if(modal && typeof openModal === 'function'){
+          openModal(modal);
+        }else{
+          const sec = document.getElementById('serviceSection');
+          if(sec) sec.scrollIntoView({behavior:'smooth', block:'start'});
+        }
+      }catch(e){ console.warn(e); }
+    }, 350);
   }
 })();
 </script>
