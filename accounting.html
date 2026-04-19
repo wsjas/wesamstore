@@ -718,7 +718,7 @@
               <table class="table table-hover mb-0">
                 <thead>
                   <tr>
-                    <th>#</th><th>اسم العميل</th><th>نوع الجهاز</th><th>حجم الجهاز</th><th>الهاتف</th><th>العنوان</th><th>تاريخ التسجيل</th><th>الحالة</th><th>الإجراءات</th>
+                    <th>#</th><th>اسم العميل</th><th>التصنيف</th><th>نوع الجهاز</th><th>حجم الجهاز</th><th>الهاتف</th><th>البريد</th><th>العنوان</th><th>الموقع</th><th>تاريخ التسجيل</th><th>الحالة</th><th>الإجراءات</th>
                   </tr>
                 </thead>
                 <tbody id="customersTable"></tbody>
@@ -818,7 +818,7 @@
               <table class="table table-hover mb-0">
                 <thead>
                   <tr>
-                    <th>#</th><th>رقم</th><th>العميل</th><th>المنتجات</th><th>الكمية الإجمالية</th><th>التاريخ</th><th>إجمالي سعر البيع</th><th>إجمالي سعر الشراء</th><th>صافي الفاتورة</th><th>طريقة الدفع</th><th>حالة الدفع</th><th>الإجراءات</th>
+                    <th>#</th><th>رقم</th><th>العميل</th><th>المنتجات</th><th>الكمية الإجمالية</th><th>التاريخ</th><th>القناة</th><th>التسليم</th><th>الشحن</th><th>إجمالي سعر البيع</th><th>إجمالي سعر الشراء</th><th>صافي الفاتورة</th><th>طريقة الدفع</th><th>حالة الدفع</th><th>الإجراءات</th>
                   </tr>
                 </thead>
                 <tbody id="invoicesTable"></tbody>
@@ -877,7 +877,7 @@
               <table class="table table-hover mb-0">
                 <thead>
                   <tr>
-                    <th>#</th><th>رقم</th><th>العميل</th><th>الجهاز</th><th>نوع الصيانة</th><th>تكلفة العمل</th><th>ثمن القطع</th><th>تاجر القطع</th><th>صافي</th><th>طريقة الدفع</th><th>الحالة</th><th>تاريخ الكفالة</th><th>حالة الدفع</th><th>الإجراءات</th>
+                    <th>#</th><th>رقم</th><th>العميل</th><th>الجهاز</th><th>وصف العطل</th><th>نوع الصيانة</th><th>تكلفة العمل</th><th>ثمن القطع</th><th>تاجر القطع</th><th>صافي</th><th>طريقة الدفع</th><th>الحالة</th><th>تاريخ الكفالة</th><th>حالة الدفع</th><th>الإجراءات</th>
                   </tr>
                 </thead>
                 <tbody id="maintenanceTable"></tbody>
@@ -1689,10 +1689,19 @@
             <input type="hidden" id="custId" />
             <div class="row g-2">
               <div class="col-md-6"><label>الاسم</label><input id="custName" required class="form-control"></div>
+              <div class="col-md-6"><label>التصنيف</label>
+                <select id="custType" class="form-select">
+                  <option value="بيع">بيع</option>
+                  <option value="صيانة">صيانة</option>
+                  <option value="بيع وصيانة">بيع وصيانة</option>
+                </select>
+              </div>
+              <div class="col-md-6"><label>الهاتف</label><input id="custPhone" class="form-control"></div>
+              <div class="col-md-6"><label>البريد الإلكتروني</label><input id="custEmail" type="email" class="form-control"></div>
               <div class="col-md-6"><label>نوع الجهاز</label><input id="custDeviceType" class="form-control"></div>
               <div class="col-md-6"><label>حجم الجهاز</label><input id="custDeviceSize" class="form-control"></div>
-              <div class="col-md-6"><label>الهاتف</label><input id="custPhone" class="form-control"></div>
-              <div class="col-12"><label>العنوان</label><input id="custAddress" class="form-control"></div>
+              <div class="col-md-6"><label>العنوان</label><input id="custAddress" class="form-control"></div>
+              <div class="col-md-6"><label>رابط الموقع</label><input id="custLocationLink" type="url" class="form-control" placeholder="https://maps.app.goo.gl/..."></div>
               <div class="col-12"><label>ملاحظات</label><textarea id="custNotes" class="form-control" rows="2"></textarea></div>
             </div>
           </div>
@@ -4005,19 +4014,33 @@ async function createNotification(title, message, type = 'info', priority = 'med
       
       if (paginated.items.length === 0) {
         const row = document.createElement('tr');
-        row.innerHTML = `<td colspan="9" class="text-center text-muted py-3">لا توجد عملاء في الفترة المحددة</td>`;
+        row.innerHTML = `<td colspan="12" class="text-center text-muted py-3">لا توجد عملاء في الفترة المحددة</td>`;
         table.appendChild(row);
       } else {
         paginated.items.forEach((customer, index) => {
           const globalIndex = ((page - 1) * paginationConfig.pageSize) + index + 1;
+          const typeValue = customer.customerType || '';
+          const typeBadgeClass = typeValue === 'بيع وصيانة' ? 'bg-primary'
+                              : typeValue === 'صيانة' ? 'bg-warning text-dark'
+                              : typeValue === 'بيع' ? 'bg-info text-dark'
+                              : 'bg-secondary';
+          const typeBadgeHtml = typeValue
+            ? `<span class="badge ${typeBadgeClass}">${escapeHtml(typeValue)}</span>`
+            : `<span class="text-muted">-</span>`;
+          const locationCell = customer.locationLink
+            ? `<a href="${escapeHtml(customer.locationLink)}" target="_blank" rel="noopener" title="فتح الموقع على الخريطة"><i class="bi bi-geo-alt-fill text-danger"></i></a>`
+            : `<span class="text-muted">-</span>`;
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${globalIndex}</td>
             <td>${escapeHtml(customer.name || '')}</td>
+            <td>${typeBadgeHtml}</td>
             <td>${escapeHtml(customer.deviceType || '')}</td>
             <td>${escapeHtml(customer.deviceSize || '')}</td>
             <td>${escapeHtml(customer.phone || '')}</td>
+            <td>${escapeHtml(customer.email || '')}</td>
             <td>${escapeHtml(customer.address || '')}</td>
+            <td class="text-center">${locationCell}</td>
             <td>${dateOnly(customer.createdAt)}</td>
             <td><span class="badge bg-success">نشط</span></td>
             <td>
@@ -4078,10 +4101,13 @@ async function createNotification(title, message, type = 'info', priority = 'med
       
       document.getElementById('custId').value = customer.id;
       document.getElementById('custName').value = customer.name || '';
+      document.getElementById('custType').value = customer.customerType || 'بيع';
       document.getElementById('custDeviceType').value = customer.deviceType || '';
       document.getElementById('custDeviceSize').value = customer.deviceSize || '';
       document.getElementById('custPhone').value = customer.phone || '';
+      document.getElementById('custEmail').value = customer.email || '';
       document.getElementById('custAddress').value = customer.address || '';
+      document.getElementById('custLocationLink').value = customer.locationLink || '';
       document.getElementById('custNotes').value = customer.notes || '';
       document.getElementById('customerModalTitle').textContent = 'تعديل عميل';
       
@@ -4601,7 +4627,7 @@ window.addSampleProducts = async function() {
       
       if (paginated.items.length === 0) {
         const row = document.createElement('tr');
-        row.innerHTML = `<td colspan="12" class="text-center text-muted py-3">لا توجد فواتير في الفترة المحددة</td>`;
+        row.innerHTML = `<td colspan="15" class="text-center text-muted py-3">لا توجد فواتير في الفترة المحددة</td>`;
         table.appendChild(row);
         return;
       }
@@ -4609,9 +4635,16 @@ window.addSampleProducts = async function() {
       paginated.items.forEach((invoice, index) => {
         const globalIndex = ((page - 1) * paginationConfig.pageSize) + index + 1;
         const customer = customers.find(c => c.id === invoice.customerId);
-        const customerName = invoice.customerId === 'anonymous' ? 'عميل بدون اسم' : (customer ? customer.name : 'غير معروف');
+        const customerName = invoice.customerId === 'anonymous' ? 'عميل بدون اسم' : (customer ? customer.name : (invoice.customerName || 'غير معروف'));
         const itemsCount = invoice.items ? invoice.items.length : 0;
         const totalQuantity = invoice.items ? invoice.items.reduce((sum, item) => sum + toNumber(item.quantity), 0) : 0;
+        
+        const channelBadge = invoice.channel
+          ? `<span class="badge bg-secondary">${escapeHtml(invoice.channel)}</span>`
+          : '<span class="text-muted">-</span>';
+        const shippingBadge = invoice.shippingMethod === 'delivery'
+          ? '<span class="badge bg-info text-dark">توصيل</span>'
+          : (invoice.shippingMethod === 'pickup' ? '<span class="badge bg-light text-dark">استلام</span>' : '<span class="text-muted">-</span>');
         
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -4621,6 +4654,9 @@ window.addSampleProducts = async function() {
           <td>${itemsCount} منتجات</td>
           <td>${totalQuantity}</td>
           <td>${dateOnly(invoice.date)}</td>
+          <td>${channelBadge}</td>
+          <td>${shippingBadge}</td>
+          <td>${toNumber(invoice.shippingFee) ? currency(invoice.shippingFee) : '<span class="text-muted">-</span>'}</td>
           <td>${currency(invoice.totalSell)}</td>
           <td>${currency(invoice.totalBuy)}</td>
           <td>${currency(invoice.net)}</td>
@@ -4685,10 +4721,23 @@ window.addSampleProducts = async function() {
       let invoiceDetails = `
         <div class="invoice-details">
           <h5>فاتورة رقم: ${invoice.number || 'N/A'}</h5>
-          <p><strong>العميل:</strong> ${invoice.customerId === 'anonymous' ? 'عميل بدون اسم' : (customer ? customer.name : 'غير معروف')}</p>
-          <p><strong>التاريخ:</strong> ${dateOnly(invoice.date)}</p>
-          <p><strong>طريقة الدفع:</strong> ${invoice.paymentMethod === 'cash' ? 'كاش' : 'حوالة بنكية'}</p>
-          <p><strong>حالة الدفع:</strong> ${invoice.paymentStatus === 'paid' ? 'مدفوع' : 'غير مدفوع'}</p>
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>العميل:</strong> ${invoice.customerId === 'anonymous' ? 'عميل بدون اسم' : (customer ? customer.name : (invoice.customerName || 'غير معروف'))}</p>
+              ${invoice.customerPhone ? `<p><strong>الهاتف:</strong> ${escapeHtml(invoice.customerPhone)}</p>` : ''}
+              ${invoice.customerAddress ? `<p><strong>العنوان:</strong> ${escapeHtml(invoice.customerAddress)}</p>` : ''}
+              ${invoice.userEmail ? `<p><strong>البريد الإلكتروني:</strong> ${escapeHtml(invoice.userEmail)}</p>` : ''}
+            </div>
+            <div class="col-md-6">
+              <p><strong>التاريخ:</strong> ${dateOnly(invoice.date)}</p>
+              <p><strong>طريقة الدفع:</strong> ${invoice.paymentMethod === 'cash' ? 'كاش' : 'حوالة بنكية'}</p>
+              <p><strong>حالة الدفع:</strong> ${invoice.paymentStatus === 'paid' ? 'مدفوع' : 'غير مدفوع'}</p>
+              ${invoice.channel ? `<p><strong>القناة:</strong> <span class="badge bg-secondary">${escapeHtml(invoice.channel)}</span></p>` : ''}
+              ${invoice.shippingMethod ? `<p><strong>طريقة التسليم:</strong> ${invoice.shippingMethod === 'delivery' ? 'توصيل' : 'استلام'}</p>` : ''}
+              ${invoice.storeStatus ? `<p><strong>حالة الطلب في المتجر:</strong> ${escapeHtml(invoice.storeStatus)}</p>` : ''}
+              ${invoice.storeOrderId ? `<p><strong>رقم الطلب في المتجر:</strong> <code>${escapeHtml(invoice.storeOrderId)}</code></p>` : ''}
+            </div>
+          </div>
           <hr>
           <h6>المنتجات:</h6>
           <table class="table table-sm">
@@ -4707,7 +4756,7 @@ window.addSampleProducts = async function() {
       if (invoice.items) {
         invoice.items.forEach(item => {
           const product = products.find(p => p.id === item.productId);
-          const productName = product ? product.name : 'غير معروف';
+          const productName = product ? product.name : (item.name || 'غير معروف');
           invoiceDetails += `
             <tr>
               <td>${escapeHtml(productName)}</td>
@@ -4724,10 +4773,18 @@ window.addSampleProducts = async function() {
             </tbody>
           </table>
           <hr>
-          <p><strong>إجمالي سعر البيع:</strong> ${currency(invoice.totalSell)}</p>
-          <p><strong>إجمالي سعر الشراء:</strong> ${currency(invoice.totalBuy)}</p>
-          <p><strong>صافي الفاتورة:</strong> ${currency(invoice.net)}</p>
-          ${invoice.notes ? `<p><strong>ملاحظات:</strong> ${escapeHtml(invoice.notes)}</p>` : ''}
+          <div class="row">
+            <div class="col-md-6">
+              ${toNumber(invoice.subtotal) ? `<p><strong>المجموع الفرعي:</strong> ${currency(invoice.subtotal)}</p>` : ''}
+              ${toNumber(invoice.shippingFee) ? `<p><strong>رسوم الشحن:</strong> ${currency(invoice.shippingFee)}</p>` : ''}
+            </div>
+            <div class="col-md-6">
+              <p><strong>إجمالي سعر البيع:</strong> ${currency(invoice.totalSell)}</p>
+              <p><strong>إجمالي سعر الشراء:</strong> ${currency(invoice.totalBuy)}</p>
+              <p><strong>صافي الفاتورة:</strong> ${currency(invoice.net)}</p>
+            </div>
+          </div>
+          ${invoice.notes ? `<hr><p><strong>ملاحظات:</strong><br>${escapeHtml(invoice.notes).replace(/\n/g, '<br>')}</p>` : ''}
         </div>
       `;
       
@@ -4810,7 +4867,7 @@ window.addSampleProducts = async function() {
       
       if (paginated.items.length === 0) {
         const row = document.createElement('tr');
-        row.innerHTML = `<td colspan="14" class="text-center text-muted py-3">لا توجد أوامر صيانة في الفترة المحددة</td>`;
+        row.innerHTML = `<td colspan="15" class="text-center text-muted py-3">لا توجد أوامر صيانة في الفترة المحددة</td>`;
         table.appendChild(row);
         return;
       }
@@ -4820,12 +4877,19 @@ window.addSampleProducts = async function() {
         const customer = customers.find(c => c.id === order.customerId);
         const dealer = dealers.find(d => d.id === order.partsDealerId);
         
+        const fault = order.faultDesc || '';
+        const faultShort = fault.length > 40 ? fault.substring(0, 40) + '…' : fault;
+        const faultCell = fault
+          ? `<span title="${escapeHtml(fault)}">${escapeHtml(faultShort)}</span>`
+          : '<span class="text-muted">-</span>';
+        
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${globalIndex}</td>
           <td>${order.number || 'N/A'}</td>
-          <td>${escapeHtml(customer ? customer.name : 'غير معروف')}</td>
+          <td>${escapeHtml(customer ? customer.name : (order.customerName || 'غير معروف'))}</td>
           <td>${escapeHtml(order.device || '')}</td>
+          <td>${faultCell}</td>
           <td>${getMaintenanceTypeText(order.type)}</td>
           <td>${currency(order.cost)}</td>
           <td>${currency(order.parts)}</td>
@@ -4845,6 +4909,9 @@ window.addSampleProducts = async function() {
           </td>
           <td>
             <div class="action-btns">
+              <button class="btn btn-sm btn-outline-info view-maintenance" data-id="${order.id}" title="عرض التفاصيل">
+                <i class="bi bi-eye"></i>
+              </button>
               ${checkPermission('maintenance', 'update') ? `
                 <button class="btn btn-sm btn-outline-primary edit-maintenance" data-id="${order.id}">
                   <i class="bi bi-pencil"></i>
@@ -4867,6 +4934,13 @@ window.addSampleProducts = async function() {
       
       // Add event listeners
       setTimeout(() => {
+        document.querySelectorAll('.view-maintenance').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const id = e.target.closest('button').getAttribute('data-id');
+            viewMaintenance(id);
+          });
+        });
+        
         document.querySelectorAll('.edit-maintenance').forEach(btn => {
           btn.addEventListener('click', (e) => {
             const id = e.target.closest('button').getAttribute('data-id');
@@ -4884,6 +4958,93 @@ window.addSampleProducts = async function() {
       
     } catch (error) {
       console.error('Error loading maintenance:', error);
+    }
+  }
+
+  async function viewMaintenance(id) {
+    try {
+      const maintenance = await load('maintenance');
+      const order = maintenance.find(m => m.id === id);
+      if (!order) return;
+      
+      const customers = await load('customers');
+      const dealers = await load('dealers');
+      const customer = customers.find(c => c.id === order.customerId);
+      const dealer = dealers.find(d => d.id === order.partsDealerId);
+      
+      const details = `
+        <div class="maintenance-details">
+          <h5>أمر صيانة رقم: ${order.number || 'N/A'}</h5>
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>العميل:</strong> ${escapeHtml(customer ? customer.name : (order.customerName || 'غير معروف'))}</p>
+              ${order.customerPhone ? `<p><strong>الهاتف:</strong> ${escapeHtml(order.customerPhone)}</p>` : ''}
+              ${order.addressText ? `<p><strong>العنوان:</strong> ${escapeHtml(order.addressText)}</p>` : ''}
+              ${order.userEmail ? `<p><strong>البريد الإلكتروني:</strong> ${escapeHtml(order.userEmail)}</p>` : ''}
+              ${order.locationLink ? `<p><strong>رابط الموقع:</strong> <a href="${escapeHtml(order.locationLink)}" target="_blank" rel="noopener"><i class="bi bi-geo-alt-fill"></i> فتح على الخريطة</a></p>` : ''}
+            </div>
+            <div class="col-md-6">
+              <p><strong>نوع الجهاز:</strong> ${escapeHtml(order.deviceType || '')}</p>
+              <p><strong>حجم الجهاز:</strong> ${escapeHtml(order.deviceSize || '')}</p>
+              <p><strong>تاريخ الاستلام:</strong> ${dateOnly(order.received)}</p>
+              ${order.delivery ? `<p><strong>تاريخ التسليم:</strong> ${dateOnly(order.delivery)}</p>` : ''}
+              ${order.warranty ? `<p><strong>تاريخ الكفالة:</strong> ${dateOnly(order.warranty)}</p>` : ''}
+              ${order.storeStatus ? `<p><strong>حالة الطلب في المتجر:</strong> ${escapeHtml(order.storeStatus)}</p>` : ''}
+              ${order.storeRequestId ? `<p><strong>رقم الطلب في المتجر:</strong> <code>${escapeHtml(order.storeRequestId)}</code></p>` : ''}
+            </div>
+          </div>
+          ${order.faultDesc ? `<hr><p><strong>وصف العطل:</strong><br>${escapeHtml(order.faultDesc).replace(/\n/g, '<br>')}</p>` : ''}
+          ${order.imageLink ? `<p><strong>صورة العطل:</strong> <a href="${escapeHtml(order.imageLink)}" target="_blank" rel="noopener">عرض الصورة</a></p>` : ''}
+          <hr>
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>تكلفة العمل:</strong> ${currency(order.cost)}</p>
+              <p><strong>ثمن القطع:</strong> ${currency(order.parts)}</p>
+              ${dealer ? `<p><strong>تاجر القطع:</strong> ${escapeHtml(dealer.name)}</p>` : ''}
+            </div>
+            <div class="col-md-6">
+              <p><strong>الصافي:</strong> ${currency(order.net)}</p>
+              <p><strong>طريقة الدفع:</strong> ${order.paymentMethod === 'cash' ? 'كاش' : 'حوالة بنكية'}</p>
+              <p><strong>حالة الدفع:</strong> <span class="badge ${order.paymentStatus === 'paid' ? 'bg-success' : 'bg-warning'}">${order.paymentStatus === 'paid' ? 'مدفوع' : 'غير مدفوع'}</span></p>
+              <p><strong>الحالة:</strong> <span class="badge ${getStatusBadge(order.status)}">${getStatusText(order.status)}</span></p>
+            </div>
+          </div>
+          ${order.notes ? `<hr><p><strong>ملاحظات:</strong><br>${escapeHtml(order.notes).replace(/\n/g, '<br>')}</p>` : ''}
+        </div>
+      `;
+      
+      const modal = document.createElement('div');
+      modal.className = 'modal fade';
+      modal.id = 'maintenanceDetailsModal';
+      modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">تفاصيل أمر الصيانة</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              ${details}
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+              <button type="button" class="btn btn-primary" onclick="window.print()">طباعة</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      const bsModal = new bootstrap.Modal(modal);
+      bsModal.show();
+      
+      modal.addEventListener('hidden.bs.modal', function() {
+        document.body.removeChild(modal);
+      });
+      
+    } catch (error) {
+      console.error('Error viewing maintenance:', error);
+      showToast('❌ خطأ في عرض أمر الصيانة', 'error');
     }
   }
 
@@ -8247,10 +8408,13 @@ window.calculateCurrentMonthCommitments = calculateCurrentMonthCommitments;
       
       const customerData = {
         name: document.getElementById('custName').value,
+        customerType: document.getElementById('custType').value || 'بيع',
         deviceType: document.getElementById('custDeviceType').value,
         deviceSize: document.getElementById('custDeviceSize').value,
         phone: document.getElementById('custPhone').value,
+        email: document.getElementById('custEmail').value,
         address: document.getElementById('custAddress').value,
+        locationLink: document.getElementById('custLocationLink').value,
         notes: document.getElementById('custNotes').value,
         updatedAt: nowISO()
       };
@@ -9251,17 +9415,20 @@ window.calculateCurrentMonthCommitments = calculateCurrentMonthCommitments;
       let csvContent = 'data:text/csv;charset=utf-8,';
       
       // Add headers
-      csvContent += 'ID,الاسم,نوع الجهاز,حجم الجهاز,الهاتف,العنوان,تاريخ التسجيل,ملاحظات\n';
+      csvContent += 'ID,الاسم,التصنيف,نوع الجهاز,حجم الجهاز,الهاتف,البريد,العنوان,رابط الموقع,تاريخ التسجيل,ملاحظات\n';
       
       // Add data
       customers.forEach(customer => {
         const row = [
           customer.id,
           customer.name || '',
+          customer.customerType || '',
           customer.deviceType || '',
           customer.deviceSize || '',
           customer.phone || '',
+          customer.email || '',
           customer.address || '',
+          customer.locationLink || '',
           dateOnly(customer.createdAt),
           customer.notes || ''
         ].map(field => `"${field}"`).join(',');
@@ -9701,6 +9868,7 @@ window.calculateCurrentMonthCommitments = calculateCurrentMonthCommitments;
     // Reset form
     document.getElementById('customerForm').reset();
     document.getElementById('custId').value = '';
+    document.getElementById('custType').value = 'بيع';
     document.getElementById('customerModalTitle').textContent = 'إضافة عميل';
     showModal('customerModal');
   });
@@ -10150,53 +10318,208 @@ async function syncStoreProductsToInventory() {
   if (typeof loadProducts === 'function') loadProducts();
 }
 
-// مزامنة طلبات المتجر مع المبيعات
+// ===== دالة مساعدة: إضافة/تحديث العميل من طلبات المتجر =====
+// ترجع id العميل بعد الحفظ
+// type: 'بيع' أو 'صيانة'
+async function upsertCustomerFromStore(name, phone, type, extra = {}) {
+  if (!name && !phone) return null;
+
+  let customers = await load('customers', false) || [];
+  if (!Array.isArray(customers)) customers = [];
+
+  const normalizedPhone = (phone || '').toString().trim();
+  const normalizedName  = (name  || '').toString().trim();
+
+  // مطابقة بالهاتف أولاً (إذا وُجد)، ثم بالاسم
+  let existing = null;
+  if (normalizedPhone) {
+    existing = customers.find(c => (c.phone || '').toString().trim() === normalizedPhone);
+  }
+  if (!existing && normalizedName) {
+    existing = customers.find(c => (c.name || '').toString().trim() === normalizedName);
+  }
+
+  if (existing) {
+    // ترقية التصنيف: إذا كان الموجود "بيع" والجديد "صيانة" (أو العكس) → يصبح "بيع وصيانة"
+    const currentType = existing.customerType || '';
+    let newType = currentType;
+    if (!currentType) {
+      newType = type;
+    } else if (currentType === 'بيع وصيانة') {
+      newType = 'بيع وصيانة';
+    } else if (currentType !== type) {
+      // currentType يختلف عن type → دمج
+      newType = 'بيع وصيانة';
+    } else {
+      newType = currentType;
+    }
+
+    existing.customerType = newType;
+    // تحديث الحقول الناقصة فقط (دون الكتابة فوق بيانات المستخدم اليدوية)
+    if (!existing.phone && normalizedPhone) existing.phone = normalizedPhone;
+    if (!existing.name  && normalizedName)  existing.name  = normalizedName;
+    if (extra.deviceType   && !existing.deviceType)   existing.deviceType   = extra.deviceType;
+    if (extra.deviceSize   && !existing.deviceSize)   existing.deviceSize   = extra.deviceSize;
+    if (extra.address      && !existing.address)      existing.address      = extra.address;
+    if (extra.email        && !existing.email)        existing.email        = extra.email;
+    if (extra.locationLink && !existing.locationLink) existing.locationLink = extra.locationLink;
+    if (extra.userId       && !existing.userId)       existing.userId       = extra.userId;
+    existing.updatedAt = nowISO();
+
+    await save('customers', customers);
+    clearCache('customers');
+    return existing.id;
+  } else {
+    const newCustomer = {
+      id: uid(),
+      name: normalizedName || 'عميل من المتجر',
+      customerType: type,
+      phone: normalizedPhone,
+      email: extra.email || '',
+      deviceType: extra.deviceType || '',
+      deviceSize: extra.deviceSize || '',
+      address: extra.address || '',
+      locationLink: extra.locationLink || '',
+      userId: extra.userId || null,
+      notes: extra.notes || 'عميل تمت إضافته من المتجر الإلكتروني',
+      createdAt: nowISO(),
+      updatedAt: nowISO()
+    };
+    customers.push(newCustomer);
+    await save('customers', customers);
+    clearCache('customers');
+    return newCustomer.id;
+  }
+}
+
+// مزامنة طلبات المتجر مع نظام المبيعات (فواتير)
 async function syncStoreOrdersToSales() {
   const orders = await loadStoreOrders();
   if (!orders.length) { showToast('لا توجد طلبات في المتجر', 'warning'); return; }
 
-  let currentSales = await load('sales', false) || [];
-  if (!Array.isArray(currentSales)) currentSales = [];
+  let currentInvoices = await load('invoices', false) || [];
+  if (!Array.isArray(currentInvoices)) currentInvoices = [];
 
-  let synced = 0;
-  for (const order of orders) {
-    const orderId = order.orderId || order.id;
-    const existing = currentSales.find(s => s.storeOrderId === orderId);
-    if (existing) continue;
-
-    const sale = {
-      id: uid(),
-      storeOrderId: orderId,
-      customer: order.customerName || 'عميل متجر',
-      phone: order.customerPhone || '',
-      items: (order.items || []).map(i => ({
-        name: i.name || '',
-        quantity: i.quantity || 1,
-        price: i.price || 0
-      })),
-      total: order.total || 0,
-      shippingFee: order.shippingFee || 0,
-      paymentMethod: 'كاش',
-      status: order.status || 'جديد',
-      channel: order.channel || 'متجر',
-      notes: `طلب من المتجر الإلكتروني - ${order.shippingMethod === 'delivery' ? 'توصيل' : 'استلام'}`,
-      date: order.createdAt && order.createdAt.toDate ? order.createdAt.toDate().toISOString() : new Date().toISOString(),
-      createdAt: new Date().toISOString()
-    };
-    currentSales.push(sale);
-    synced++;
+  let counters = await load('counters', false);
+  if (!counters || typeof counters !== 'object') {
+    counters = { invoice: 1000, maintenance: 2000, customer: 3000, product: 4000 };
   }
 
-  if (synced > 0) {
-    await save('sales', currentSales);
-    showToast(`✅ تمت مزامنة ${synced} طلب شراء من المتجر`, 'success');
-    if (typeof loadInvoices === 'function') loadInvoices();
+  let syncedCount = 0;
+  let customersAdded = 0;
+
+  for (const order of orders) {
+    const orderId = order.orderId || order.id;
+    // منع التكرار
+    if (currentInvoices.some(inv => inv.storeOrderId === orderId)) continue;
+
+    // 1) إضافة/تحديث العميل
+    const beforeCustomers = (await load('customers', false) || []).length;
+    const customerAddress = order.customerAddress || order.shippingAddress || order.address || '';
+    const customerId = await upsertCustomerFromStore(
+      order.customerName,
+      order.customerPhone,
+      'بيع',
+      {
+        address: customerAddress,
+        email: order.userEmail || '',
+        userId: order.userId || null
+      }
+    );
+    const afterCustomers = (await load('customers', false) || []).length;
+    if (afterCustomers > beforeCustomers) customersAdded++;
+
+    // 2) تجهيز أصناف الفاتورة
+    const items = (order.items || []).map(i => {
+      const qty  = toNumber(i.quantity ?? 1);
+      const sell = toNumber(i.price ?? i.sell ?? 0);
+      const buy  = toNumber(i.buy ?? 0);
+      return {
+        productId: i.productId || i.id || '',
+        name: i.name || '',
+        quantity: qty,
+        sell: sell,
+        buy: buy
+      };
+    });
+
+    const shipping  = toNumber(order.shippingFee);
+    const totalSell = toNumber(items.reduce((s, x) => s + (x.quantity * x.sell), 0)) + shipping;
+    const totalBuy  = toNumber(items.reduce((s, x) => s + (x.quantity * x.buy), 0));
+    const net       = totalSell - totalBuy;
+
+    // 3) رقم فاتورة جديد
+    counters.invoice = (counters.invoice || 1000) + 1;
+    const invoiceNumber = counters.invoice;
+
+    // 4) تاريخ الطلب
+    let orderDate;
+    if (order.createdAt && typeof order.createdAt.toDate === 'function') {
+      orderDate = order.createdAt.toDate().toISOString();
+    } else if (order.createdAt) {
+      orderDate = new Date(order.createdAt).toISOString();
+    } else {
+      orderDate = nowISO();
+    }
+
+    let updatedAtISO = '';
+    if (order.updatedAt && typeof order.updatedAt.toDate === 'function') {
+      updatedAtISO = order.updatedAt.toDate().toISOString();
+    } else if (order.updatedAt) {
+      updatedAtISO = new Date(order.updatedAt).toISOString();
+    }
+
+    // 5) تحويل حالة الطلب إلى حالة دفع
+    const status = order.status || 'جديد';
+    const paymentStatus = (status === 'تم التسليم') ? 'paid' : 'pending';
+
+    const invoice = {
+      id: uid(),
+      storeOrderId: orderId,
+      number: `INV-${invoiceNumber}`,
+      customerId: customerId || 'anonymous',
+      customerName: order.customerName || '',
+      customerPhone: order.customerPhone || '',
+      customerAddress: customerAddress,
+      items: items,
+      subtotal: toNumber(order.subtotal),
+      totalSell: totalSell,
+      totalBuy: totalBuy,
+      shippingFee: shipping,
+      shippingMethod: order.shippingMethod || '',
+      storeTotal: toNumber(order.total),
+      net: net,
+      date: orderDate.slice(0, 10),
+      paymentMethod: 'cash',
+      paymentStatus: paymentStatus,
+      channel: order.channel || '',
+      storeStatus: status,
+      userEmail: order.userEmail || '',
+      userId: order.userId || null,
+      storeCreatedAt: orderDate,
+      storeUpdatedAt: updatedAtISO,
+      notes: `طلب من المتجر الإلكتروني (${order.shippingMethod === 'delivery' ? 'توصيل' : 'استلام'}) - رقم: ${orderId}${customerAddress ? `\nالعنوان: ${customerAddress}` : ''}${order.channel ? `\nالقناة: ${order.channel}` : ''}`,
+      createdAt: nowISO()
+    };
+
+    currentInvoices.push(invoice);
+    syncedCount++;
+  }
+
+  if (syncedCount > 0) {
+    await save('invoices', currentInvoices);
+    await save('counters', counters);
+    clearCache('invoices');
+    clearCache('customers');
+    showToast(`✅ تمت مزامنة ${syncedCount} طلب بيع${customersAdded ? ` + ${customersAdded} عميل جديد` : ''}`, 'success');
+    if (typeof loadInvoices === 'function')  loadInvoices();
+    if (typeof loadCustomers === 'function') loadCustomers();
   } else {
-    showToast('جميع الطلبات مزامنة مسبقاً', 'info');
+    showToast('جميع طلبات البيع مزامنة مسبقاً', 'info');
   }
 }
 
-// مزامنة طلبات الصيانة
+// مزامنة طلبات الصيانة من المتجر إلى نظام الصيانة
 async function syncStoreMaintenanceToSystem() {
   const reqs = await loadStoreServiceRequests();
   if (!reqs.length) { showToast('لا توجد طلبات صيانة في المتجر', 'warning'); return; }
@@ -10204,35 +10527,129 @@ async function syncStoreMaintenanceToSystem() {
   let currentMaintenance = await load('maintenance', false) || [];
   if (!Array.isArray(currentMaintenance)) currentMaintenance = [];
 
-  let synced = 0;
+  let counters = await load('counters', false);
+  if (!counters || typeof counters !== 'object') {
+    counters = { invoice: 1000, maintenance: 2000, customer: 3000, product: 4000 };
+  }
+
+  let syncedCount = 0;
+  let customersAdded = 0;
+
   for (const req of reqs) {
     const reqId = req.requestId || req.id;
-    const existing = currentMaintenance.find(m => m.storeRequestId === reqId);
-    if (existing) continue;
+    // منع التكرار
+    if (currentMaintenance.some(m => m.storeRequestId === reqId)) continue;
+
+    // 1) إضافة/تحديث العميل
+    const beforeCustomers = (await load('customers', false) || []).length;
+    const customerAddress = req.addressText || req.address || '';
+    const customerId = await upsertCustomerFromStore(
+      req.customerName,
+      req.customerPhone,
+      'صيانة',
+      {
+        deviceType:   req.deviceType   || '',
+        deviceSize:   req.deviceSize   || '',
+        address:      customerAddress,
+        email:        req.userEmail    || '',
+        locationLink: req.locationLink || '',
+        userId:       req.userId       || null
+      }
+    );
+    const afterCustomers = (await load('customers', false) || []).length;
+    if (afterCustomers > beforeCustomers) customersAdded++;
+
+    // 2) رقم أمر صيانة
+    counters.maintenance = (counters.maintenance || 2000) + 1;
+    const orderNumber = counters.maintenance;
+
+    // 3) تاريخ الاستلام
+    let receivedDate;
+    if (req.createdAt && typeof req.createdAt.toDate === 'function') {
+      receivedDate = req.createdAt.toDate();
+    } else if (req.createdAt) {
+      receivedDate = new Date(req.createdAt);
+    } else {
+      receivedDate = new Date();
+    }
+    const receivedISO = receivedDate.toISOString().slice(0, 10);
+
+    let updatedAtISO = '';
+    if (req.updatedAt && typeof req.updatedAt.toDate === 'function') {
+      updatedAtISO = req.updatedAt.toDate().toISOString();
+    } else if (req.updatedAt) {
+      updatedAtISO = new Date(req.updatedAt).toISOString();
+    }
+
+    // 4) تحويل الحالة
+    const storeStatus = req.status || 'جديد';
+    const statusMap = {
+      'جديد': 'new',
+      'تم التواصل': 'in_progress',
+      'قيد التجهيز': 'in_progress',
+      'تم الإصلاح': 'completed',
+      'تم التسليم': 'completed',
+      'ملغي': 'cancelled'
+    };
+    const status = statusMap[storeStatus] || 'new';
+    const paymentStatus = (storeStatus === 'تم التسليم') ? 'paid' : 'pending';
+
+    // 5) بناء وصف الجهاز
+    const deviceDesc = [req.deviceType, req.deviceSize].filter(Boolean).join(' - ') || req.deviceType || '';
 
     const maint = {
       id: uid(),
       storeRequestId: reqId,
-      customer: req.customerName || '',
-      phone: req.customerPhone || '',
+      number: `MNT-${orderNumber}`,
+      customerId: customerId || 'anonymous',
+      customerName: req.customerName || '',
+      customerPhone: req.customerPhone || '',
+      device: deviceDesc,
       deviceType: req.deviceType || '',
       deviceSize: req.deviceSize || '',
-      problem: req.faultDesc || req.problemDescription || req.problem || '',
-      status: req.status || 'جديد',
-      cost: req.repairCost || 0,
+      faultDesc: req.faultDesc || req.problemDescription || req.problem || '',
+      addressText: customerAddress,
+      locationLink: req.locationLink || '',
+      imageLink: req.imageLink || '',
+      userEmail: req.userEmail || '',
+      userId: req.userId || null,
+      type: 'in_shop',
+      cost: toNumber(req.repairCost || 0),
+      parts: 0,
+      partsDealerId: null,
+      net: toNumber(req.repairCost || 0),
+      received: receivedISO,
+      delivery: '',
       warranty: req.warranty || '',
-      notes: 'طلب من المتجر الإلكتروني',
-      date: req.createdAt && req.createdAt.toDate ? req.createdAt.toDate().toISOString() : new Date().toISOString(),
-      createdAt: new Date().toISOString()
+      paymentMethod: 'cash',
+      paymentStatus: paymentStatus,
+      status: status,
+      storeStatus: storeStatus,
+      storeCreatedAt: receivedDate.toISOString(),
+      storeUpdatedAt: updatedAtISO,
+      notes: [
+        `طلب صيانة من المتجر الإلكتروني - رقم: ${reqId}`,
+        `العطل: ${req.faultDesc || req.problemDescription || req.problem || ''}`,
+        customerAddress ? `العنوان: ${customerAddress}` : '',
+        req.locationLink ? `رابط الموقع: ${req.locationLink}` : '',
+        req.imageLink ? `صورة العطل: ${req.imageLink}` : ''
+      ].filter(Boolean).join('\n'),
+      createdAt: nowISO(),
+      updatedAt: nowISO()
     };
+
     currentMaintenance.push(maint);
-    synced++;
+    syncedCount++;
   }
 
-  if (synced > 0) {
+  if (syncedCount > 0) {
     await save('maintenance', currentMaintenance);
-    showToast(`✅ تمت مزامنة ${synced} طلب صيانة من المتجر`, 'success');
+    await save('counters', counters);
+    clearCache('maintenance');
+    clearCache('customers');
+    showToast(`✅ تمت مزامنة ${syncedCount} طلب صيانة${customersAdded ? ` + ${customersAdded} عميل جديد` : ''}`, 'success');
     if (typeof loadMaintenance === 'function') loadMaintenance();
+    if (typeof loadCustomers   === 'function') loadCustomers();
   } else {
     showToast('جميع طلبات الصيانة مزامنة مسبقاً', 'info');
   }
