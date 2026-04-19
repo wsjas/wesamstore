@@ -818,7 +818,7 @@
               <table class="table table-hover mb-0">
                 <thead>
                   <tr>
-                    <th>#</th><th>رقم</th><th>العميل</th><th>المنتجات</th><th>الكمية الإجمالية</th><th>التاريخ</th><th>القناة</th><th>التسليم</th><th>الشحن</th><th>إجمالي سعر البيع</th><th>إجمالي سعر الشراء</th><th>صافي الفاتورة</th><th>طريقة الدفع</th><th>حالة الدفع</th><th>الإجراءات</th>
+                    <th>#</th><th>رقم</th><th>العميل</th><th>المنتجات</th><th>الكمية الإجمالية</th><th>التاريخ</th><th>القناة</th><th>التسليم</th><th>الشحن</th><th>مندوب التوصيل</th><th>إجمالي سعر البيع</th><th>إجمالي سعر الشراء</th><th>صافي الفاتورة</th><th>طريقة الدفع</th><th>حالة الدفع</th><th>الإجراءات</th>
                   </tr>
                 </thead>
                 <tbody id="invoicesTable"></tbody>
@@ -1235,6 +1235,7 @@
                 <li>إجمالي المبيعات النقدية: <strong id="bankSalesCash">0 دينار</strong></li>
                 <li>إجمالي المبيعات بالحوالات: <strong id="bankSalesTransfer">0 دينار</strong></li>
                 <li>إجمالي تكلفة المنتجات: <strong id="bankProductsCost">0 دينار</strong></li>
+                <li>إجمالي مصاريف الشحن (مستحقة للمندوب): <strong id="bankSalesShipping" class="text-warning">0 دينار</strong></li>
                 <li>صافي ربح المبيعات: <strong id="bankSalesNet">0 دينار</strong></li>
               </ul>
             </div>
@@ -1448,6 +1449,7 @@
               <ul>
                 <li>إجمالي المبيعات (سعر البيع): <strong id="r_sales_total">0 دينار</strong></li>
                 <li>إجمالي تكلفة الشراء (رأس المال المبذول): <strong id="r_sales_buy">0 دينار</strong></li>
+                <li>إجمالي مصاريف الشحن (مستحقة للمندوب): <strong id="r_sales_shipping" class="text-warning">0 دينار</strong></li>
                 <li>صافي البيع (ربح): <strong id="r_sales_net">0 دينار</strong></li>
               </ul>
               <h6 class="mt-3">تفصيل حسب طريقة الدفع</h6>
@@ -1780,6 +1782,24 @@
               <div class="col-md-4">
                 <label>صافي الفاتورة</label>
                 <input id="invNet" class="form-control" readonly>
+              </div>
+              <div class="col-md-4">
+                <label>طريقة التسليم</label>
+                <select id="invShippingMethod" class="form-select" onchange="toggleDeliveryFields()">
+                  <option value="">-- غير محدد --</option>
+                  <option value="pickup">استلام من المحل</option>
+                  <option value="delivery">توصيل</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label>رسوم الشحن</label>
+                <input id="invShippingFee" type="number" step="0.01" class="form-control" value="0" oninput="updateInvoiceTotals()">
+              </div>
+              <div class="col-md-4">
+                <label>مندوب التوصيل</label>
+                <select id="invDeliveryDealer" class="form-select">
+                  <option value="">-- اختر المندوب --</option>
+                </select>
               </div>
               <div class="col-md-4">
                 <label>طريقة الدفع</label>
@@ -3707,9 +3727,11 @@ async function createNotification(title, message, type = 'info', priority = 'med
       // Calculate revenues and profits
       let salesRevenue = 0;
       let salesCost = 0;
+      let salesShipping = 0;
       filteredInvoices.forEach(inv => {
         salesRevenue += toNumber(inv.totalSell);
         salesCost += toNumber(inv.totalBuy);
+        salesShipping += toNumber(inv.shippingFee);
       });
       
       let maintenanceRevenue = 0;
@@ -3720,7 +3742,8 @@ async function createNotification(title, message, type = 'info', priority = 'med
       });
       
       const totalRevenue = salesRevenue + maintenanceRevenue;
-      const salesProfit = salesRevenue - salesCost;
+      // صافي ربح المبيعات = الإيرادات - تكلفة الشراء - مصاريف الشحن (مستحقة لمندوب التوصيل)
+      const salesProfit = salesRevenue - salesCost - salesShipping;
       const maintenanceProfit = maintenanceRevenue - maintenanceCost;
       const totalProfit = salesProfit + maintenanceProfit;
       
@@ -4611,6 +4634,7 @@ window.addSampleProducts = async function() {
     try {
       const invoices = await load('invoices');
       const customers = await load('customers');
+      const dealers = await load('dealers');
       const table = document.getElementById('invoicesTable');
       if (!table) return;
       
@@ -4627,7 +4651,7 @@ window.addSampleProducts = async function() {
       
       if (paginated.items.length === 0) {
         const row = document.createElement('tr');
-        row.innerHTML = `<td colspan="15" class="text-center text-muted py-3">لا توجد فواتير في الفترة المحددة</td>`;
+        row.innerHTML = `<td colspan="16" class="text-center text-muted py-3">لا توجد فواتير في الفترة المحددة</td>`;
         table.appendChild(row);
         return;
       }
@@ -4646,6 +4670,11 @@ window.addSampleProducts = async function() {
           ? '<span class="badge bg-info text-dark">توصيل</span>'
           : (invoice.shippingMethod === 'pickup' ? '<span class="badge bg-light text-dark">استلام</span>' : '<span class="text-muted">-</span>');
         
+        const deliveryDealer = invoice.deliveryDealerId ? dealers.find(d => d.id === invoice.deliveryDealerId) : null;
+        const deliveryDealerCell = deliveryDealer
+          ? `<span class="text-info" title="رسوم التوصيل مستحقة لـ: ${escapeHtml(deliveryDealer.name)}"><i class="bi bi-truck"></i> ${escapeHtml(deliveryDealer.name)}</span>`
+          : '<span class="text-muted">-</span>';
+        
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${globalIndex}</td>
@@ -4657,6 +4686,7 @@ window.addSampleProducts = async function() {
           <td>${channelBadge}</td>
           <td>${shippingBadge}</td>
           <td>${toNumber(invoice.shippingFee) ? currency(invoice.shippingFee) : '<span class="text-muted">-</span>'}</td>
+          <td>${deliveryDealerCell}</td>
           <td>${currency(invoice.totalSell)}</td>
           <td>${currency(invoice.totalBuy)}</td>
           <td>${currency(invoice.net)}</td>
@@ -4668,11 +4698,16 @@ window.addSampleProducts = async function() {
           </td>
           <td>
             <div class="action-btns">
-              <button class="btn btn-sm btn-outline-info view-invoice" data-id="${invoice.id}">
+              <button class="btn btn-sm btn-outline-info view-invoice" data-id="${invoice.id}" title="عرض">
                 <i class="bi bi-eye"></i>
               </button>
+              ${checkPermission('invoices', 'update') ? `
+                <button class="btn btn-sm btn-outline-primary edit-invoice" data-id="${invoice.id}" title="تعديل">
+                  <i class="bi bi-pencil"></i>
+                </button>
+              ` : ''}
               ${checkPermission('invoices', 'delete') ? `
-                <button class="btn btn-sm btn-outline-danger delete-invoice" data-id="${invoice.id}">
+                <button class="btn btn-sm btn-outline-danger delete-invoice" data-id="${invoice.id}" title="حذف">
                   <i class="bi bi-trash"></i>
                 </button>
               ` : ''}
@@ -4692,6 +4727,13 @@ window.addSampleProducts = async function() {
           btn.addEventListener('click', (e) => {
             const id = e.target.closest('button').getAttribute('data-id');
             viewInvoice(id);
+          });
+        });
+        
+        document.querySelectorAll('.edit-invoice').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const id = e.target.closest('button').getAttribute('data-id');
+            editInvoice(id);
           });
         });
         
@@ -4717,6 +4759,8 @@ window.addSampleProducts = async function() {
       const customers = await load('customers');
       const customer = customers.find(c => c.id === invoice.customerId);
       const products = await load('products');
+      const dealers = await load('dealers');
+      const deliveryDealer = invoice.deliveryDealerId ? dealers.find(d => d.id === invoice.deliveryDealerId) : null;
       
       let invoiceDetails = `
         <div class="invoice-details">
@@ -4776,7 +4820,7 @@ window.addSampleProducts = async function() {
           <div class="row">
             <div class="col-md-6">
               ${toNumber(invoice.subtotal) ? `<p><strong>المجموع الفرعي:</strong> ${currency(invoice.subtotal)}</p>` : ''}
-              ${toNumber(invoice.shippingFee) ? `<p><strong>رسوم الشحن:</strong> ${currency(invoice.shippingFee)}</p>` : ''}
+              ${toNumber(invoice.shippingFee) ? `<p><strong>رسوم الشحن:</strong> ${currency(invoice.shippingFee)}${deliveryDealer ? ` <span class="badge bg-info text-dark ms-1">مستحقة لـ: ${escapeHtml(deliveryDealer.name)}</span>` : ''}</p>` : ''}
             </div>
             <div class="col-md-6">
               <p><strong>إجمالي سعر البيع:</strong> ${currency(invoice.totalSell)}</p>
@@ -4821,6 +4865,69 @@ window.addSampleProducts = async function() {
     } catch (error) {
       console.error('Error viewing invoice:', error);
       showToast('❌ خطأ في عرض الفاتورة', 'error');
+    }
+  }
+
+  async function editInvoice(id) {
+    try {
+      if (!checkPermission('invoices', 'update')) {
+        showToast('❌ لا تملك صلاحية تعديل الفواتير', 'error');
+        return;
+      }
+      
+      const invoices = await load('invoices');
+      const invoice = invoices.find(i => i.id === id);
+      if (!invoice) {
+        showToast('❌ الفاتورة غير موجودة', 'error');
+        return;
+      }
+      
+      // Reset form
+      document.getElementById('invoiceForm').reset();
+      document.getElementById('invoiceModalTitle').textContent = `تعديل فاتورة ${invoice.number || ''}`;
+      document.getElementById('invId').value = invoice.id;
+      document.getElementById('invNumber').value = invoice.number || '';
+      document.getElementById('invDate').value = dateOnly(invoice.date);
+      document.getElementById('invPaymentMethod').value = invoice.paymentMethod || 'cash';
+      document.getElementById('invPaymentStatus').value = invoice.paymentStatus || 'paid';
+      document.getElementById('invNotes').value = invoice.notes || '';
+      document.getElementById('invShippingMethod').value = invoice.shippingMethod || '';
+      document.getElementById('invShippingFee').value = toNumber(invoice.shippingFee) || 0;
+      
+      // Clear and rebuild items
+      document.getElementById('invoiceItemsContainer').innerHTML = '';
+      invoiceItemCount = 0;
+      
+      // Populate selects first so products appear
+      await populateSelects();
+      
+      // Set customer
+      document.getElementById('invCustomer').value = invoice.customerId || '';
+      
+      // Set delivery dealer
+      document.getElementById('invDeliveryDealer').value = invoice.deliveryDealerId || '';
+      
+      // Apply toggle (enables/disables shipping fields based on method)
+      toggleDeliveryFields();
+      // ضع القيم مرة أخرى بعد toggleDeliveryFields لأنها قد تصفرها
+      document.getElementById('invShippingFee').value = toNumber(invoice.shippingFee) || 0;
+      document.getElementById('invDeliveryDealer').value = invoice.deliveryDealerId || '';
+      
+      // Add rows for each item (addInvoiceItemRow handles prefilling & ghost options)
+      if (Array.isArray(invoice.items) && invoice.items.length) {
+        for (const item of invoice.items) {
+          await addInvoiceItemRow(item);
+        }
+      } else {
+        await addInvoiceItemRow();
+      }
+      
+      updateInvoiceTotals();
+      showModal('invoiceModal');
+      
+    } catch (error) {
+      console.error('Error editing invoice:', error);
+      showToast('❌ خطأ في تحميل بيانات الفاتورة', 'error');
     }
   }
 
@@ -5297,17 +5404,20 @@ window.addSampleProducts = async function() {
       const maintenance = await load('maintenance');
       const parts = await load('parts');
       const dealerPayments = await load('dealerPayments');
+      const invoices = await load('invoices');
       
       // Apply date range filter to transactions
       const range = getCurrentDateRange('dealers');
       let filteredMaintenance = maintenance;
       let filteredParts = parts;
       let filteredPayments = dealerPayments;
+      let filteredInvoices = invoices;
       
       if (range.from || range.to) {
         filteredMaintenance = filterByDateRange(maintenance, 'received', 'dealers');
         filteredParts = filterByDateRange(parts, 'createdAt', 'dealers', true);
         filteredPayments = filterByDateRange(dealerPayments, 'date', 'dealers');
+        filteredInvoices = filterByDateRange(invoices, 'date', 'dealers');
       }
       
       // Build search index
@@ -5340,6 +5450,13 @@ window.addSampleProducts = async function() {
           }
         });
         
+        // Calculate delivery fees from invoices (for delivery dealer)
+        filteredInvoices.forEach(inv => {
+          if (inv.deliveryDealerId === dealer.id) {
+            totalPurchases += toNumber(inv.shippingFee);
+          }
+        });
+        
         // Calculate total payments from dealerPayments
         const dealerPaymentRecords = filteredPayments.filter(payment => payment.dealerId === dealer.id);
         dealerPaymentRecords.forEach(payment => {
@@ -5359,6 +5476,15 @@ window.addSampleProducts = async function() {
         
         if (lastMaintenance && (!lastTransaction || new Date(lastMaintenance.received || lastMaintenance.createdAt) > new Date(lastTransaction))) {
           lastTransaction = lastMaintenance.received || lastMaintenance.createdAt;
+        }
+        
+        // Check from delivery invoices
+        const lastDeliveryInvoice = filteredInvoices
+          .filter(inv => inv.deliveryDealerId === dealer.id)
+          .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))[0];
+        
+        if (lastDeliveryInvoice && (!lastTransaction || new Date(lastDeliveryInvoice.date || lastDeliveryInvoice.createdAt) > new Date(lastTransaction))) {
+          lastTransaction = lastDeliveryInvoice.date || lastDeliveryInvoice.createdAt;
         }
         
         // Check from payments
@@ -7072,6 +7198,7 @@ window.addSampleCommitments = async function() {
       let salesCash = 0;
       let salesTransfer = 0;
       let salesCost = 0;
+      let salesShipping = 0;
       let maintCash = 0;
       let maintTransfer = 0;
       let maintCost = 0;
@@ -7086,6 +7213,7 @@ window.addSampleCommitments = async function() {
           salesTransfer += toNumber(inv.totalSell);
         }
         salesCost += toNumber(inv.totalBuy);
+        salesShipping += toNumber(inv.shippingFee);
       });
       
       // Calculate from maintenance
@@ -7101,7 +7229,8 @@ window.addSampleCommitments = async function() {
       });
       
       const total = cashTotal + transferTotal;
-      const salesNet = (salesCash + salesTransfer) - salesCost;
+      // صافي ربح المبيعات = الإيرادات - تكلفة الشراء - مصاريف الشحن (مستحقة لمندوب التوصيل)
+      const salesNet = (salesCash + salesTransfer) - salesCost - salesShipping;
       const maintNet = (maintCash + maintTransfer) - maintCost;
       
       // Update UI
@@ -7111,6 +7240,8 @@ window.addSampleCommitments = async function() {
       document.getElementById('bankSalesCash').textContent = currency(salesCash);
       document.getElementById('bankSalesTransfer').textContent = currency(salesTransfer);
       document.getElementById('bankProductsCost').textContent = currency(salesCost);
+      const bankSalesShippingEl = document.getElementById('bankSalesShipping');
+      if (bankSalesShippingEl) bankSalesShippingEl.textContent = currency(salesShipping);
       document.getElementById('bankSalesNet').textContent = currency(salesNet);
       document.getElementById('bankMaintenanceCash').textContent = currency(maintCash);
       document.getElementById('bankMaintenanceTransfer').textContent = currency(maintTransfer);
@@ -7397,12 +7528,14 @@ window.addSampleCommitments = async function() {
       // Sales reports
       let salesTotal = 0;
       let salesBuy = 0;
+      let salesShipping = 0;
       let salesCash = 0;
       let salesTransfer = 0;
 
       filteredInvoices.forEach(inv => {
         salesTotal += toNumber(inv.totalSell);
         salesBuy += toNumber(inv.totalBuy);
+        salesShipping += toNumber(inv.shippingFee);
         
         if (inv.paymentMethod === 'cash') {
           salesCash += toNumber(inv.totalSell);
@@ -7411,7 +7544,8 @@ window.addSampleCommitments = async function() {
         }
       });
 
-      const salesNet = salesTotal - salesBuy;
+      // صافي ربح المبيعات = الإجمالي - تكلفة الشراء - مصاريف الشحن (مستحقة للمندوب)
+      const salesNet = salesTotal - salesBuy - salesShipping;
 
       // Expenses reports
       let expensesTotal = 0;
@@ -7446,6 +7580,8 @@ window.addSampleCommitments = async function() {
       
       document.getElementById('r_sales_total').textContent = currency(salesTotal);
       document.getElementById('r_sales_buy').textContent = currency(salesBuy);
+      const rSalesShippingEl = document.getElementById('r_sales_shipping');
+      if (rSalesShippingEl) rSalesShippingEl.textContent = currency(salesShipping);
       document.getElementById('r_sales_net').textContent = currency(salesNet);
       document.getElementById('r_sales_cash').textContent = currency(salesCash);
       document.getElementById('r_sales_transfer').textContent = currency(salesTransfer);
@@ -7562,6 +7698,7 @@ async function loadReports() {
         // ========== تقارير المبيعات ==========
         let salesTotal = 0;
         let salesBuy = 0;
+        let salesShipping = 0;
         let salesCash = 0;
         let salesTransfer = 0;
 
@@ -7571,6 +7708,7 @@ async function loadReports() {
             
             salesTotal += totalSell;
             salesBuy += totalBuy;
+            salesShipping += toNumber(inv.shippingFee);
             
             if (inv.paymentMethod === 'cash') {
                 salesCash += totalSell;
@@ -7579,7 +7717,8 @@ async function loadReports() {
             }
         });
 
-        const salesNet = salesTotal - salesBuy;
+        // صافي ربح المبيعات = الإجمالي - تكلفة الشراء - مصاريف الشحن (مستحقة للمندوب)
+        const salesNet = salesTotal - salesBuy - salesShipping;
 
         // ========== تقارير المصاريف ==========
         let expensesTotal = 0;
@@ -7635,6 +7774,7 @@ async function loadReports() {
             // تقارير المبيعات
             r_sales_total: salesTotal,
             r_sales_buy: salesBuy,
+            r_sales_shipping: salesShipping,
             r_sales_net: salesNet,
             r_sales_cash: salesCash,
             r_sales_transfer: salesTransfer,
@@ -7717,6 +7857,8 @@ function updateReportsUI(data) {
     // تقارير المبيعات
     document.getElementById('r_sales_total').textContent = currency(data.r_sales_total);
     document.getElementById('r_sales_buy').textContent = currency(data.r_sales_buy);
+    const _rShipEl = document.getElementById('r_sales_shipping');
+    if (_rShipEl) _rShipEl.textContent = currency(data.r_sales_shipping || 0);
     document.getElementById('r_sales_net').textContent = currency(data.r_sales_net);
     document.getElementById('r_sales_cash').textContent = currency(data.r_sales_cash);
     document.getElementById('r_sales_transfer').textContent = currency(data.r_sales_transfer);
@@ -8370,7 +8512,7 @@ window.calculateCurrentMonthCommitments = calculateCurrentMonthCommitments;
       
       // Populate dealer selects
       const dealers = await load('dealers');
-      const dealerSelects = document.querySelectorAll('#mntPartsDealer, #partSupplier');
+      const dealerSelects = document.querySelectorAll('#mntPartsDealer, #partSupplier, #invDeliveryDealer');
       
       dealerSelects.forEach(select => {
         select.innerHTML = '<option value="">-- اختر التاجر --</option>';
@@ -8509,6 +8651,9 @@ window.calculateCurrentMonthCommitments = calculateCurrentMonthCommitments;
       document.getElementById('invId').value = '';
       document.getElementById('invDate').value = dateOnly(new Date());
       document.getElementById('invoiceModalTitle').textContent = 'إنشاء فاتورة بيع';
+      document.getElementById('invShippingFee').value = 0;
+      document.getElementById('invShippingMethod').value = '';
+      document.getElementById('invDeliveryDealer').value = '';
       
       // Generate invoice number
       const counters = await load('counters');
@@ -8521,11 +8666,14 @@ window.calculateCurrentMonthCommitments = calculateCurrentMonthCommitments;
       // Reset invoice item count
       invoiceItemCount = 0;
       
-      // Add first item row
-      addInvoiceItemRow();
-      
-      // Populate selects
+      // Populate selects first (customers + dealers in delivery dropdown)
       await populateSelects();
+      
+      // Add first item row (products are populated inside)
+      await addInvoiceItemRow();
+      
+      // تطبيق حالة افتراضية لحقول التوصيل (disabled لأن الافتراضي = غير محدد)
+      toggleDeliveryFields();
       
       showModal('invoiceModal');
       
@@ -8535,60 +8683,101 @@ window.calculateCurrentMonthCommitments = calculateCurrentMonthCommitments;
     }
   });
 
-  function addInvoiceItemRow() {
+  async function addInvoiceItemRow(itemData) {
     invoiceItemCount++;
+    const idx = invoiceItemCount;
     const container = document.getElementById('invoiceItemsContainer');
     
     const row = document.createElement('div');
     row.className = 'invoice-item-row';
-    row.id = `itemRow_${invoiceItemCount}`;
+    row.id = `itemRow_${idx}`;
     row.innerHTML = `
       <div class="row g-2 align-items-center">
         <div class="col-md-5">
-          <select class="form-select form-select-sm product-select" onchange="updateProductPrice(this, ${invoiceItemCount})">
+          <select class="form-select form-select-sm product-select" onchange="updateProductPrice(this, ${idx})">
             <option value="">-- اختر المنتج --</option>
           </select>
         </div>
         <div class="col-md-2">
           <input type="number" class="form-control form-control-sm quantity-input" 
                  onchange="updateInvoiceTotals()" oninput="updateInvoiceTotals()" 
-                 value="1" min="1" id="quantity_${invoiceItemCount}">
+                 value="1" min="1" id="quantity_${idx}">
         </div>
         <div class="col-md-2">
           <input type="number" class="form-control form-control-sm" 
-                 readonly id="buyPrice_${invoiceItemCount}">
+                 readonly id="buyPrice_${idx}">
         </div>
         <div class="col-md-2">
           <input type="number" class="form-control form-control-sm" 
-                 readonly id="sellPrice_${invoiceItemCount}">
+                 readonly id="sellPrice_${idx}">
         </div>
         <div class="col-md-1">
-          <button type="button" class="btn btn-sm btn-danger" onclick="removeInvoiceItem(${invoiceItemCount})">
+          <button type="button" class="btn btn-sm btn-danger" onclick="removeInvoiceItem(${idx})" title="حذف المنتج">
             <i class="bi bi-trash"></i>
           </button>
         </div>
       </div>
-      <input type="hidden" id="productId_${invoiceItemCount}">
+      <input type="hidden" id="productId_${idx}">
     `;
     
     container.appendChild(row);
     
-    // Populate product select
-    populateProductSelect(row.querySelector('.product-select'));
+    // Populate product select (with optional preselected id)
+    const selectEl = row.querySelector('.product-select');
+    await populateProductSelect(
+      selectEl,
+      itemData ? itemData.productId : null,
+      itemData ? itemData.name : null
+    );
+    
+    // إذا كانت هناك بيانات صنف: املأ باقي الحقول
+    if (itemData) {
+      document.getElementById(`productId_${idx}`).value = itemData.productId || '';
+      document.getElementById(`quantity_${idx}`).value = toNumber(itemData.quantity) || 1;
+      document.getElementById(`buyPrice_${idx}`).value = toNumber(itemData.buy) || 0;
+      document.getElementById(`sellPrice_${idx}`).value = toNumber(itemData.sell) || 0;
+    }
+    
+    return idx;
   }
 
-  async function populateProductSelect(selectElement) {
+  async function populateProductSelect(selectElement, selectedId, fallbackName) {
     try {
       const products = await load('products');
       selectElement.innerHTML = '<option value="">-- اختر المنتج --</option>';
+      
       products.map(normalizeProductRecord).forEach(product => {
-        if (toNumber(product.stock) > 0) {
-          const option = document.createElement('option');
-          option.value = product.id;
-          option.textContent = `${product.name} (المخزون: ${product.stock})`;
-          selectElement.appendChild(option);
-        }
+        const option = document.createElement('option');
+        option.value = product.id;
+        const stock = toNumber(product.stock);
+        const stockLabel = stock > 0 ? `(المخزون: ${stock})` : '(نفد المخزون)';
+        option.textContent = `${product.name} ${stockLabel}`;
+        if (product.storeId) option.dataset.storeId = product.storeId;
+        selectElement.appendChild(option);
       });
+      
+      // إذا كانت قيمة مطلوبة (وضع التعديل)
+      if (selectedId) {
+        // جرّب المطابقة بالـ id الداخلي
+        let opt = selectElement.querySelector(`option[value="${selectedId}"]`);
+        // ثم بالـ storeId (للفواتير المتزامنة من المتجر)
+        if (!opt) {
+          opt = selectElement.querySelector(`option[data-store-id="${selectedId}"]`);
+        }
+        if (opt) {
+          selectElement.value = opt.value;
+        } else {
+          // منتج محذوف أو غير مطابق — أضف خياراً شبحياً للحفاظ على البيانات
+          const ghost = document.createElement('option');
+          ghost.value = selectedId;
+          ghost.textContent = fallbackName
+            ? `${fallbackName} (غير موجود في المستودع)`
+            : '(منتج غير موجود في المستودع)';
+          ghost.dataset.ghost = 'true';
+          selectElement.appendChild(ghost);
+          selectElement.value = selectedId;
+        }
+      }
     } catch (error) {
       console.error('Error populating product select:', error);
     }
@@ -8629,7 +8818,7 @@ window.calculateCurrentMonthCommitments = calculateCurrentMonthCommitments;
   }
 
   function updateInvoiceTotals() {
-    let totalSell = 0;
+    let itemsTotalSell = 0;
     let totalBuy = 0;
     
     for (let i = 1; i <= invoiceItemCount; i++) {
@@ -8639,28 +8828,59 @@ window.calculateCurrentMonthCommitments = calculateCurrentMonthCommitments;
         const sellPrice = toNumber(document.getElementById(`sellPrice_${i}`)?.value || 0);
         const buyPrice = toNumber(document.getElementById(`buyPrice_${i}`)?.value || 0);
         
-        totalSell += quantity * sellPrice;
+        itemsTotalSell += quantity * sellPrice;
         totalBuy += quantity * buyPrice;
       }
     }
     
-    const net = totalSell - totalBuy;
+    const shippingFee = toNumber(document.getElementById('invShippingFee')?.value || 0);
+    // إجمالي الفاتورة = بيع الأصناف + رسوم الشحن (المستلمة من العميل)
+    const totalSell = itemsTotalSell + shippingFee;
+    // الصافي = (بيع - شراء - شحن) لأن الشحن مستحق للمندوب
+    const net = itemsTotalSell - totalBuy;
     
     document.getElementById('invTotalSell').value = totalSell.toFixed(2);
     document.getElementById('invTotalBuy').value = totalBuy.toFixed(2);
     document.getElementById('invNet').value = net.toFixed(2);
   }
 
-  document.getElementById('btnAddItem').addEventListener('click', function() {
-    addInvoiceItemRow();
+  // إظهار/إخفاء حقول التوصيل حسب طريقة التسليم
+  window.toggleDeliveryFields = function() {
+    const method = document.getElementById('invShippingMethod')?.value || '';
+    const feeEl = document.getElementById('invShippingFee');
+    const dealerEl = document.getElementById('invDeliveryDealer');
+    if (!feeEl || !dealerEl) return;
+    
+    if (method === 'delivery') {
+      feeEl.removeAttribute('disabled');
+      dealerEl.removeAttribute('disabled');
+    } else {
+      // استلام أو غير محدد: صفر شحن ولا مندوب
+      feeEl.value = 0;
+      feeEl.setAttribute('disabled', 'disabled');
+      dealerEl.value = '';
+      dealerEl.setAttribute('disabled', 'disabled');
+    }
+    updateInvoiceTotals();
+  };
+
+  document.getElementById('btnAddItem').addEventListener('click', async function() {
+    await addInvoiceItemRow();
   });
 
   document.getElementById('invoiceForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
     try {
-      if (!checkPermission('invoices', 'create')) {
+      const invId = document.getElementById('invId').value;
+      const isEdit = !!invId;
+      
+      if (!isEdit && !checkPermission('invoices', 'create')) {
         showToast('❌ لا تملك صلاحية إنشاء فواتير', 'error');
+        return;
+      }
+      if (isEdit && !checkPermission('invoices', 'update')) {
+        showToast('❌ لا تملك صلاحية تعديل الفواتير', 'error');
         return;
       }
       
@@ -8674,6 +8894,19 @@ window.calculateCurrentMonthCommitments = calculateCurrentMonthCommitments;
       let hasStockError = false;
       
       const products = await load('products');
+      const invoices = await load('invoices');
+      const oldInvoice = isEdit ? invoices.find(i => i.id === invId) : null;
+      
+      // عند التعديل: أعد المخزون القديم لأننا سنخصمه حسب الكميات الجديدة
+      if (isEdit && oldInvoice && Array.isArray(oldInvoice.items)) {
+        oldInvoice.items.forEach(oldItem => {
+          if (oldItem.isGhost) return; // منتج شبحي — لا يوجد في المستودع
+          const pIndex = products.findIndex(p => p.id === oldItem.productId);
+          if (pIndex !== -1) {
+            products[pIndex].stock = toNumber(products[pIndex].stock) + toNumber(oldItem.quantity);
+          }
+        });
+      }
       
       for (let i = 1; i <= invoiceItemCount; i++) {
         const row = document.getElementById(`itemRow_${i}`);
@@ -8683,7 +8916,13 @@ window.calculateCurrentMonthCommitments = calculateCurrentMonthCommitments;
           
           if (productId && quantity > 0) {
             const product = products.find(p => p.id === productId);
-            if (product && toNumber(product.stock) < quantity) {
+            
+            // المنتج الشبحي (غير موجود في المستودع — مثل منتجات المتجر بدون مطابقة)
+            const isGhost = !product;
+            const selectEl = row.querySelector('.product-select');
+            const selectedOpt = selectEl ? selectEl.options[selectEl.selectedIndex] : null;
+            
+            if (!isGhost && toNumber(product.stock) < quantity) {
               showToast(`❌ كمية المنتج ${product.name} غير متوفرة. المتاح: ${product.stock}`, 'error');
               hasStockError = true;
               break;
@@ -8691,12 +8930,18 @@ window.calculateCurrentMonthCommitments = calculateCurrentMonthCommitments;
             
             const buyPrice = toNumber(document.getElementById(`buyPrice_${i}`)?.value || 0);
             const sellPrice = toNumber(document.getElementById(`sellPrice_${i}`)?.value || 0);
+            // اسم المنتج: من المستودع أو من الخيار الشبحي
+            const itemName = isGhost
+              ? (selectedOpt ? (selectedOpt.textContent || '').replace(/\s*\(غير موجود.*?\)\s*$/, '').trim() : '')
+              : product.name;
             
             items.push({
               productId,
+              name: itemName,
               quantity,
               buy: buyPrice,
-              sell: sellPrice
+              sell: sellPrice,
+              isGhost: isGhost || undefined
             });
             hasItems = true;
           }
@@ -8710,46 +8955,83 @@ window.calculateCurrentMonthCommitments = calculateCurrentMonthCommitments;
         return;
       }
       
-      // Calculate totals
-      const totalSell = items.reduce((sum, item) => sum + (item.quantity * item.sell), 0);
+      // قراءة حقول التوصيل
+      const shippingMethod = document.getElementById('invShippingMethod').value || '';
+      const shippingFee = shippingMethod === 'delivery' ? toNumber(document.getElementById('invShippingFee').value || 0) : 0;
+      let deliveryDealerId = shippingMethod === 'delivery' ? (document.getElementById('invDeliveryDealer').value || null) : null;
+      
+      // التحقق: إذا طريقة التسليم = توصيل ورسوم الشحن > 0 لكن بدون مندوب → أنشئ مندوب افتراضي
+      if (shippingMethod === 'delivery' && shippingFee > 0 && !deliveryDealerId) {
+        try {
+          deliveryDealerId = await ensureDeliveryDealer();
+        } catch (e) {
+          console.warn('Failed to ensure delivery dealer:', e);
+        }
+      }
+      
+      // حساب الإجماليات
+      const itemsTotalSell = items.reduce((sum, item) => sum + (item.quantity * item.sell), 0);
       const totalBuy = items.reduce((sum, item) => sum + (item.quantity * item.buy), 0);
-      const net = totalSell - totalBuy;
+      const totalSell = itemsTotalSell + shippingFee; // المبلغ المستلم من العميل
+      const net = itemsTotalSell - totalBuy; // الصافي الحقيقي للمتجر (بدون الشحن لأنه مستحق للمندوب)
       
-      // Get counters for invoice number
-      const counters = await load('counters');
-      const invoiceNumber = counters.invoice + 1;
+      let invoice;
+      if (isEdit && oldInvoice) {
+        // تعديل: حافظ على الـ id والـ number والـ createdAt والـ storeOrderId
+        invoice = {
+          ...oldInvoice,
+          customerId: customerId || 'anonymous',
+          items,
+          totalSell,
+          totalBuy,
+          net,
+          shippingFee,
+          shippingMethod,
+          deliveryDealerId,
+          date: document.getElementById('invDate').value || oldInvoice.date || dateOnly(new Date()),
+          paymentMethod: document.getElementById('invPaymentMethod').value,
+          paymentStatus: document.getElementById('invPaymentStatus').value,
+          notes: document.getElementById('invNotes').value,
+          updatedAt: nowISO()
+        };
+        const idx = invoices.findIndex(i => i.id === invId);
+        if (idx !== -1) invoices[idx] = invoice;
+      } else {
+        // إنشاء جديد
+        const counters = await load('counters');
+        const invoiceNumber = (counters.invoice || 1000) + 1;
+        
+        invoice = {
+          id: uid(),
+          number: `INV-${invoiceNumber}`,
+          customerId: customerId || 'anonymous',
+          items,
+          totalSell,
+          totalBuy,
+          net,
+          shippingFee,
+          shippingMethod,
+          deliveryDealerId,
+          date: document.getElementById('invDate').value || dateOnly(new Date()),
+          paymentMethod: document.getElementById('invPaymentMethod').value,
+          paymentStatus: document.getElementById('invPaymentStatus').value,
+          notes: document.getElementById('invNotes').value,
+          createdAt: nowISO()
+        };
+        invoices.push(invoice);
+        counters.invoice = invoiceNumber;
+        await save('counters', counters);
+      }
       
-      // Create invoice
-      const invoice = {
-        id: uid(),
-        number: `INV-${invoiceNumber}`,
-        customerId: customerId || 'anonymous',
-        items,
-        totalSell,
-        totalBuy,
-        net,
-        date: document.getElementById('invDate').value || dateOnly(new Date()),
-        paymentMethod: document.getElementById('invPaymentMethod').value,
-        paymentStatus: document.getElementById('invPaymentStatus').value,
-        notes: document.getElementById('invNotes').value,
-        createdAt: nowISO()
-      };
-      
-      // Save invoice
-      const invoices = await load('invoices');
-      invoices.push(invoice);
       await save('invoices', invoices);
       clearCache('invoices');
       
-      // Update counters
-      counters.invoice = invoiceNumber;
-      await save('counters', counters);
-      
-      // Update product stock
+      // تحديث المخزون: اخصم الكميات الجديدة (تجاهل المنتجات الشبحية)
       items.forEach(item => {
+        if (item.isGhost) return; // منتج غير موجود في المستودع — لا شيء للخصم منه
         const productIndex = products.findIndex(p => p.id === item.productId);
         if (productIndex !== -1) {
-          products[productIndex].stock -= item.quantity;
+          products[productIndex].stock = toNumber(products[productIndex].stock) - toNumber(item.quantity);
           if (products[productIndex].stock < 0) products[productIndex].stock = 0;
         }
       });
@@ -8757,10 +9039,12 @@ window.calculateCurrentMonthCommitments = calculateCurrentMonthCommitments;
       clearCache('products');
       
       hideModal('invoiceModal');
-      showToast('✅ تم إنشاء الفاتورة بنجاح', 'success');
-      createNotification('فاتورة جديدة', `تم إنشاء فاتورة جديدة برقم ${invoice.number}`, 'success');
+      showToast(`✅ تم ${isEdit ? 'تعديل' : 'إنشاء'} الفاتورة بنجاح`, 'success');
+      if (!isEdit) {
+        createNotification('فاتورة جديدة', `تم إنشاء فاتورة جديدة برقم ${invoice.number}`, 'success');
+      }
       loadInvoices();
-      loadProducts(); // Refresh products table to show updated stock
+      if (typeof loadProducts === 'function') loadProducts(); // Refresh products table
       
     } catch (error) {
       console.error('Error saving invoice:', error);
@@ -10318,6 +10602,36 @@ async function syncStoreProductsToInventory() {
   if (typeof loadProducts === 'function') loadProducts();
 }
 
+// ===== دالة مساعدة: ضمان وجود تاجر "مندوب التوصيل" =====
+// ترجع id التاجر الخاص بمندوب التوصيل (ينشئه تلقائياً إن لم يوجد)
+async function ensureDeliveryDealer() {
+  let dealers = await load('dealers', false) || [];
+  if (!Array.isArray(dealers)) dealers = [];
+
+  // ابحث بالاسم "مندوب التوصيل" أو بعلامة isDeliveryDealer
+  let delivery = dealers.find(d => d.isDeliveryDealer === true)
+              || dealers.find(d => (d.name || '').trim() === 'مندوب التوصيل');
+
+  if (delivery) return delivery.id;
+
+  // إنشاء تاجر جديد
+  const newDealer = {
+    id: uid(),
+    name: 'مندوب التوصيل',
+    specialty: 'خدمات توصيل',
+    phone: '',
+    address: '',
+    isDeliveryDealer: true,
+    notes: 'تاجر نظامي لتسجيل رسوم التوصيل من طلبات المتجر',
+    createdAt: nowISO(),
+    updatedAt: nowISO()
+  };
+  dealers.push(newDealer);
+  await save('dealers', dealers);
+  clearCache('dealers');
+  return newDealer.id;
+}
+
 // ===== دالة مساعدة: إضافة/تحديث العميل من طلبات المتجر =====
 // ترجع id العميل بعد الحفظ
 // type: 'بيع' أو 'صيانة'
@@ -10429,24 +10743,45 @@ async function syncStoreOrdersToSales() {
     const afterCustomers = (await load('customers', false) || []).length;
     if (afterCustomers > beforeCustomers) customersAdded++;
 
-    // 2) تجهيز أصناف الفاتورة
+    // 2) تجهيز أصناف الفاتورة (مع مطابقة storeId → id داخلي للمحاسبة)
+    const accountingProducts = await load('products', false) || [];
+    const productsArr = Array.isArray(accountingProducts) ? accountingProducts : [];
     const items = (order.items || []).map(i => {
       const qty  = toNumber(i.quantity ?? 1);
       const sell = toNumber(i.price ?? i.sell ?? 0);
-      const buy  = toNumber(i.buy ?? 0);
+      const storeProdId = i.id || i.productId || '';
+      // ابحث عن المنتج في مستودع المحاسبة بالـ storeId أو بالاسم
+      const localProd = productsArr.find(p =>
+        (p.storeId && p.storeId === storeProdId) ||
+        (p.id && p.id === storeProdId) ||
+        (i.name && p.name === i.name)
+      );
+      const buy = toNumber(i.buy ?? (localProd ? localProd.buy : 0));
       return {
-        productId: i.productId || i.id || '',
-        name: i.name || '',
+        productId: localProd ? localProd.id : storeProdId,
+        storeProductId: storeProdId,
+        name: i.name || (localProd ? localProd.name : ''),
         quantity: qty,
         sell: sell,
-        buy: buy
+        buy: buy,
+        isGhost: !localProd || undefined // إن لم يُوجد في المستودع = منتج شبحي
       };
     });
 
     const shipping  = toNumber(order.shippingFee);
     const totalSell = toNumber(items.reduce((s, x) => s + (x.quantity * x.sell), 0)) + shipping;
     const totalBuy  = toNumber(items.reduce((s, x) => s + (x.quantity * x.buy), 0));
-    const net       = totalSell - totalBuy;
+    const net       = totalSell - totalBuy - shipping; // صافي الربح الحقيقي = سعر البيع - سعر الشراء - (رسوم التوصيل المستحقة للمندوب)
+
+    // 2.5) ربط رسوم التوصيل بتاجر "مندوب التوصيل"
+    let deliveryDealerId = null;
+    if (shipping > 0 && order.shippingMethod === 'delivery') {
+      try {
+        deliveryDealerId = await ensureDeliveryDealer();
+      } catch (e) {
+        console.warn('Failed to ensure delivery dealer:', e);
+      }
+    }
 
     // 3) رقم فاتورة جديد
     counters.invoice = (counters.invoice || 1000) + 1;
@@ -10487,6 +10822,7 @@ async function syncStoreOrdersToSales() {
       totalBuy: totalBuy,
       shippingFee: shipping,
       shippingMethod: order.shippingMethod || '',
+      deliveryDealerId: deliveryDealerId,
       storeTotal: toNumber(order.total),
       net: net,
       date: orderDate.slice(0, 10),
