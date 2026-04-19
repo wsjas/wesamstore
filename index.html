@@ -8323,7 +8323,11 @@ function updateProductsTable() {
                 }
 
                 const orderId = `OR-${Date.now()}`;
-                const subtotal = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const subtotal = state.cart.reduce((sum, item) => {
+                    const p = Number(item.sell ?? item.price ?? 0) || 0;
+                    const q = Number(item.quantity ?? 0) || 0;
+                    return sum + (p * q);
+                }, 0);
                 const shippingFee = state.shippingMethod === 'delivery' ? 2 : 0;
                 const total = subtotal + shippingFee;
 
@@ -8338,8 +8342,8 @@ function updateProductsTable() {
                     items: state.cart.map(i => ({
                         id: i.id || '',
                         name: i.name || '',
-                        price: i.price || 0,
-                        quantity: i.quantity || 0
+                        price: Number(i.sell ?? i.price ?? 0) || 0,
+                        quantity: Number(i.quantity ?? 0) || 0
                     })),
                     subtotal,
                     shippingFee,
