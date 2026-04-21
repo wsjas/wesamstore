@@ -259,10 +259,27 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
 /* ===== Category List ===== */
 .cat-list-item{
   display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border);
+  flex-wrap:wrap;
 }
 .cat-list-item i{width:28px;height:28px;display:flex;align-items:center;justify-content:center;
   background:rgba(255,140,0,.1);color:var(--accent);border-radius:8px;font-size:.85rem;}
-.cat-list-item .cat-name{flex:1;font-weight:600;font-size:.9rem;}
+.cat-list-item .cat-thumb{
+  width:36px;height:36px;border-radius:8px;object-fit:cover;border:1px solid var(--border);
+  background:#fafafa;
+}
+.cat-list-item .cat-name{flex:1;font-weight:600;font-size:.9rem;min-width:120px;}
+.cat-list-item .cat-img-input{
+  flex:1 1 260px;min-width:200px;
+  padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;
+  font-family:inherit;background:#fff;
+}
+.cat-list-item .cat-save{
+  background:var(--accent);color:#fff;border:none;border-radius:8px;
+  padding:6px 14px;cursor:pointer;font-size:.85rem;font-weight:700;
+  transition:all .2s;
+}
+.cat-list-item .cat-save:hover{ filter:brightness(1.1); }
+.cat-list-item .cat-save.saved{ background:#16a34a; }
 .cat-list-item .cat-delete{
   background:none;border:none;color:var(--danger);cursor:pointer;font-size:.85rem;
   padding:4px 10px;border-radius:6px;transition:all .2s;
@@ -451,7 +468,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
               <input id="newCategoryName" placeholder="أدخل اسم التصنيف" required type="text"/>
             </div>
             <div class="form-group">
-              <label for="newCategoryIcon">أيقونة التصنيف</label>
+              <label for="newCategoryIcon">أيقونة التصنيف (بديل الصورة)</label>
               <select id="newCategoryIcon">
                 <option value="fas fa-headphones">سماعات</option>
                 <option value="fas fa-tv">تلفزيون</option>
@@ -464,6 +481,15 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
                 <option value="fas fa-battery-full">بطاريات</option>
                 <option value="fas fa-plug">شواحن</option>
               </select>
+            </div>
+            <div class="form-group" style="grid-column:1/-1;">
+              <label for="newCategoryImage">
+                رابط صورة التصنيف (اختياري — إذا ضفت صورة ستظهر بدل الأيقونة)
+              </label>
+              <input id="newCategoryImage" placeholder="https://i.postimg.cc/.../image.jpg" type="url"/>
+              <small style="color:var(--text-muted);display:block;margin-top:4px;font-size:.78rem;">
+                ارفع الصورة على <a href="https://postimages.org" target="_blank" style="color:var(--accent);">Postimages</a> ثم الصق رابط "Direct Link" هنا.
+              </small>
             </div>
           </div>
           <button class="save-btn" type="submit"><i class="fas fa-plus"></i> إضافة التصنيف</button>
@@ -1041,24 +1067,41 @@ $('saveCategoryOrderBtn').addEventListener('click', async () => {
 function renderCategoriesList() {
   const el = $('categoriesList');
   if (!categories.length) { el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-muted);">لا توجد تصنيفات</div>'; return; }
-  el.innerHTML = categories.map(c => `
-    <div class="cat-list-item">
-      <i class="${c.icon || 'fas fa-box'}"></i>
+  el.innerHTML = categories.map(c => {
+    const imgUrl = c.imageUrl || '';
+    const thumb = imgUrl
+      ? `<img class="cat-thumb" src="${escapeHtml(imgUrl)}" alt="${escapeHtml(c.name||'')}" onerror="this.outerHTML='<i class=\\'${escapeHtml(c.icon||'fas fa-box')}\\'></i>'"/>`
+      : `<i class="${escapeHtml(c.icon || 'fas fa-box')}"></i>`;
+    return `
+    <div class="cat-list-item" data-cat-id="${escapeHtml(c.id)}">
+      ${thumb}
       <span class="cat-name">${escapeHtml(c.name)}</span>
-      <button class="cat-delete" onclick="deleteCategory('${c.id}')"><i class="fas fa-trash"></i> حذف</button>
-    </div>
-  `).join('');
+      <input type="url" class="cat-img-input" placeholder="رابط صورة التصنيف (https://...)"
+             value="${escapeHtml(imgUrl)}"
+             data-cat-id="${escapeHtml(c.id)}"/>
+      <button type="button" class="cat-save" onclick="saveCategoryImage('${escapeHtml(c.id)}', this)">
+        <i class="fas fa-save"></i> حفظ
+      </button>
+      <button type="button" class="cat-delete" onclick="deleteCategory('${escapeHtml(c.id)}')">
+        <i class="fas fa-trash"></i> حذف
+      </button>
+    </div>`;
+  }).join('');
 }
 
 $('addCategoryForm').addEventListener('submit', async e => {
   e.preventDefault();
   const name = $('newCategoryName').value.trim();
   const icon = $('newCategoryIcon').value;
+  const imageUrl = ($('newCategoryImage') ? $('newCategoryImage').value.trim() : '');
   if (!name) return;
   try {
-    await db.collection('categories').add({ name, icon, createdAt: getServerTimestamp() });
+    const docData = { name, icon, createdAt: getServerTimestamp() };
+    if (imageUrl) docData.imageUrl = imageUrl;
+    await db.collection('categories').add(docData);
     showToast('✅ تم إضافة التصنيف', 'success');
     $('newCategoryName').value = '';
+    if ($('newCategoryImage')) $('newCategoryImage').value = '';
     await loadCategories();
     renderCategoriesList();
     renderCategoryOrder();
@@ -1066,10 +1109,46 @@ $('addCategoryForm').addEventListener('submit', async e => {
   } catch(e) { showToast('❌ خطأ في إضافة التصنيف', 'error'); }
 });
 
+// Save/update image URL for an existing category
+window.saveCategoryImage = async function(catId, btn) {
+  try {
+    const row = btn.closest('.cat-list-item');
+    const input = row && row.querySelector('.cat-img-input');
+    if (!input) return;
+    const cat = categories.find(c => c.id === catId);
+    if (!cat) { showToast('❌ التصنيف غير موجود', 'error'); return; }
+    const newUrl = input.value.trim();
+    // Validate URL format if non-empty
+    if (newUrl && !/^https?:\/\//i.test(newUrl)) {
+      showToast('⚠️ الرابط يجب أن يبدأ بـ http:// أو https://', 'warning');
+      return;
+    }
+    // Use docId if present, otherwise fall back to id field
+    const docRef = db.collection('categories').doc(cat.docId || cat.id);
+    await docRef.set({ imageUrl: newUrl || firebase.firestore.FieldValue.delete() }, { merge: true });
+    btn.classList.add('saved');
+    btn.innerHTML = '<i class="fas fa-check"></i> تم الحفظ';
+    setTimeout(() => {
+      btn.classList.remove('saved');
+      btn.innerHTML = '<i class="fas fa-save"></i> حفظ';
+    }, 1800);
+    // Refresh in-memory list + re-render thumbnail
+    cat.imageUrl = newUrl;
+    renderCategoriesList();
+    showToast('✅ تم حفظ صورة التصنيف', 'success');
+  } catch(err) {
+    console.error(err);
+    showToast('❌ خطأ في حفظ الصورة', 'error');
+  }
+};
+
 window.deleteCategory = async function(id) {
   if (!confirm('حذف هذا التصنيف؟')) return;
   try {
-    await db.collection('categories').doc(id).delete();
+    // Find the proper docId
+    const cat = categories.find(c => c.id === id);
+    const docRef = db.collection('categories').doc((cat && cat.docId) || id);
+    await docRef.delete();
     showToast('✅ تم حذف التصنيف', 'success');
     await loadCategories();
     renderCategoriesList();

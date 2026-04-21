@@ -1,0 +1,194 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdminDoc() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isKnownAdmin() {
+      return isAuthenticated() &&
+        request.auth.token.email in ['wesam@store.store'];
+    }
+
+    function isAdminAny() {
+      return isAdminDoc() || isKnownAdmin();
+    }
+
+    function isNumeric(value) {
+      return value is int || value is float;
+    }
+
+    function isOwnerByUid(uid) {
+      return isAuthenticated() && uid is string && uid == request.auth.uid;
+    }
+
+    function isOwnerByEmail(email) {
+      return isAuthenticated() &&
+        email is string &&
+        request.auth.token.email is string &&
+        email == request.auth.token.email;
+    }
+
+    function createOwnerFieldsAreValid() {
+      return (
+        request.resource.data.userId == null ||
+        request.resource.data.userId == '' ||
+        isOwnerByUid(request.resource.data.userId)
+      ) && (
+        request.resource.data.userEmail == null ||
+        request.resource.data.userEmail == '' ||
+        isOwnerByEmail(request.resource.data.userEmail)
+      );
+    }
+
+    function validOrderCreate() {
+      return request.resource.data.keys().hasAll([
+          'orderId', 'customerName', 'customerPhone', 'shippingMethod',
+          'items', 'subtotal', 'shippingFee', 'total', 'status', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'orderId', 'userId', 'userEmail', 'customerName', 'customerPhone',
+          'shippingMethod', 'customerAddress', 'items', 'subtotal', 'shippingFee',
+          'total', 'channel', 'status', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.orderId is string
+        && request.resource.data.customerName is string
+        && request.resource.data.customerPhone is string
+        && request.resource.data.shippingMethod is string
+        && request.resource.data.items is list
+        && isNumeric(request.resource.data.subtotal)
+        && isNumeric(request.resource.data.shippingFee)
+        && isNumeric(request.resource.data.total)
+        && request.resource.data.status is string
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.customerName.size() > 0
+        && request.resource.data.customerName.size() <= 120
+        && request.resource.data.customerPhone.size() >= 8
+        && request.resource.data.customerPhone.size() <= 20
+        && request.resource.data.items.size() > 0
+        && request.resource.data.items.size() <= 100
+        && createOwnerFieldsAreValid();
+    }
+
+    function validServiceRequestCreate() {
+      return request.resource.data.keys().hasAll([
+          'requestId', 'customerName', 'customerPhone', 'deviceType', 'deviceSize',
+          'faultDesc', 'status', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'requestId', 'userId', 'userEmail', 'customerName', 'customerPhone',
+          'deviceType', 'deviceSize', 'faultDesc', 'imageLink', 'locationLink',
+          'addressText', 'status', 'createdAt', 'updatedAt', 'warranty', 'repairCost', 'repairNotes'
+        ])
+        && request.resource.data.requestId is string
+        && request.resource.data.customerName is string
+        && request.resource.data.customerPhone is string
+        && request.resource.data.deviceType is string
+        && request.resource.data.deviceSize is string
+        && request.resource.data.faultDesc is string
+        && request.resource.data.status is string
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.customerName.size() > 0
+        && request.resource.data.customerName.size() <= 120
+        && request.resource.data.customerPhone.size() >= 8
+        && request.resource.data.customerPhone.size() <= 20
+        && request.resource.data.deviceType.size() > 0
+        && request.resource.data.deviceType.size() <= 80
+        && request.resource.data.deviceSize.size() > 0
+        && request.resource.data.deviceSize.size() <= 20
+        && request.resource.data.faultDesc.size() > 0
+        && request.resource.data.faultDesc.size() <= 2000
+        && createOwnerFieldsAreValid();
+    }
+
+    function validSubscriberCreate() {
+      return request.resource.data.keys().hasAll(['phone', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['phone', 'createdAt'])
+        && request.resource.data.phone is string
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.phone.size() >= 8
+        && request.resource.data.phone.size() <= 20;
+    }
+
+    function validUserProfileWrite(userId) {
+      return isAuthenticated()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['uid', 'email', 'name', 'phone', 'createdAt', 'updatedAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email is string
+        && request.resource.data.name is string
+        && request.resource.data.phone is string
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.name.size() <= 120
+        && request.resource.data.phone.size() <= 20;
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update, delete: if isAdminAny();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create, update, delete: if isAdminAny();
+    }
+
+    match /orders/{orderId} {
+      allow read: if isAdminAny() || isOwnerByUid(resource.data.userId) || isOwnerByEmail(resource.data.userEmail);
+      allow get: if resource.data.orderId == orderId;
+      allow create: if validOrderCreate();
+      allow update, delete: if isAdminAny();
+    }
+
+    match /service_requests/{requestId} {
+      allow read: if isAdminAny() || isOwnerByUid(resource.data.userId) || isOwnerByEmail(resource.data.userEmail);
+      allow get: if resource.data.requestId == requestId;
+      allow create: if validServiceRequestCreate();
+      allow update, delete: if isAdminAny();
+    }
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdminAny();
+    }
+
+    match /subscribers/{subscriberId} {
+      allow read: if isAdminAny();
+      allow create: if validSubscriberCreate();
+      allow update, delete: if isAdminAny();
+    }
+
+    match /accounting_data/{docKey} {
+      allow read, write: if isAdminAny();
+    }
+
+    match /accounting_backups/{backupId} {
+      allow read, create, delete: if isAdminAny();
+    }
+
+    match /admins/{adminId} {
+      allow read: if isAdminAny();
+      allow create, update, delete: if isAdminAny();
+    }
+
+    match /users/{userId} {
+      allow read: if isAdminAny() || (isAuthenticated() && request.auth.uid == userId);
+      allow create, update: if isAdminAny() || validUserProfileWrite(userId);
+      allow delete: if isAdminAny();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
