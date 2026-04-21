@@ -4454,6 +4454,13 @@ header.glass i {
                                 عرض ضمن المنتجات المختارة والأفضل
                             </label>
 </div>
+<div class="form-group" style="display:flex; align-items:flex-end;">
+
+<label style="display:flex; gap:10px; align-items:center; cursor:pointer; padding:8px 12px; background:#fef2f2; border:2px solid #fee2e2; border-radius:8px;">
+<input id="productHidden" style="transform:scale(1.2);" type="checkbox"/>
+<span><i class="fas fa-eye-slash" style="color:#ef4444;margin-left:4px;"></i> إخفاء المنتج من المتجر (لن يظهر للعملاء)</span>
+</label>
+</div>
 </div>
 <div class="form-group">
 <label for="productDescription">وصف المنتج (المواصفات)</label>
@@ -5350,6 +5357,7 @@ header.glass i {
             cart: JSON.parse(localStorage.getItem('wassam_cart')) || [],
             products: [],
             filteredProducts: [],
+            sitePages: [],
             isAdmin: false,
             adminButtonVisible: true,
             currentUser: null,
@@ -6107,6 +6115,25 @@ header.glass i {
                     card.style.backgroundImage = '';
                 }
 
+                // إذا كانت البطاقة ترتبط بصفحة موقوفة، أعطها مظهر باهت (للعميل إشارة)
+                try {
+                    if (cfg.type === 'link' && cfg.href) {
+                        const sp = getSitePage(cfg.href);
+                        if (sp && sp.enabled === false) {
+                            card.style.opacity = '0.55';
+                            card.style.filter = 'grayscale(40%)';
+                            card.title = sp.disabledMessage || 'هذه الصفحة غير متاحة حالياً';
+                        } else {
+                            card.style.opacity = '';
+                            card.style.filter = '';
+                            card.title = '';
+                        }
+                    } else {
+                        card.style.opacity = '';
+                        card.style.filter = '';
+                    }
+                } catch (_) {}
+
                 // خزّن الإعداد الحالي ليستعمله مستمع النقر الدائم
                 card.__featuredCfg = cfg;
 
@@ -6130,7 +6157,7 @@ header.glass i {
                         if (liveCfg.type === 'link') {
                             const href = (liveCfg.href || '').trim();
                             if (href) {
-                                window.location.href = href;
+                                navigateToPage(href);
                             }
                             return;
                         }
@@ -6213,6 +6240,70 @@ header.glass i {
                 return url || '';
             }
         }
+
+        // ========== إدارة الصفحات (تفعيل/إيقاف صفحات المتجر) ==========
+        // استخرج الاسم من رابط (بدون باراميترز/هاش)
+        function _normalizePageUrl(url) {
+            return String(url || '').split('?')[0].split('#')[0].trim().toLowerCase();
+        }
+
+        // جد سجل صفحة بالمجموعة site_pages حسب الرابط
+        function getSitePage(url) {
+            const u = _normalizePageUrl(url);
+            if (!u || !Array.isArray(state.sitePages)) return null;
+            return state.sitePages.find(p => _normalizePageUrl(p.url) === u) || null;
+        }
+
+        // هل هذه الصفحة مفعّلة (افتراضياً نعم لو مش موجودة في الإدارة)؟
+        function isPageEnabled(url) {
+            const p = getSitePage(url);
+            return !p || p.enabled !== false;
+        }
+
+        // انتقل للصفحة إذا كانت مفعّلة، وإلا اعرض رسالة للعميل
+        function navigateToPage(url) {
+            if (!url) return false;
+            const p = getSitePage(url);
+            if (p && p.enabled === false) {
+                const msg = (p.disabledMessage && p.disabledMessage.trim())
+                    ? p.disabledMessage
+                    : `الصفحة "${p.name || url}" غير متاحة حالياً، يرجى المحاولة لاحقاً.`;
+                try {
+                    if (typeof showNotification === 'function') {
+                        showNotification(msg);
+                    } else {
+                        alert(msg);
+                    }
+                } catch(_) { alert(msg); }
+                return false;
+            }
+            window.location.href = url;
+            return true;
+        }
+
+        // اعترض نقرات الروابط <a href="..."> إلى صفحات .html موقوفة
+        document.addEventListener('click', function(e) {
+            const a = e.target.closest && e.target.closest('a[href]');
+            if (!a) return;
+            const rawHref = a.getAttribute('href') || '';
+            // تخطى الروابط الفارغة/الداخلية/الخارجية
+            if (!rawHref || rawHref.startsWith('#')
+                || /^(https?:|mailto:|tel:|whatsapp:|javascript:)/i.test(rawHref)) return;
+            // نهتم فقط بصفحات HTML المحلية
+            if (!/\.html(\?|#|$)/i.test(rawHref)) return;
+            const p = getSitePage(rawHref);
+            if (p && p.enabled === false) {
+                e.preventDefault();
+                e.stopPropagation();
+                const msg = (p.disabledMessage && p.disabledMessage.trim())
+                    ? p.disabledMessage
+                    : `الصفحة "${p.name || rawHref}" غير متاحة حالياً، يرجى المحاولة لاحقاً.`;
+                try {
+                    if (typeof showNotification === 'function') showNotification(msg);
+                    else alert(msg);
+                } catch(_) { alert(msg); }
+            }
+        }, true);
 
 function updateSocialLinks() {
             elements.socialLinks.innerHTML = '';
@@ -6333,14 +6424,24 @@ function updateSocialLinks() {
                     setTimeout(() => reject(new Error("انتهت مهلة الاتصال")), 10000)
                 );
                 
-                // تحميل المنتجات والتصنيفات معاً
-                const [querySnapshot, categoriesSnapshot] = await Promise.race([
+                // تحميل المنتجات والتصنيفات والصفحات معاً
+                const [querySnapshot, categoriesSnapshot, pagesSnapshot] = await Promise.race([
                     Promise.all([
                         db.collection('products').orderBy('createdAt', 'desc').get(),
-                        db.collection('categories').get()
+                        db.collection('categories').get(),
+                        db.collection('site_pages').get().catch(() => ({ forEach: () => {} }))
                     ]),
                     timeoutPromise
                 ]);
+
+                // تحميل الصفحات المُدارة (لمعرفة أي صفحة موقوفة أم مفعّلة)
+                const sitePages = [];
+                if (pagesSnapshot && typeof pagesSnapshot.forEach === 'function') {
+                    pagesSnapshot.forEach(doc => {
+                        sitePages.push({ id: doc.id, ...doc.data() });
+                    });
+                }
+                state.sitePages = sitePages;
                 
                 const products = [];
                 querySnapshot.forEach(doc => {
@@ -6398,13 +6499,16 @@ function updateSocialLinks() {
                 window._categoryDocIdMap = {};
                 firebaseCategories.forEach(fc => { window._categoryDocIdMap[fc.docId] = fc.id; });
                 state.products = products;
-                state.filteredProducts = [...products];
+                state.filteredProducts = products.filter(p => p.hidden !== true);
                 
                 console.log(`✅ تم تحميل ${products.length} منتج و ${mergedCategories.length} تصنيف`);
                 showConnectionMessage('success', `تم تحميل ${products.length} منتج`);
                 
                 state.isFirebaseConnected = true;
                 showFirebaseError(false);
+
+                // حدّث مظهر البطاقات المميزة بعد تحميل site_pages (للإشارة للصفحات الموقوفة)
+                try { applyFeaturedCategoryCards(); } catch(_) {}
                 
             } catch (error) {
                 console.error('❌ خطأ في تحميل المنتجات:', error);
@@ -6507,8 +6611,9 @@ function updateSocialLinks() {
                 // تمييز المنتج كعرض
                 const onSaleChecked = !!(onSaleInput && onSaleInput.checked);
                 productData.onSale = onSaleChecked || (oldPrice > 0) || (discountPercent > 0);
-productData.stock = parseInt(document.getElementById('productStock').value);
+                productData.stock = parseInt(document.getElementById('productStock').value);
                 productData.featured = !!document.getElementById('productFeatured')?.checked;
+                productData.hidden = !!document.getElementById('productHidden')?.checked;
                 productData.description = document.getElementById('productDescription').value || '';
                 productData.deliveryFee = parseFloat(document.getElementById('productDeliveryFee').value) || 2;
                 productData.videoUrl = document.getElementById('productVideoUrl').value.trim() || '';
@@ -6583,14 +6688,16 @@ productData.stock = parseInt(document.getElementById('productStock').value);
         }
 
         function updateCategoryCounts() {
+            // استبعاد المنتجات المخفية من العدادات المعروضة للعملاء
+            const visible = state.products.filter(p => p.hidden !== true);
             state.categories.forEach(category => {
                 category.count = category.id === "all"
-                    ? state.products.filter(p => !!p.featured).length
+                    ? visible.filter(p => !!p.featured).length
                     : (category.id === "new"
-                        ? state.products.filter(p => isNewProduct(p)).length
+                        ? visible.filter(p => isNewProduct(p)).length
                         : (category.id === "offers"
-                            ? state.products.filter(p => isOfferProduct(p)).length
-                            : state.products.filter(p => p.category === category.id).length));
+                            ? visible.filter(p => isOfferProduct(p)).length
+                            : visible.filter(p => p.category === category.id).length));
             });
         }
 
@@ -6937,6 +7044,8 @@ function truncateDescription(description, maxLength = 100) {
             const sortOption = elements.sortOptions.value;
             
             let filtered = state.products.filter(product => {
+                // إخفاء المنتجات المعلّمة بأنها مخفية عن العملاء
+                if (product.hidden === true) return false;
                 const matchesSearch = product.name.toLowerCase().includes(searchTerm) || 
                                      (product.description && product.description.toLowerCase().includes(searchTerm));
                 let matchesCategory = false;
@@ -7979,7 +8088,7 @@ function updateProductsTable() {
                             '<i class="fas fa-image" style="color: #ccc; font-size: 1.5rem;"></i>'
                         }
                     </td>
-                    <td>${product.name}</td>
+                    <td>${product.name}${product.hidden === true ? ' <span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:700;margin-right:4px;"><i class="fas fa-eye-slash"></i> مخفي</span>' : ''}</td>
                     <td>${product.category}</td>
                     <td>${product.sell} دينار</td>
                     <td>${product.stock}</td>
@@ -8049,6 +8158,8 @@ function updateProductsTable() {
             const pf = document.getElementById('productFeatured');
             if (pf) pf.checked = !!product.featured;
             if (elements.productFeatured) elements.productFeatured.checked = !!product.featured;
+            const ph = document.getElementById('productHidden');
+            if (ph) ph.checked = product.hidden === true;
             document.getElementById('productDescription').value = product.description || '';
             document.getElementById('productDeliveryFee').value = product.deliveryFee || 2;
             document.getElementById('productVideoUrl').value = product.videoUrl || '';
@@ -9105,13 +9216,13 @@ if (elements.navShopBtn) {
 
 if (elements.navElectronicsStoreBtn) {
     bind(elements.navElectronicsStoreBtn, 'click', () => {
-        window.location.href = 'electronics-store.html';
+        navigateToPage('electronics-store.html');
     });
 }
 
 if (elements.navLiveBtn) {
     bind(elements.navLiveBtn, 'click', () => {
-        window.location.href = 'repair-live.html';
+        navigateToPage('repair-live.html');
     });
 }
 
@@ -9125,7 +9236,7 @@ if (elements.mOpenService) {
 if (elements.mLiveBtn) {
     bind(elements.mLiveBtn, 'click', () => {
         try { closeMobileDrawer(); } catch (e) {}
-        window.location.href = 'repair-live.html';
+        navigateToPage('repair-live.html');
     });
 }
 

@@ -140,6 +140,20 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
 .action-btn.view{background:rgba(34,197,94,.1);color:#16a34a;}
 .action-btn.view:hover{background:rgba(34,197,94,.2);}
 
+/* ===== TOGGLE SWITCH ===== */
+.switch{position:relative;display:inline-block;width:52px;height:28px;vertical-align:middle;}
+.switch input{opacity:0;width:0;height:0;}
+.switch .slider-track{
+  position:absolute;cursor:pointer;inset:0;background:#cbd5e1;
+  transition:.3s;border-radius:28px;
+}
+.switch .slider-track:before{
+  content:"";position:absolute;height:22px;width:22px;left:3px;bottom:3px;
+  background:#fff;transition:.3s;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,.2);
+}
+.switch input:checked + .slider-track{background:var(--success);}
+.switch input:checked + .slider-track:before{transform:translateX(24px);}
+
 /* ===== SETTINGS FORM ===== */
 .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 .form-group{margin-bottom:16px;}
@@ -318,9 +332,11 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
     <a href="#storeSettings" data-section="storeSettings"><i class="fas fa-cog"></i> إعدادات المتجر</a>
     <a href="#pageContent" data-section="pageContent"><i class="fas fa-edit"></i> محتوى الصفحة</a>
     <a href="#slider" data-section="slider"><i class="fas fa-images"></i> إدارة السلايدر</a>
+    <a href="#pages" data-section="pages"><i class="fas fa-link"></i> إدارة الصفحات</a>
     <div class="nav-divider"></div>
     <a href="orders.html"><i class="fas fa-shopping-bag"></i> الطلبات</a>
     <a href="add-product.html"><i class="fas fa-plus-circle"></i> إضافة منتج</a>
+    <a href="product-images.html"><i class="fas fa-images"></i> صور المنتجات</a>
     <a href="accounting.html"><i class="fas fa-calculator"></i> نظام المحاسبة</a>
     <a href="index.html"><i class="fas fa-store"></i> المتجر</a>
   </nav>
@@ -337,6 +353,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
     <h1><i class="fas fa-chart-pie"></i> <span id="pageTitle">الرئيسية</span></h1>
     <div class="topbar-actions">
       <a href="add-product.html" class="topbar-btn primary"><i class="fas fa-plus"></i> إضافة منتج</a>
+      <a href="product-images.html" class="topbar-btn"><i class="fas fa-images"></i> صور المنتجات</a>
       <a href="orders.html" class="topbar-btn"><i class="fas fa-shopping-bag"></i> الطلبات</a>
       <button class="topbar-btn danger" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> خروج</button>
     </div>
@@ -627,6 +644,63 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
     </div>
   </div>
 
+  <!-- Pages Management Section -->
+  <div class="admin-section" id="pagesSection">
+    <div class="section-card">
+      <div class="section-header">
+        <h2><i class="fas fa-link"></i> إضافة/تعديل صفحة</h2>
+      </div>
+      <div class="section-body">
+        <p style="color:var(--text-muted);margin-bottom:16px;font-size:.88rem;">
+          <i class="fas fa-info-circle" style="color:var(--accent);margin-left:4px;"></i>
+          أضف أي صفحة مرتبطة بالمتجر (مثل: <code>electronics-store.html</code>, <code>repair-live.html</code>) لتستطيع إيقافها أو تشغيلها. عند إيقاف صفحة سيظهر للعميل رسالة بدلاً من الدخول إليها.
+        </p>
+        <form id="pageForm">
+          <input type="hidden" id="pageEditId"/>
+          <div class="settings-grid">
+            <div class="form-group">
+              <label for="pageName">اسم الصفحة *</label>
+              <input id="pageName" type="text" required placeholder="مثال: متجر القطع والالكترونيات"/>
+            </div>
+            <div class="form-group">
+              <label for="pageUrl">رابط الصفحة (URL) *</label>
+              <input id="pageUrl" type="text" required placeholder="electronics-store.html"/>
+              <small>مثال: <code>electronics-store.html</code> أو <code>repair-live.html</code></small>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="pageDisabledMessage">رسالة عند الإيقاف (اختياري)</label>
+            <input id="pageDisabledMessage" type="text" placeholder="هذه الصفحة قيد الصيانة حالياً"/>
+            <small>ستظهر هذه الرسالة للعميل عند محاولة الدخول للصفحة وهي متوقفة.</small>
+          </div>
+          <div class="form-group">
+            <label class="toggle-wrap" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:12px 16px;background:var(--bg);border-radius:10px;">
+              <input type="checkbox" id="pageEnabled" checked style="width:18px;height:18px;accent-color:var(--success);cursor:pointer;"/>
+              <span style="font-weight:600;"><i class="fas fa-power-off" style="color:var(--success);margin-left:6px;"></i> الصفحة مفعّلة</span>
+            </label>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="save-btn" type="submit" id="savePageBtn"><i class="fas fa-save"></i> حفظ الصفحة</button>
+            <button class="topbar-btn" type="button" id="cancelPageEditBtn" style="display:none;"><i class="fas fa-times"></i> إلغاء</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-header">
+        <h2><i class="fas fa-list"></i> الصفحات المرتبطة بالمتجر</h2>
+        <button class="topbar-btn" id="seedPagesBtn" title="إضافة الصفحات الافتراضية"><i class="fas fa-magic"></i> استيراد الصفحات المعروفة</button>
+      </div>
+      <div class="section-body" style="overflow-x:auto;">
+        <table class="data-table" id="pagesTable">
+          <thead><tr><th>الاسم</th><th>الرابط</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+          <tbody id="pagesTableBody"><tr><td colspan="4" class="loading-spinner"><i class="fas fa-spinner"></i> جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- Toast -->
@@ -716,6 +790,7 @@ async function loadDashboard() {
   renderCategoryOrder();
   renderCategoriesList();
   loadSliderAdmin();
+  loadPages();
 }
 
 async function loadProducts() {
@@ -831,10 +906,16 @@ function renderProductsTable() {
     const sell = Number(p.sell || 0);
     const disc = Number(p.discountPercent || 0) || (old > sell && sell > 0 ? Math.round((1 - sell/old)*100) : 0);
     const isOnSale = p.onSale || disc > 0 || old > sell;
+    const isHidden = p.hidden === true;
+    const rowStyle = isHidden ? 'opacity:.55;background:#fef2f2;' : '';
+    const hiddenBadge = isHidden ? ' <span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:700;margin-right:4px;"><i class="fas fa-eye-slash"></i> مخفي</span>' : '';
+    const toggleBtn = isHidden
+      ? `<button class="action-btn" style="background:#dcfce7;color:#166534;" onclick="toggleProductHidden('${p.id}', false)" title="إظهار في المتجر"><i class="fas fa-eye"></i></button>`
+      : `<button class="action-btn" style="background:#fef3c7;color:#92400e;" onclick="toggleProductHidden('${p.id}', true)" title="إخفاء من المتجر"><i class="fas fa-eye-slash"></i></button>`;
     return `
-    <tr>
+    <tr style="${rowStyle}">
       <td>${p.image ? `<img src="${escapeHtml(p.image)}" alt="">` : '-'}</td>
-      <td style="font-weight:600;">${escapeHtml(p.name)}</td>
+      <td style="font-weight:600;">${escapeHtml(p.name)}${hiddenBadge}</td>
       <td><span class="badge info">${escapeHtml(p.category||'')}</span></td>
       <td style="font-weight:700;">${sell} د.أ</td>
       <td><span class="badge ${p.stock>5?'success':p.stock>0?'warning':'danger'}">${p.stock}</span></td>
@@ -843,12 +924,30 @@ function renderProductsTable() {
       <td>${isOnSale ? '<span style="color:var(--accent);font-weight:800;">✔</span>' : '-'}</td>
       <td>${p.videoUrl ? '<i class="fab fa-youtube" style="color:#f00;"></i>' : '-'}</td>
       <td>
+        ${toggleBtn}
         <button class="action-btn edit" onclick="editProduct('${p.id}')"><i class="fas fa-edit"></i></button>
         <button class="action-btn delete" onclick="deleteProduct('${p.id}')"><i class="fas fa-trash"></i></button>
       </td>
     </tr>`;
   }).join('');
 }
+
+window.toggleProductHidden = async function(id, hidden) {
+  try {
+    await db.collection('products').doc(id).update({
+      hidden: !!hidden,
+      updatedAt: getServerTimestamp()
+    });
+    showToast(hidden ? '🙈 تم إخفاء المنتج من المتجر' : '👁️ تم إظهار المنتج في المتجر', 'success');
+    await loadProducts();
+    renderProductsTable();
+    renderRecentProducts();
+    renderProductOrder();
+    loadStats();
+  } catch(e) {
+    showToast('❌ فشل تحديث حالة المنتج: ' + e.message, 'error');
+  }
+};
 
 window.editProduct = function(id) {
   window.location.href = 'add-product.html?edit=' + id;
@@ -1067,6 +1166,195 @@ $('saveSliderBtn').addEventListener('click', async () => {
 });
 
 $('reloadSliderBtn').addEventListener('click', loadSliderAdmin);
+
+// ===== Pages Management =====
+let sitePages = [];
+
+// قائمة الصفحات المعروفة في المتجر (يستخدمها زر "استيراد الصفحات المعروفة")
+const KNOWN_PAGES = [
+  { url: 'electronics-store.html', name: 'متجر القطع والالكترونيات' },
+  { url: 'repair-live.html', name: 'البث المباشر / الإصلاح المباشر' }
+];
+
+function pageDocId(url) {
+  // تحويل الرابط لـ ID آمن لفايرستور (بدون . أو / أو whitespace)
+  return String(url || '').trim().toLowerCase().replace(/[^a-z0-9\-_]+/g, '_').replace(/^_+|_+$/g, '');
+}
+
+async function loadPages() {
+  try {
+    const snap = await db.collection('site_pages').get();
+    sitePages = [];
+    snap.forEach(doc => { sitePages.push({ id: doc.id, ...doc.data() }); });
+    sitePages.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar'));
+    renderPagesTable();
+  } catch(e) {
+    console.warn('فشل تحميل الصفحات:', e);
+    renderPagesTable();
+  }
+}
+
+function renderPagesTable() {
+  const body = $('pagesTableBody');
+  if (!body) return;
+  if (!sitePages.length) {
+    body.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted);">لا توجد صفحات مضافة. استخدم النموذج أعلاه لإضافة صفحة، أو اضغط "استيراد الصفحات المعروفة".</td></tr>`;
+    return;
+  }
+  body.innerHTML = sitePages.map(p => {
+    const enabled = p.enabled !== false; // default true
+    const statusBadge = enabled
+      ? '<span class="badge success"><i class="fas fa-check-circle"></i> مفعّلة</span>'
+      : '<span class="badge danger"><i class="fas fa-ban"></i> متوقفة</span>';
+    return `
+    <tr>
+      <td style="font-weight:600;">${escapeHtml(p.name || '-')}</td>
+      <td><code style="background:var(--bg);padding:2px 8px;border-radius:6px;font-size:.82rem;">${escapeHtml(p.url || '-')}</code></td>
+      <td>
+        <label class="switch" title="${enabled ? 'اضغط لإيقاف' : 'اضغط لتفعيل'}">
+          <input type="checkbox" ${enabled ? 'checked' : ''} onchange="togglePage('${p.id}', this.checked)"/>
+          <span class="slider-track"></span>
+        </label>
+        ${statusBadge}
+      </td>
+      <td>
+        <button class="action-btn edit" onclick="editPage('${p.id}')"><i class="fas fa-edit"></i> تعديل</button>
+        <button class="action-btn delete" onclick="deletePage('${p.id}')"><i class="fas fa-trash"></i> حذف</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+window.togglePage = async function(id, enabled) {
+  try {
+    await db.collection('site_pages').doc(id).update({
+      enabled: !!enabled,
+      updatedAt: getServerTimestamp()
+    });
+    showToast(enabled ? '✅ تم تفعيل الصفحة' : '⏸️ تم إيقاف الصفحة', 'success');
+    await loadPages();
+  } catch(e) {
+    showToast('❌ فشل تحديث حالة الصفحة: ' + e.message, 'error');
+    await loadPages();
+  }
+};
+
+window.editPage = function(id) {
+  const p = sitePages.find(x => x.id === id);
+  if (!p) return;
+  $('pageEditId').value = p.id;
+  $('pageName').value = p.name || '';
+  $('pageUrl').value = p.url || '';
+  $('pageDisabledMessage').value = p.disabledMessage || '';
+  $('pageEnabled').checked = p.enabled !== false;
+  $('savePageBtn').innerHTML = '<i class="fas fa-save"></i> تحديث الصفحة';
+  $('cancelPageEditBtn').style.display = 'inline-flex';
+  // scroll إلى النموذج
+  document.getElementById('pageForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+window.deletePage = async function(id) {
+  const p = sitePages.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm(`هل أنت متأكد من حذف الصفحة "${p.name}"؟ سيعود سلوك المتجر إلى الافتراضي (الصفحة متاحة دون إدارة).`)) return;
+  try {
+    await db.collection('site_pages').doc(id).delete();
+    showToast('✅ تم حذف الصفحة', 'success');
+    resetPageForm();
+    await loadPages();
+  } catch(e) {
+    showToast('❌ فشل الحذف: ' + e.message, 'error');
+  }
+};
+
+function resetPageForm() {
+  $('pageForm').reset();
+  $('pageEditId').value = '';
+  $('pageEnabled').checked = true;
+  $('savePageBtn').innerHTML = '<i class="fas fa-save"></i> حفظ الصفحة';
+  $('cancelPageEditBtn').style.display = 'none';
+}
+
+$('cancelPageEditBtn').addEventListener('click', resetPageForm);
+
+$('pageForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const name = $('pageName').value.trim();
+  const url = $('pageUrl').value.trim();
+  const disabledMessage = $('pageDisabledMessage').value.trim();
+  const enabled = $('pageEnabled').checked;
+  const editId = $('pageEditId').value.trim();
+
+  if (!name || !url) {
+    showToast('❌ أدخل الاسم والرابط', 'error');
+    return;
+  }
+
+  const data = {
+    name,
+    url,
+    enabled: !!enabled,
+    disabledMessage,
+    updatedAt: getServerTimestamp()
+  };
+
+  $('savePageBtn').disabled = true;
+  try {
+    if (editId) {
+      // إذا تغيّر الـ URL، الـ ID الجديد يختلف — احذف القديم وأنشئ جديد
+      const newId = pageDocId(url);
+      if (newId !== editId) {
+        await db.collection('site_pages').doc(newId).set({ ...data, createdAt: getServerTimestamp() });
+        await db.collection('site_pages').doc(editId).delete();
+      } else {
+        await db.collection('site_pages').doc(editId).update(data);
+      }
+      showToast('✅ تم تحديث الصفحة', 'success');
+    } else {
+      const id = pageDocId(url);
+      if (!id) { showToast('❌ رابط غير صالح', 'error'); return; }
+      // افحص إن كانت موجودة
+      const existing = await db.collection('site_pages').doc(id).get();
+      if (existing.exists) {
+        if (!confirm('يوجد صفحة بنفس الرابط. هل تريد استبدالها؟')) { $('savePageBtn').disabled = false; return; }
+      }
+      data.createdAt = getServerTimestamp();
+      await db.collection('site_pages').doc(id).set(data);
+      showToast('✅ تمت إضافة الصفحة', 'success');
+    }
+    resetPageForm();
+    await loadPages();
+  } catch(e) {
+    showToast('❌ خطأ: ' + e.message, 'error');
+  } finally {
+    $('savePageBtn').disabled = false;
+  }
+});
+
+$('seedPagesBtn').addEventListener('click', async () => {
+  if (!confirm('سيتم إضافة الصفحات الافتراضية إذا لم تكن موجودة (الصفحات الموجودة لن تتغير). متابعة؟')) return;
+  let added = 0, skipped = 0;
+  try {
+    for (const p of KNOWN_PAGES) {
+      const id = pageDocId(p.url);
+      const existing = await db.collection('site_pages').doc(id).get();
+      if (existing.exists) { skipped++; continue; }
+      await db.collection('site_pages').doc(id).set({
+        name: p.name,
+        url: p.url,
+        enabled: true,
+        disabledMessage: '',
+        createdAt: getServerTimestamp(),
+        updatedAt: getServerTimestamp()
+      });
+      added++;
+    }
+    showToast(`✅ تمت إضافة ${added} صفحة — تم تخطي ${skipped}`, 'success');
+    await loadPages();
+  } catch(e) {
+    showToast('❌ خطأ في الاستيراد: ' + e.message, 'error');
+  }
+});
 </script>
 
 </body>

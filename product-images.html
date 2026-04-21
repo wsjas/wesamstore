@@ -7,6 +7,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
@@ -310,7 +311,7 @@ a{text-decoration:none}
         <div class="editor-empty">
           <i class="fas fa-image"></i>
           <div style="font-size:1rem;font-weight:800;color:var(--primary);margin-bottom:6px;">اختر منتجاً من القائمة</div>
-          <div>بعد اختيار المنتج ستظهر هنا جميع روابط صوره لتعديلها وحفظها.</div>
+          <div>بعد اختيار المنتج ستظهر هنا روابط الصور، مع إمكانية الرفع المباشر إلى Firebase للصورة الرئيسية وحذف القديمة تلقائياً عند الاستبدال.</div>
         </div>
       </div>
     </section>
@@ -321,6 +322,7 @@ a{text-decoration:none}
 window.WesamFirebase.init();
 const db = window.WesamFirebase.db;
 const auth = window.WesamFirebase.auth;
+const storage = window.WesamFirebase.storage;
 const ADMIN_EMAILS = ['wesam@store.store'];
 const $ = window.WesamUtils.$id;
 const escapeHtml = window.WesamUtils.escapeHtml;
@@ -481,10 +483,11 @@ function renderEditor(id){
       </div>
       <div>
         <h3>${escapeHtml(product.name || 'منتج')}</h3>
-        <p>من هنا تستطيع حفظ روابط خارجية للصورة الرئيسية وصور المعرض لهذا المنتج فقط.</p>
+        <p>من هنا تستطيع رفع الصورة الرئيسية مباشرة إلى Firebase، أو إبقاء الروابط الخارجية للصور الإضافية كما هي.</p>
         <div class="inline-meta">
           <span class="id-box">Product ID: ${escapeHtml(product.id)}</span>
           <span class="pill gray">${escapeHtml(product.category || 'بدون فئة')}</span>
+          <span class="pill blue">${escapeHtml(getStorageFolderName(product))}</span>
         </div>
         <div class="helper-links">
           <a href="https://postimages.org" target="_blank" rel="noopener">Postimages</a>
@@ -502,9 +505,20 @@ function renderEditor(id){
       </div>
       <div class="form-group">
         <label for="imageNotesInput">ملاحظات سريعة</label>
-        <textarea id="imageNotesInput" readonly>الصفحة تحفظ فقط الحقول image و additionalImages داخل مجموعة products.</textarea>
-        <div class="form-note">لا يتم رفع ملفات هنا. فقط لصق الروابط الخارجية المباشرة.</div>
+        <textarea id="imageNotesInput" readonly>الصورة الرئيسية يمكن رفعها إلى Firebase مباشرة. عند استبدالها سيتم حذف الصورة القديمة من Firebase إذا كانت مرفوعة من نفس الصفحة. الصور الإضافية تبقى بروابط خارجية.</textarea>
+        <div class="form-note">سيتم إنشاء مجلد واضح في Storage باسم المنتج + رقم المنتج لتتعرف عليه بسهولة.</div>
       </div>
+    </div>
+
+    <div class="form-group" style="margin-top:4px;">
+      <label for="mainImageFileInput">رفع الصورة الرئيسية إلى Firebase</label>
+      <input id="mainImageFileInput" type="file" accept="image/*" />
+      <div class="toolbar">
+        <button class="small-btn add" id="uploadMainImageBtn" type="button"><i class="fas fa-cloud-upload-alt"></i> رفع الصورة الرئيسية</button>
+        <button class="small-btn secondary" id="removeMainImageBtn" type="button"><i class="fas fa-trash"></i> حذف الصورة الرئيسية الحالية من Firebase</button>
+      </div>
+      <div class="form-note">عند الرفع سيتم تحديث حقل الرابط تلقائياً. وعند الاستبدال سيتم حذف الصورة القديمة إذا كانت محفوظة في Firebase.</div>
+      <div class="form-note">مجلد التخزين: <strong>${escapeHtml(getStorageFolderName(product))}</strong></div>
     </div>
 
     <div class="form-group" style="margin-top:4px;">
@@ -523,7 +537,9 @@ function renderEditor(id){
     </div>
 
     <div class="success-box" id="saveSuccessBox">تم حفظ الصور بنجاح.</div>
+    <div class="success-box" id="uploadSuccessBox" style="display:none;">تم رفع الصورة الرئيسية إلى Firebase بنجاح.</div>
     <div class="warning-box" id="saveWarningBox">الرجاء وضع رابط صورة رئيسية صالح يبدأ بـ http أو https.</div>
+    <div class="warning-box" id="uploadWarningBox" style="display:none;">اختر صورة أولاً قبل الرفع.</div>
 
     <div class="preview-grid" id="previewGrid"></div>
   `;
@@ -543,6 +559,9 @@ function renderEditor(id){
     location.href = 'add-product.html?edit=' + encodeURIComponent(product.id);
   });
   $('saveImagesBtn').addEventListener('click', saveCurrentProductImages);
+  $('uploadMainImageBtn').addEventListener('click', uploadMainProductImage);
+  $('removeMainImageBtn').addEventListener('click', removeCurrentFirebaseMainImage);
+  $('mainImageFileInput').addEventListener('change', hideUploadMessages);
 
   updatePreviews();
   history.replaceState({}, '', 'product-images.html?id=' + encodeURIComponent(product.id));
@@ -562,6 +581,165 @@ function addGalleryRow(value=''){
     updatePreviews();
   });
   $('galleryRows').appendChild(row);
+}
+
+function hideUploadMessages(){
+  if ($('uploadSuccessBox')) $('uploadSuccessBox').style.display = 'none';
+  if ($('uploadWarningBox')) $('uploadWarningBox').style.display = 'none';
+}
+
+function slugifyProductName(name=''){
+  return String(name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^\u0600-\u06FFa-z0-9]+/gi, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '') || 'product';
+}
+
+function getStorageFolderName(product){
+  return `${slugifyProductName(product?.name || 'product')}-${product?.id || 'unknown'}`;
+}
+
+function getMainImageStoragePath(product){
+  if (!product) return '';
+  if (product.imageStoragePath) return String(product.imageStoragePath);
+  return extractStoragePathFromUrl(product.image || '');
+}
+
+function extractStoragePathFromUrl(url=''){
+  try {
+    const value = String(url || '').trim();
+    if (!value) return '';
+    if (value.startsWith('gs://')) {
+      const parts = value.split('/').slice(3);
+      return decodeURIComponent(parts.join('/'));
+    }
+    const parsed = new URL(value);
+    if (parsed.pathname.includes('/o/')) {
+      const encoded = parsed.pathname.split('/o/')[1] || '';
+      return decodeURIComponent(encoded.split('/').filter(Boolean).join('/'));
+    }
+    return '';
+  } catch (e) {
+    return '';
+  }
+}
+
+function getFileExtension(file){
+  const type = String(file?.type || '').toLowerCase();
+  if (type.includes('png')) return 'png';
+  if (type.includes('webp')) return 'webp';
+  if (type.includes('gif')) return 'gif';
+  if (type.includes('bmp')) return 'bmp';
+  if (type.includes('svg')) return 'svg';
+  return 'jpg';
+}
+
+async function deleteStorageObjectByPath(path){
+  if (!storage || !path) return false;
+  try {
+    await storage.ref(path).delete();
+    return true;
+  } catch (e) {
+    console.warn('deleteStorageObjectByPath failed:', path, e);
+    return false;
+  }
+}
+
+async function uploadMainProductImage(){
+  const product = allProducts.find(p => p.id === selectedProductId);
+  if (!product) return;
+  hideUploadMessages();
+  $('saveSuccessBox').style.display = 'none';
+
+  const fileInput = $('mainImageFileInput');
+  const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+  if (!file) {
+    if ($('uploadWarningBox')) $('uploadWarningBox').style.display = 'block';
+    return;
+  }
+  if (!storage) {
+    showToast('❌ Firebase Storage غير متاح في هذه الصفحة', 'error');
+    return;
+  }
+
+  const folderName = getStorageFolderName(product);
+  const ext = getFileExtension(file);
+  const storagePath = `products/${folderName}/main_${Date.now()}.${ext}`;
+  const oldPath = getMainImageStoragePath(product);
+  const btn = $('uploadMainImageBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الرفع...';
+
+  try {
+    const ref = storage.ref(storagePath);
+    await ref.put(file, {
+      contentType: file.type || 'image/jpeg',
+      customMetadata: {
+        productId: product.id,
+        productName: String(product.name || ''),
+        storageFolderName: folderName
+      }
+    });
+    const downloadURL = await ref.getDownloadURL();
+
+    if (oldPath && oldPath !== storagePath) {
+      await deleteStorageObjectByPath(oldPath);
+    }
+
+    $('mainImageInput').value = downloadURL;
+    product.image = downloadURL;
+    product.imageStoragePath = storagePath;
+    product.storageFolderName = folderName;
+    if ($('uploadSuccessBox')) $('uploadSuccessBox').style.display = 'block';
+    fileInput.value = '';
+    updatePreviews();
+    showToast('✅ تم رفع الصورة الرئيسية واستبدال القديمة');
+  } catch (e) {
+    console.error(e);
+    showToast('❌ تعذر رفع الصورة: ' + (e.message || e), 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> رفع الصورة الرئيسية';
+  }
+}
+
+async function removeCurrentFirebaseMainImage(){
+  const product = allProducts.find(p => p.id === selectedProductId);
+  if (!product) return;
+  const currentPath = getMainImageStoragePath(product);
+  if (!currentPath) {
+    showToast('⚠️ الصورة الحالية ليست ملفاً محفوظاً في Firebase أو لا يوجد مسار محفوظ لها', 'warning');
+    return;
+  }
+  if (!confirm('سيتم حذف الصورة الرئيسية الحالية من Firebase ومسح رابطها من المنتج. هل تريد المتابعة؟')) return;
+
+  const btn = $('removeMainImageBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحذف...';
+  try {
+    await deleteStorageObjectByPath(currentPath);
+    $('mainImageInput').value = '';
+    await db.collection('products').doc(product.id).update({
+      image: '',
+      imageStoragePath: firebase.firestore.FieldValue.delete(),
+      storageFolderName: getStorageFolderName(product),
+      updatedAt: getServerTimestamp()
+    });
+    product.image = '';
+    delete product.imageStoragePath;
+    product.storageFolderName = getStorageFolderName(product);
+    updatePreviews();
+    renderProductsList($('searchInput').value.trim());
+    showToast('✅ تم حذف الصورة الرئيسية من Firebase');
+  } catch (e) {
+    console.error(e);
+    showToast('❌ تعذر حذف الصورة: ' + (e.message || e), 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-trash"></i> حذف الصورة الرئيسية الحالية من Firebase';
+  }
 }
 
 function updatePreviews(){
@@ -594,8 +772,9 @@ async function saveCurrentProductImages(){
 
   $('saveSuccessBox').style.display = 'none';
   $('saveWarningBox').style.display = 'none';
+  hideUploadMessages();
 
-  if (!/^https?:\/\//i.test(main)) {
+  if (main && !/^https?:\/\//i.test(main)) {
     $('saveWarningBox').style.display = 'block';
     return;
   }
@@ -604,17 +783,39 @@ async function saveCurrentProductImages(){
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
+  const previousMain = String(product.image || '').trim();
+  const previousPath = getMainImageStoragePath(product);
+  const currentIsFirebase = !!extractStoragePathFromUrl(main);
+  const folderName = getStorageFolderName(product);
+
   try {
-    await db.collection('products').doc(product.id).update({
+    if (previousPath && previousMain && main !== previousMain && !currentIsFirebase) {
+      await deleteStorageObjectByPath(previousPath);
+    }
+
+    const payload = {
       image: main,
       additionalImages: extras,
+      storageFolderName: folderName,
       updatedAt: getServerTimestamp()
-    });
+    };
+
+    if (currentIsFirebase) {
+      payload.imageStoragePath = extractStoragePathFromUrl(main);
+    } else {
+      payload.imageStoragePath = firebase.firestore.FieldValue.delete();
+    }
+
+    await db.collection('products').doc(product.id).update(payload);
 
     product.image = main;
     product.additionalImages = extras;
+    product.storageFolderName = folderName;
+    if (currentIsFirebase) product.imageStoragePath = extractStoragePathFromUrl(main);
+    else delete product.imageStoragePath;
+
     $('saveSuccessBox').style.display = 'block';
-    $('selectedImageCount').textContent = (1 + extras.length) + ' صورة';
+    $('selectedImageCount').textContent = ((main ? 1 : 0) + extras.length) + ' صورة';
     renderProductsList($('searchInput').value.trim());
     showToast('✅ تم حفظ صور المنتج');
   } catch (e) {

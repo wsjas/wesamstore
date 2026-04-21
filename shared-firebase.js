@@ -3,7 +3,7 @@
     apiKey: "AIzaSyBDlQYnTunZMDwIFsysgPbmovHkPj0f3M8",
     authDomain: "wesamstorenew.firebaseapp.com",
     projectId: "wesamstorenew",
-    storageBucket: "wesamstorenew.appspot.com",
+    storageBucket: "wesamstorenew.firebasestorage.app",
     messagingSenderId: "956353010212",
     appId: "1:956353010212:web:2e5ee949fa8f4ea713d6b1",
     measurementId: "G-EDLFXHCPBB"
