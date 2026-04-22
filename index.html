@@ -3420,6 +3420,34 @@ header{
   z-index:5;
 }
 .product-image .discount-float .discount-badge { color:#dc3545; background: rgba(220,53,69,.12); border-color: rgba(220,53,69,.35); }
+
+/* ===== FORCE LEFT SOCIAL STRIP ON MOBILE ===== */
+@media (max-width:768px){
+  body .me-social-strip{
+    display:flex !important;
+    position:fixed !important;
+    left:8px !important;
+    bottom:88px !important;
+    top:auto !important;
+    transform:none !important;
+    z-index:99999 !important;
+    opacity:1 !important;
+    visibility:visible !important;
+    pointer-events:auto !important;
+    gap:3px !important;
+    border-radius:14px !important;
+    padding:4px 0 !important;
+  }
+  body .me-social-strip a{
+    display:flex !important;
+    width:38px !important;
+    height:38px !important;
+    font-size:17px !important;
+    visibility:visible !important;
+    opacity:1 !important;
+  }
+}
+
 </style>
 <style>
 /* Inline social buttons next to WhatsApp/Email */
@@ -4741,14 +4769,15 @@ footer{
   /* =====         FIXED LEFT SOCIAL STRIP (desktop)         ===== */
   /* ============================================================ */
   .me-social-strip{
-    position:fixed; left:0; top:45%;
+    position:fixed; left:10px; top:50%;
     transform:translateY(-50%);
-    display:flex; flex-direction:column; gap:2px;
+    display:flex; flex-direction:column; gap:3px;
     background:#fff;
-    border-radius:0 8px 8px 0;
-    box-shadow:2px 2px 8px rgba(0,0,0,0.1);
-    z-index:998;
+    border-radius:14px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.18);
+    z-index:9998;
     overflow:hidden;
+    padding:4px 0;
   }
   .me-social-strip a{
     width:32px; height:32px;
@@ -4762,7 +4791,26 @@ footer{
   .me-social-strip .s-wa    { background:#25d366; }
   .me-social-strip .s-tg    { background:#229ed9; }
   .me-social-strip .s-ig    { background:linear-gradient(45deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); }
-  @media (max-width:768px){ .me-social-strip{ display:none; } }
+  .me-social-strip .s-yt    { background:#ff0000; }
+  @media (max-width:768px){
+    .me-social-strip{
+      display:flex;
+      top:auto;
+      bottom:90px;
+      left:8px;
+      transform:none;
+      gap:3px;
+      border-radius:14px;
+      z-index:9998;
+      padding:4px 0;
+      box-shadow:0 8px 24px rgba(0,0,0,0.22);
+    }
+    .me-social-strip a{
+      width:38px;
+      height:38px;
+      font-size:17px;
+    }
+  }
 
   /* ============================================================ */
   /* =====          HERO — solid orange banner              ===== */
@@ -5418,12 +5466,13 @@ footer{
 </head>
 <body>
 <!-- Left social strip (desktop only) -->
-<div class="me-social-strip" aria-label="روابط التواصل">
-  <a href="https://facebook.com" target="_blank" rel="noopener" class="s-fb" aria-label="فيسبوك"><i class="fab fa-facebook-f"></i></a>
-  <a href="https://instagram.com" target="_blank" rel="noopener" class="s-ig" aria-label="انستغرام"><i class="fab fa-instagram"></i></a>
-  <a href="mailto:info@example.com" class="s-mail" aria-label="إيميل"><i class="fas fa-envelope"></i></a>
-  <a href="https://wa.me/962790781206" target="_blank" rel="noopener" class="s-wa" aria-label="واتساب"><i class="fab fa-whatsapp"></i></a>
-  <a href="https://t.me/" target="_blank" rel="noopener" class="s-tg" aria-label="تيليغرام"><i class="fab fa-telegram-plane"></i></a>
+<div class="me-social-strip" aria-label="روابط التواصل" id="meSocialStrip">
+  <a href="https://facebook.com" target="_blank" rel="noopener" class="s-fb" aria-label="فيسبوك" id="meStripFacebook"><i class="fab fa-facebook-f"></i></a>
+  <a href="https://youtube.com" target="_blank" rel="noopener" class="s-yt" aria-label="يوتيوب" id="meStripYoutube"><i class="fab fa-youtube"></i></a>
+  <a href="https://instagram.com" target="_blank" rel="noopener" class="s-ig" aria-label="انستغرام" id="meStripInstagram"><i class="fab fa-instagram"></i></a>
+  <a href="mailto:info@example.com" class="s-mail" aria-label="إيميل" id="meStripEmail"><i class="fas fa-envelope"></i></a>
+  <a href="https://wa.me/962790781206" target="_blank" rel="noopener" class="s-wa" aria-label="واتساب" id="meStripWhatsapp"><i class="fab fa-whatsapp"></i></a>
+  <a href="https://t.me/" target="_blank" rel="noopener" class="s-tg" aria-label="تيليغرام" id="meStripTelegram"><i class="fab fa-telegram-plane"></i></a>
 </div>
 <!-- ===== Mobile Top Bar (Professional) ===== -->
 <div class="m-topbar" id="mTopbar">
@@ -6801,6 +6850,7 @@ footer{
             isFirebaseConnected: false,
             shippingMethod: 'pickup',
             currentGalleryProduct: null,
+            sitePages: [],
             storeSettings: JSON.parse(localStorage.getItem('wassam_settings')) || {
                 whatsappLink: 'https://wa.me/962790781206',
                 storeEmail: 'wesamelectronics@gmail.com',
@@ -6925,6 +6975,63 @@ footer{
                 setTimeout(() => document.body.removeChild(notification), 300);
             }, 3000);
         }
+
+        // ========== إدارة الصفحات (تفعيل/إيقاف الصفحات) ==========
+
+        function normalizeManagedPageUrl(url) {
+            let u = String(url || '').trim().toLowerCase();
+            if (!u) return '';
+            try {
+                u = u.replace(/^https?:\/\/[^\/]+/i, '');
+            } catch (_) {}
+            u = u.split('?')[0].split('#')[0].trim();
+            u = u.replace(/^\/+/, '');
+            if (!u) return '';
+            if (!u.endsWith('.html') && !u.includes('/')) u += '.html';
+            return u;
+        }
+
+        function getManagedPageRecord(url) {
+            const normalized = normalizeManagedPageUrl(url);
+            if (!normalized || !Array.isArray(state.sitePages)) return null;
+            return state.sitePages.find(p => normalizeManagedPageUrl(p.url) === normalized) || null;
+        }
+
+        function isManagedPageEnabled(url) {
+            const page = getManagedPageRecord(url);
+            return !page || page.enabled !== false;
+        }
+
+        function navigateToManagedPage(url) {
+            if (!url) return false;
+            const page = getManagedPageRecord(url);
+            if (page && page.enabled === false) {
+                const msg = (page.disabledMessage && String(page.disabledMessage).trim())
+                    ? String(page.disabledMessage).trim()
+                    : `الصفحة "${page.name || url}" غير متاحة حالياً.`;
+                try { showNotification(msg, 'error'); } catch (_) { alert(msg); }
+                return false;
+            }
+            window.location.href = url;
+            return true;
+        }
+
+        document.addEventListener('click', function(e) {
+            const a = e.target.closest && e.target.closest('a[href]');
+            if (!a) return;
+            const rawHref = a.getAttribute('href') || '';
+            if (!rawHref || rawHref.startsWith('#') || /^(https?:|mailto:|tel:|whatsapp:|javascript:)/i.test(rawHref)) return;
+            if (!/\.html(\?|#|$)/i.test(rawHref)) return;
+            const page = getManagedPageRecord(rawHref);
+            if (page && page.enabled === false) {
+                e.preventDefault();
+                e.stopPropagation();
+                const msg = (page.disabledMessage && String(page.disabledMessage).trim())
+                    ? String(page.disabledMessage).trim()
+                    : `الصفحة "${page.name || rawHref}" غير متاحة حالياً.`;
+                try { showNotification(msg, 'error'); } catch (_) { alert(msg); }
+            }
+        }, true);
 
         // ========== إدارة إعدادات الموقع ==========
 
@@ -7441,7 +7548,7 @@ footer{
                     footerAbout: elements.footerAbout.value.trim(),
                     storeEmail: elements.storeEmail.value.trim(),
                     workingHours: elements.workingHours.value.trim(),
-                    servicesList: elements.servicesList.value.trim().split('\n').filter(line => line.trim() !== ''),
+                    servicesList: normalizeServicesList(elements.servicesList.value),
 
                     featuredNewTitle: (elements.featuredNewTitle ? elements.featuredNewTitle.value.trim() : 'المنتجات الجديدة') || 'المنتجات الجديدة',
                     featuredNewImage: (elements.featuredNewImage ? elements.featuredNewImage.value.trim() : '') || '',
@@ -7511,13 +7618,19 @@ footer{
             // تحديث قائمة خدمات الفوتر
             if (elements.footerServices) {
                 elements.footerServices.innerHTML = '';
-                if (Array.isArray(state.pageContent.servicesList)) {
-                    state.pageContent.servicesList.forEach(service => {
-                        const li = document.createElement('li');
-                        li.innerHTML = `<i class="fas fa-chevron-left"></i> ${escapeHtml(service)}`;
-                        elements.footerServices.appendChild(li);
-                    });
-                }
+                const footerServicesList = normalizeServicesList(
+                    state.pageContent?.servicesList ||
+                    state.storeSettings?.servicesList ||
+                    `توصيل سريع لجميع مناطق عمان
+دفع عند الاستلام
+فحص وصيانة الشاشات والأجهزة
+خدمة عملاء عبر واتساب`
+                );
+                footerServicesList.forEach(service => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<i class="fas fa-chevron-left"></i> ${escapeHtml(service)}`;
+                    elements.footerServices.appendChild(li);
+                });
             }
 
             // تحديث بطاقات التصنيفات المميزة (صور) تحت السلايدر
@@ -7535,13 +7648,31 @@ footer{
             const setCard = (card, cfg) => {
                 if (!card) return;
 
+                const href = (cfg && cfg.href ? String(cfg.href).trim() : '');
+                const isManagedLinkCard = cfg && cfg.type === 'link' && href;
+                const pageRecord = isManagedLinkCard ? getManagedPageRecord(href) : null;
+                const isDisabled = !!(pageRecord && pageRecord.enabled === false);
+
+                // إخفاء البطاقة تماماً إذا كانت الصفحة موقوفة
+                card.style.display = isDisabled ? 'none' : '';
+                card.hidden = isDisabled;
+                card.setAttribute('aria-hidden', isDisabled ? 'true' : 'false');
+                card.classList.toggle('is-disabled-page-card', isDisabled);
+                if (isDisabled) {
+                    card.setAttribute('disabled', 'disabled');
+                    card.tabIndex = -1;
+                } else {
+                    card.removeAttribute('disabled');
+                    card.tabIndex = 0;
+                }
+
                 // النص
                 const titleEl = card.querySelector('.featured-cat-title');
                 const subEl = card.querySelector('.featured-cat-sub');
                 const badgeEl = card.querySelector('.featured-cat-badge');
                 if (titleEl) titleEl.innerHTML = cfg.titleHtml || cfg.title || '';
                 if (subEl) subEl.textContent = cfg.sub || '';
-                if (badgeEl && cfg.badgeHtml) badgeEl.innerHTML = cfg.badgeHtml;
+                if (badgeEl) badgeEl.innerHTML = cfg.badgeHtml || '';
 
                 // صورة خلفية
                 const url = (cfg.image || '').trim();
@@ -7553,12 +7684,14 @@ footer{
 
                 // خزّن الإعداد الحالي ليستعمله مستمع النقر الدائم
                 card.__featuredCfg = cfg;
+                card.__managedPageRecord = pageRecord;
 
                 // ربط النقر مرة واحدة
                 if (!card.dataset.bound) {
                     card.addEventListener('click', (e) => {
                         e.preventDefault();
                         const liveCfg = card.__featuredCfg || {};
+                        const currentHref = (liveCfg.href || '').trim();
 
                         if (liveCfg.type === 'category') {
                             state.currentCategory = liveCfg.categoryId || 'all';
@@ -7572,9 +7705,8 @@ footer{
                         }
 
                         if (liveCfg.type === 'link') {
-                            const href = (liveCfg.href || '').trim();
-                            if (href) {
-                                window.location.href = href;
+                            if (currentHref) {
+                                navigateToManagedPage(currentHref);
                             }
                             return;
                         }
@@ -7755,6 +7887,32 @@ function updateSocialLinks() {
             if (mM) mM.href = normalizeUrl(state.storeSettings.googleMapsLink) || 'https://maps.google.com';
             if (mY) mY.href = normalizeUrl(state.storeSettings.youtubeLink) || 'https://youtube.com';
 
+            if (elements.footerServices) {
+                elements.footerServices.innerHTML = '';
+                const footerServicesList = normalizeServicesList(
+                    state.pageContent?.servicesList || state.storeSettings?.servicesList || ''
+                );
+                footerServicesList.forEach(service => {
+                    const li = document.createElement('li');
+                    li.textContent = service;
+                    elements.footerServices.appendChild(li);
+                });
+            }
+
+            const sFb = document.getElementById('meStripFacebook');
+            const sYt = document.getElementById('meStripYoutube');
+            const sIg = document.getElementById('meStripInstagram');
+            const sEm = document.getElementById('meStripEmail');
+            const sWa = document.getElementById('meStripWhatsapp');
+            const sTg = document.getElementById('meStripTelegram');
+
+            if (sFb) sFb.href = normalizeUrl(state.storeSettings.facebookLink) || 'https://facebook.com';
+            if (sYt) sYt.href = normalizeUrl(state.storeSettings.youtubeLink) || 'https://youtube.com';
+            if (sIg) sIg.href = normalizeUrl(state.storeSettings.instagramLink) || 'https://instagram.com';
+            if (sEm) sEm.href = (state.storeSettings.storeEmail ? ('mailto:' + String(state.storeSettings.storeEmail).trim()) : 'mailto:wesamelectronics@gmail.com');
+            if (sWa) sWa.href = normalizeUrl(state.storeSettings.whatsappLink) || 'https://wa.me/962790781206';
+            if (sTg) sTg.href = normalizeUrl(state.storeSettings.telegramLink) || 'https://t.me/';
+
 
         }
 
@@ -7777,14 +7935,24 @@ function updateSocialLinks() {
                     setTimeout(() => reject(new Error("انتهت مهلة الاتصال")), 10000)
                 );
                 
-                // تحميل المنتجات والتصنيفات معاً
-                const [querySnapshot, categoriesSnapshot] = await Promise.race([
+                // تحميل المنتجات والتصنيفات والصفحات المُدارة معاً
+                const [querySnapshot, categoriesSnapshot, pagesSnapshot] = await Promise.race([
                     Promise.all([
                         db.collection('products').orderBy('createdAt', 'desc').get(),
-                        db.collection('categories').get()
+                        db.collection('categories').get(),
+                        db.collection('site_pages').get().catch(() => ({ forEach: () => {} }))
                     ]),
                     timeoutPromise
                 ]);
+
+                const sitePages = [];
+                if (pagesSnapshot && typeof pagesSnapshot.forEach === 'function') {
+                    pagesSnapshot.forEach(doc => {
+                        sitePages.push({ id: doc.id, ...doc.data() });
+                    });
+                }
+                state.sitePages = sitePages;
+                try { applyFeaturedCategoryCards(); } catch (e) { console.warn(e); }
                 
                 const products = [];
                 querySnapshot.forEach(doc => {
@@ -7794,7 +7962,8 @@ function updateSocialLinks() {
                     if (!product.videoUrl) product.videoUrl = '';
 
                     // لا تعرض المنتجات التي أخفاها الأدمن من لوحة التحكم
-                    if (product.hidden === true) return;
+                    const isHidden = product.hidden === true || product.hidden === 'true' || product.hidden === 1 || product.hidden === '1';
+                    if (isHidden) return;
 
                     products.push(product);
                 });
@@ -10558,13 +10727,13 @@ if (elements.navShopBtn) {
 
 if (elements.navElectronicsStoreBtn) {
     bind(elements.navElectronicsStoreBtn, 'click', () => {
-        window.location.href = 'electronics-store.html';
+        navigateToManagedPage('electronics-store.html');
     });
 }
 
 if (elements.navLiveBtn) {
     bind(elements.navLiveBtn, 'click', () => {
-        window.location.href = 'repair-live.html';
+        navigateToManagedPage('repair-live.html');
     });
 }
 
@@ -10578,7 +10747,7 @@ if (elements.mOpenService) {
 if (elements.mLiveBtn) {
     bind(elements.mLiveBtn, 'click', () => {
         try { closeMobileDrawer(); } catch (e) {}
-        window.location.href = 'repair-live.html';
+        navigateToManagedPage('repair-live.html');
     });
 }
 

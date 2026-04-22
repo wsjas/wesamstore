@@ -892,7 +892,7 @@ async function loadSettings() {
       $('liveVideo5Url') && ($('liveVideo5Url').value = p.liveVideo5Url || '');
       $('liveVideo6Title') && ($('liveVideo6Title').value = p.liveVideo6Title || '');
       $('liveVideo6Url') && ($('liveVideo6Url').value = p.liveVideo6Url || '');
-      $('servicesList') && ($('servicesList').value = p.servicesList || '');
+      $('servicesList') && ($('servicesList').value = Array.isArray(p.servicesList) ? p.servicesList.join('\n') : (p.servicesList || ''));
     }
   } catch(e) { console.warn(e); }
 }
@@ -1189,7 +1189,11 @@ $('pageContentForm').addEventListener('submit', async e => {
      'liveVideo1Title','liveVideo1Url','liveVideo2Title','liveVideo2Url','liveVideo3Title','liveVideo3Url',
      'liveVideo4Title','liveVideo4Url','liveVideo5Title','liveVideo5Url','liveVideo6Title','liveVideo6Url'].forEach(key => {
       const el = $(key);
-      if (el) data[key] = el.value.trim();
+      if (el) {
+        data[key] = key === 'servicesList'
+          ? normalizeServicesList(el.value)
+          : el.value.trim();
+      }
     });
     await db.collection('settings').doc('page_content').set(data, { merge: true });
     showToast('✅ تم حفظ محتوى الصفحة', 'success');
