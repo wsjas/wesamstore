@@ -1178,6 +1178,41 @@ const _FB_CONFIG = {
         });
         window._storeSignOut = ()=>signOut(auth);
 
+        // بوابة إيقاف الصفحة من site_pages مثل النسخة القديمة
+        function _normalizeManagedPageUrl(url){
+          let u=String(url||'').trim().toLowerCase();
+          if(!u) return '';
+          u=u.replace(/^https?:\/\/[^\/]+/i,'');
+          u=u.split('?')[0].split('#')[0].trim().replace(/^\/+/, '');
+          if(!u) return '';
+          if(!u.endsWith('.html') && !u.includes('/')) u += '.html';
+          return u;
+        }
+        function _showPageDisabledOverlay(page){
+          const msg=(page && page.disabledMessage && String(page.disabledMessage).trim())
+            ? String(page.disabledMessage).trim()
+            : 'هذه الصفحة متوقفة حالياً.';
+          const name=(page && page.name) ? page.name : 'هذه الصفحة';
+          document.body.innerHTML = `
+            <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#0f172a;font-family:Cairo,sans-serif;">
+              <div style="width:min(560px,100%);background:#111827;color:#fff;border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:28px;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.35)">
+                <div style="font-size:52px;margin-bottom:10px">⛔</div>
+                <h1 style="margin:0 0 10px;font-size:28px">${name} متوقفة</h1>
+                <p style="margin:0 0 20px;color:#cbd5e1;line-height:1.9">${msg}</p>
+                <a href="index.html" style="display:inline-block;background:#f97316;color:#fff;text-decoration:none;padding:12px 22px;border-radius:12px;font-weight:700">العودة إلى الرئيسية</a>
+              </div>
+            </div>`;
+        }
+        onSnapshot(collection(db,'site_pages'), snap => {
+          const current=_normalizeManagedPageUrl(location.pathname.split('/').pop() || 'electronics-store.html');
+          let matched=null;
+          snap.forEach(docSnap=>{
+            const data=docSnap.data()||{};
+            if(_normalizeManagedPageUrl(data.url)===current && data.enabled===false) matched={id:docSnap.id,...data};
+          });
+          if(matched) _showPageDisabledOverlay(matched);
+        }, err => console.warn('site_pages gate failed:', err));
+
         // Track current user
         onAuthStateChanged(auth, user => {
           window._storeUser = user || null;
