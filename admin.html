@@ -594,8 +594,10 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
           <div class="settings-grid">
             <div class="form-group"><label>عنوان: المنتجات الجديدة</label><input id="featuredNewTitle" type="text" placeholder="المنتجات الجديدة"/></div>
             <div class="form-group"><label>رابط صورة المنتجات الجديدة</label><input id="featuredNewImage" type="text" placeholder="https://.../new.jpg"/></div>
+            <div class="form-group"><label>وصف قصير: المنتجات الجديدة</label><input id="featuredNewSub" type="text" placeholder="منتجات وصلت حديثًا"/></div>
             <div class="form-group"><label>عنوان: العروض والخصومات</label><input id="featuredOffersTitle" type="text" placeholder="العروض والخصومات"/></div>
             <div class="form-group"><label>رابط صورة العروض</label><input id="featuredOffersImage" type="text" placeholder="https://.../offers.jpg"/></div>
+            <div class="form-group"><label>وصف قصير: العروض والخصومات</label><input id="featuredOffersSub" type="text" placeholder="أفضل الأسعار والتخفيضات"/></div>
             <div class="form-group"><label>عنوان: قسم الصيانة</label><input id="featuredServiceTitle" type="text" placeholder="قسم الصيانة"/></div>
             <div class="form-group"><label>رابط صورة الصيانة</label><input id="featuredServiceImage" type="text" placeholder="https://.../service.jpg"/></div>
             <div class="form-group"><label>وصف قصير: قسم الصيانة</label><input id="featuredServiceSub" type="text" placeholder="قدّم طلبك خلال دقيقة"/></div>
@@ -866,6 +868,8 @@ async function loadSettings() {
       $('featuredNewImage') && ($('featuredNewImage').value = p.featuredNewImage || '');
       $('featuredOffersTitle') && ($('featuredOffersTitle').value = p.featuredOffersTitle || '');
       $('featuredOffersImage') && ($('featuredOffersImage').value = p.featuredOffersImage || '');
+      $('featuredNewSub') && ($('featuredNewSub').value = p.featuredNewSub || '');
+      $('featuredOffersSub') && ($('featuredOffersSub').value = p.featuredOffersSub || '');
       $('featuredServiceTitle') && ($('featuredServiceTitle').value = p.featuredServiceTitle || '');
       $('featuredServiceImage') && ($('featuredServiceImage').value = p.featuredServiceImage || '');
       $('featuredServiceSub') && ($('featuredServiceSub').value = p.featuredServiceSub || '');
@@ -874,6 +878,11 @@ async function loadSettings() {
       $('featuredElectronicsSub') && ($('featuredElectronicsSub').value = p.featuredElectronicsSub || '');
       $('featuredElectronicsBadge') && ($('featuredElectronicsBadge').value = p.featuredElectronicsBadge || '');
       $('featuredElectronicsLink') && ($('featuredElectronicsLink').value = p.featuredElectronicsLink || 'electronics-store.html');
+      $('featuredLiveTitle') && ($('featuredLiveTitle').value = p.featuredLiveTitle || '');
+      $('featuredLiveImage') && ($('featuredLiveImage').value = p.featuredLiveImage || '');
+      $('featuredLiveSub') && ($('featuredLiveSub').value = p.featuredLiveSub || '');
+      $('featuredLiveBadge') && ($('featuredLiveBadge').value = p.featuredLiveBadge || '');
+      $('featuredLiveLink') && ($('featuredLiveLink').value = p.featuredLiveLink || 'repair-live.html');
       $('livePageYoutubeVideoId') && ($('livePageYoutubeVideoId').value = p.livePageYoutubeVideoId || '');
       $('livePageFacebookVideoUrl') && ($('livePageFacebookVideoUrl').value = p.livePageFacebookVideoUrl || '');
       $('livePageServiceLink') && ($('livePageServiceLink').value = p.livePageServiceLink || 'index.html?openService=1');
@@ -1179,7 +1188,7 @@ $('pageContentForm').addEventListener('submit', async e => {
     const data = {};
     ['storeName','storeSlogan','phoneNumber','storeAddress','storeTagline','specializationText',
      'footerAbout','storeEmail','workingHours','servicesList',
-     'featuredNewTitle','featuredNewImage','featuredOffersTitle','featuredOffersImage',
+     'featuredNewTitle','featuredNewImage','featuredNewSub','featuredOffersTitle','featuredOffersImage','featuredOffersSub',
      'featuredServiceTitle','featuredServiceImage','featuredServiceSub',
      'featuredElectronicsTitle','featuredElectronicsImage','featuredElectronicsSub',
      'featuredElectronicsBadge','featuredElectronicsLink',
@@ -1201,12 +1210,24 @@ $('pageContentForm').addEventListener('submit', async e => {
 });
 
 // ===== Slider Admin =====
+async function getSliderAdminRefs() {
+  return {
+    primary: db.collection('settings').doc('homeSlider'),
+    legacy: db.collection('settings').doc('slider')
+  };
+}
+
 async function loadSliderAdmin() {
   const grid = $('sliderAdminGrid');
   let slides = [];
   try {
-    const doc = await db.collection('settings').doc('slider').get();
-    if (doc.exists && doc.data().slides) slides = doc.data().slides;
+    const { primary, legacy } = await getSliderAdminRefs();
+    const [homeDoc, legacyDoc] = await Promise.all([primary.get(), legacy.get()]);
+    if (homeDoc.exists && Array.isArray((homeDoc.data() || {}).slides) && homeDoc.data().slides.length) {
+      slides = homeDoc.data().slides;
+    } else if (legacyDoc.exists && Array.isArray((legacyDoc.data() || {}).slides) && legacyDoc.data().slides.length) {
+      slides = legacyDoc.data().slides;
+    }
   } catch(e) {}
   while (slides.length < 3) slides.push({ imageUrl:'', title:'', subtitle:'', link:'' });
 
@@ -1243,9 +1264,14 @@ $('saveSliderBtn').addEventListener('click', async () => {
     });
   }
   try {
-    await db.collection('settings').doc('slider').set({ slides }, { merge: true });
+    const payload = { slides, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+    const { primary, legacy } = await getSliderAdminRefs();
+    await Promise.all([
+      primary.set(payload, { merge: true }),
+      legacy.set(payload, { merge: true })
+    ]);
     showToast('✅ تم حفظ السلايدر', 'success');
-  } catch(e) { showToast('❌ خطأ في حفظ السلايدر', 'error'); }
+  } catch(e) { console.error(e); showToast('❌ خطأ في حفظ السلايدر', 'error'); }
 });
 
 $('reloadSliderBtn').addEventListener('click', loadSliderAdmin);
