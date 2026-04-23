@@ -5978,6 +5978,44 @@ body .product-card .product-image::after,
 }
 </style>
 
+
+<style id="wesam-mobile-cart-count-visible-final">
+@media (max-width:768px){
+  #mCartBtn,
+  .m-cart-btn,
+  .m-qs.cart{
+    position:relative !important;
+    overflow:visible !important;
+  }
+
+  #mCartCount,
+  .m-badge,
+  .m-qs-badge,
+  #floatingCartCount,
+  #mobileCartCount{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    position:absolute !important;
+    top:-8px !important;
+    right:-8px !important;
+    min-width:20px !important;
+    height:20px !important;
+    padding:0 6px !important;
+    border-radius:999px !important;
+    background:#fff !important;
+    color:#ff6a00 !important;
+    border:2px solid #ff8c00 !important;
+    font-size:12px !important;
+    font-weight:900 !important;
+    line-height:1 !important;
+    z-index:20 !important;
+    box-shadow:0 4px 10px rgba(0,0,0,.18) !important;
+    pointer-events:none !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <!-- Left social strip (desktop only) -->
@@ -16256,6 +16294,99 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 });
+</script>
+
+
+<script id="wesam-mobile-cart-count-sync-final">
+(function(){
+  function readCartCount(){
+    try{
+      const candidates = [
+        window.cart,
+        window.shoppingCart,
+        window.cartItems,
+        window.wesamCart
+      ];
+      for(const c of candidates){
+        if(Array.isArray(c)){
+          return c.reduce((sum,item)=> sum + Math.max(1, Number(item.quantity || item.qty || 1)), 0);
+        }
+      }
+
+      const keys = ['cart','shoppingCart','cartItems','wesamCart','wesam-cart','wesam_cart'];
+      for(const key of keys){
+        const raw = localStorage.getItem(key);
+        if(!raw) continue;
+        try{
+          const parsed = JSON.parse(raw);
+          if(Array.isArray(parsed)){
+            return parsed.reduce((sum,item)=> sum + Math.max(1, Number(item.quantity || item.qty || 1)), 0);
+          }
+          if(parsed && Array.isArray(parsed.items)){
+            return parsed.items.reduce((sum,item)=> sum + Math.max(1, Number(item.quantity || item.qty || 1)), 0);
+          }
+        }catch(e){}
+      }
+
+      const desktopBadge = document.getElementById('cartCount');
+      if(desktopBadge){
+        const n = parseInt((desktopBadge.textContent || '0').replace(/[^\d]/g,''), 10);
+        if(!Number.isNaN(n)) return n;
+      }
+    }catch(e){}
+    return 0;
+  }
+
+  function setBadge(el, count){
+    if(!el) return;
+    el.textContent = String(count);
+    el.style.display = count > 0 ? 'flex' : 'flex';
+    el.setAttribute('aria-label', 'عدد المنتجات في السلة: ' + count);
+  }
+
+  window.syncAllCartBadges = function(){
+    const count = readCartCount();
+    [
+      'cartCount',
+      'mCartCount',
+      'floatingCartCount',
+      'mobileCartCount',
+      'mQSCount',
+      'mQsCartCount'
+    ].forEach(id => setBadge(document.getElementById(id), count));
+
+    document.querySelectorAll('.cart-count, .m-badge, .m-qs-badge, [data-cart-count]').forEach(el => setBadge(el, count));
+  };
+
+  const oldUpdate = window.updateCartCount;
+  window.updateCartCount = function(){
+    if(typeof oldUpdate === 'function'){
+      try{ oldUpdate.apply(this, arguments); }catch(e){}
+    }
+    window.syncAllCartBadges();
+  };
+
+  const oldSetItem = localStorage.setItem;
+  localStorage.setItem = function(key, value){
+    oldSetItem.apply(this, arguments);
+    if(String(key).toLowerCase().includes('cart')){
+      setTimeout(window.syncAllCartBadges, 0);
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', function(){
+    window.syncAllCartBadges();
+    setInterval(window.syncAllCartBadges, 700);
+  });
+
+  window.addEventListener('storage', window.syncAllCartBadges);
+  document.addEventListener('click', function(e){
+    if(e.target.closest('.buy-btn, .add-to-cart, [data-add-to-cart], .quantity-btn, .remove-item')){
+      setTimeout(window.syncAllCartBadges, 80);
+      setTimeout(window.syncAllCartBadges, 300);
+    }
+  }, true);
+})();
 </script>
 
 </body>
