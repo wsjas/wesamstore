@@ -6502,46 +6502,88 @@ footer{
   <div class="container">
     <h2 class="section-title">تصنيفات المنتجات</h2>
 
-    <!-- Featured categories - V2 Layout (Chips + Hero) -->
-    <div class="featured-categories-row v2-layout" data-me-carousel-built="1">
-      <!-- Row of circular chip categories -->
-      <div class="v2-chips-row">
-        <button class="featured-cat-card v2-chip" id="featuredCatNew" type="button" data-category="new" aria-label="المنتجات الجديدة">
-          <span class="v2-chip-icon"><i class="fas fa-star"></i></span>
-          <span class="v2-chip-label featured-cat-title" id="featuredNewTitleText">جديد</span>
-          <span class="featured-cat-sub" id="featuredNewSubText" hidden>منتجات وصلت حديثًا</span>
-        </button>
+    <!-- Featured categories - V3 Banner Carousel -->
+    <div class="featured-categories-row fcat-carousel" data-me-carousel-built="1">
+      <button type="button" class="fcat-car-nav fcat-car-prev" aria-label="السابق">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+      <button type="button" class="fcat-car-nav fcat-car-next" aria-label="التالي">
+        <i class="fas fa-chevron-left"></i>
+      </button>
 
-        <button class="featured-cat-card v2-chip" id="featuredCatOffers" type="button" data-category="offers" aria-label="العروض والخصومات">
-          <span class="v2-chip-icon"><i class="fas fa-tag"></i></span>
-          <span class="v2-chip-label featured-cat-title" id="featuredOffersTitleText">عروض</span>
-          <span class="featured-cat-sub" id="featuredOffersSubText" hidden>أفضل الأسعار والتخفيضات</span>
-        </button>
+      <div class="fcat-car-viewport">
+        <div class="fcat-car-track">
 
-        <button class="featured-cat-card v2-chip" id="featuredCatService" type="button" data-action="service" aria-label="قسم الصيانة">
-          <span class="v2-chip-icon"><i class="fas fa-screwdriver-wrench"></i></span>
-          <span class="v2-chip-label featured-cat-title" id="featuredServiceTitleText">صيانة</span>
-          <span class="featured-cat-sub" id="featuredServiceSubText" hidden>قدّم طلبك خلال دقيقة</span>
-        </button>
+          <button class="featured-cat-card fcat-car-card" id="featuredCatNew" type="button" data-category="new" aria-label="المنتجات الجديدة">
+            <div class="fcat-car-inner">
+              <div class="fcat-car-content">
+                <div class="fcat-car-eyebrow"><span class="fcat-car-eyebrow-text">NEW</span></div>
+                <div class="fcat-car-title featured-cat-title" id="featuredNewTitleText">المنتجات الجديدة</div>
+                <div class="fcat-car-sub featured-cat-sub" id="featuredNewSubText">منتجات وصلت حديثًا</div>
+                <span class="fcat-car-btn">اضغط هنا</span>
+              </div>
+              <div class="fcat-car-icon-wrap"><i class="fas fa-star"></i></div>
+            </div>
+          </button>
 
-        <button class="featured-cat-card v2-chip v2-chip-live" id="featuredCatLive" type="button" data-action="live-stream" aria-label="البث المباشر">
-          <span class="v2-chip-icon"><i class="fas fa-video"></i><span class="v2-live-dot"></span></span>
-          <span class="v2-chip-label featured-cat-title" id="featuredLiveTitleText">بث مباشر</span>
-          <span class="featured-cat-sub" id="featuredLiveSubText" hidden>شاهد عملية الإصلاح مباشرة للعميل</span>
-        </button>
+          <button class="featured-cat-card fcat-car-card" id="featuredCatOffers" type="button" data-category="offers" aria-label="العروض والخصومات">
+            <div class="fcat-car-inner">
+              <div class="fcat-car-content">
+                <div class="fcat-car-eyebrow"><span class="fcat-car-eyebrow-text">OFFERS</span></div>
+                <div class="fcat-car-title featured-cat-title" id="featuredOffersTitleText">العروض والخصومات</div>
+                <div class="fcat-car-sub featured-cat-sub" id="featuredOffersSubText">أفضل الأسعار والتخفيضات</div>
+                <span class="fcat-car-btn">اضغط هنا</span>
+              </div>
+              <div class="fcat-car-icon-wrap"><i class="fas fa-tag"></i></div>
+            </div>
+          </button>
+
+          <button class="featured-cat-card fcat-car-card fcat-car-card-electronics featured-cat-card-electronics" id="featuredCatElectronics" type="button" data-action="electronics-store" aria-label="متجر القطع والالكترونيات">
+            <div class="fcat-car-inner">
+              <div class="fcat-car-content">
+                <div class="fcat-car-eyebrow"><span class="fcat-car-eyebrow-text">ELECTRONICS</span></div>
+                <div class="fcat-car-title featured-cat-title" id="featuredElectronicsTitleText">متجر القطع والإلكترونيات</div>
+                <div class="fcat-car-sub featured-cat-sub" id="featuredElectronicsSubText">قطع متخصصة • إكسسوارات أصلية</div>
+                <span class="fcat-car-btn featured-cat-badge">اضغط هنا</span>
+              </div>
+              <div class="fcat-car-icon-wrap"><i class="fas fa-microchip"></i></div>
+            </div>
+          </button>
+
+          <button class="featured-cat-card fcat-car-card" id="featuredCatService" type="button" data-action="service" aria-label="قسم الصيانة">
+            <div class="fcat-car-inner">
+              <div class="fcat-car-content">
+                <div class="fcat-car-eyebrow"><span class="fcat-car-eyebrow-text">SERVICE</span></div>
+                <div class="fcat-car-title featured-cat-title" id="featuredServiceTitleText">قسم الصيانة</div>
+                <div class="fcat-car-sub featured-cat-sub" id="featuredServiceSubText">قدّم طلبك خلال دقيقة</div>
+                <span class="fcat-car-btn">اضغط هنا</span>
+              </div>
+              <div class="fcat-car-icon-wrap"><i class="fas fa-screwdriver-wrench"></i></div>
+            </div>
+          </button>
+
+          <button class="featured-cat-card fcat-car-card fcat-car-card-live featured-cat-card-live" id="featuredCatLive" type="button" data-action="live-stream" aria-label="البث المباشر">
+            <div class="fcat-car-inner">
+              <div class="fcat-car-content">
+                <div class="fcat-car-eyebrow">
+                  <span class="fcat-car-live-dot"></span>
+                  <span class="fcat-car-eyebrow-text">LIVE</span>
+                </div>
+                <div class="fcat-car-title featured-cat-title" id="featuredLiveTitleText">البث المباشر</div>
+                <div class="fcat-car-sub featured-cat-sub" id="featuredLiveSubText">شاهد عملية الإصلاح مباشرة</div>
+                <span class="fcat-car-btn featured-cat-badge">اضغط هنا</span>
+              </div>
+              <div class="fcat-car-icon-wrap"><i class="fas fa-video"></i></div>
+            </div>
+          </button>
+
+        </div>
       </div>
 
-      <!-- Hero card: Electronics Store -->
-      <div class="v2-hero-wrap">
-        <button class="featured-cat-card v2-hero featured-cat-card-electronics" id="featuredCatElectronics" type="button" data-action="electronics-store" aria-label="متجر القطع والالكترونيات">
-          <div class="v2-hero-content">
-            <div class="v2-hero-badge"><i class="fas fa-bolt"></i> الأكثر مبيعًا</div>
-            <div class="v2-hero-title featured-cat-title" id="featuredElectronicsTitleText">متجر القطع والإلكترونيات</div>
-            <div class="v2-hero-sub featured-cat-sub" id="featuredElectronicsSubText">قطع متخصصة • إكسسوارات أصلية • ضمان معتمد</div>
-            <div class="v2-hero-cta"><span>ادخل المتجر</span> <i class="fas fa-arrow-left"></i></div>
-          </div>
-          <div class="v2-hero-icon"><i class="fas fa-microchip"></i></div>
-        </button>
+      <div class="fcat-car-dots">
+        <span class="fcat-car-dot"></span>
+        <span class="fcat-car-dot"></span>
+        <span class="fcat-car-dot"></span>
       </div>
     </div>
 
@@ -7648,6 +7690,81 @@ footer{
             const liveCard = document.getElementById('featuredCatLive');
             const electronicsCard = document.getElementById('featuredCatElectronics');
 
+            // Helper: apply carousel-card customization (bgColor, textColor, btnBg, btnText, image, icon)
+            const applyCarouselCard = (card, cfg) => {
+                if (!card) return;
+                const iconWrap = card.querySelector('.fcat-car-icon-wrap');
+                const contentEl = card.querySelector('.fcat-car-content');
+                const btnEl = card.querySelector('.fcat-car-btn');
+                const eyebrowText = card.querySelector('.fcat-car-eyebrow-text');
+
+                const defaults = {
+                    featuredCatNew:         { bg:'#FF8C00', text:'#ffffff', btnBg:'transparent', btnText:'#ffffff', icon:'fa-star' },
+                    featuredCatOffers:      { bg:'#d81b60', text:'#ffffff', btnBg:'transparent', btnText:'#ffffff', icon:'fa-tag' },
+                    featuredCatService:     { bg:'#0A58CA', text:'#ffffff', btnBg:'transparent', btnText:'#ffffff', icon:'fa-screwdriver-wrench' },
+                    featuredCatLive:        { bg:'#c62828', text:'#ffffff', btnBg:'#ffffff',     btnText:'#c62828', icon:'fa-video' },
+                    featuredCatElectronics: { bg:'#2d1b4e', text:'#ffffff', btnBg:'#ffffff',     btnText:'#2d1b4e', icon:'fa-microchip' }
+                }[card.id] || {};
+
+                const isValidHex = (v) => /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(v||'').trim());
+                const bg      = isValidHex(cfg.bgColor)   ? cfg.bgColor.trim()   : (defaults.bg      || '#0A58CA');
+                const textCol = isValidHex(cfg.textColor) ? cfg.textColor.trim() : (defaults.text    || '#ffffff');
+                const btnBg   = (cfg.btnBgColor && String(cfg.btnBgColor).trim())   || (defaults.btnBg   || 'transparent');
+                const btnText = (cfg.btnTextColor && String(cfg.btnTextColor).trim()) || (defaults.btnText || textCol);
+
+                // Background: image if provided, else solid color
+                const imgUrl = (cfg.image || '').trim();
+                if (imgUrl && /^https?:\/\//i.test(imgUrl)) {
+                    card.style.background = `${bg}`;
+                    card.style.backgroundImage =
+                        `linear-gradient(135deg, ${bg}e0 0%, ${bg}bb 100%), url('${imgUrl.replace(/'/g,'%27')}')`;
+                    card.style.backgroundSize = 'cover, cover';
+                    card.style.backgroundPosition = 'center, center';
+                    card.style.backgroundRepeat = 'no-repeat, no-repeat';
+                } else {
+                    card.style.background = bg;
+                    card.style.backgroundImage = '';
+                }
+
+                // Text color via CSS var
+                card.style.setProperty('--fcat-car-text', textCol);
+                card.style.setProperty('--fcat-car-bg', bg);
+
+                // Eyebrow text (the LABEL above title) — derive from title first word or keep preset
+                if (eyebrowText && cfg.title) {
+                    const label = {
+                        featuredCatNew: 'NEW',
+                        featuredCatOffers: 'OFFERS',
+                        featuredCatService: 'SERVICE',
+                        featuredCatLive: 'LIVE',
+                        featuredCatElectronics: 'ELECTRONICS'
+                    }[card.id];
+                    if (label) eyebrowText.textContent = label;
+                }
+
+                // Button styling
+                if (btnEl) {
+                    const isTransparentBtn = btnBg === 'transparent' || btnBg === '';
+                    if (isTransparentBtn) {
+                        btnEl.style.background = 'rgba(255,255,255,0.18)';
+                        btnEl.style.border = '1.5px solid rgba(255,255,255,0.55)';
+                        btnEl.style.color = btnText;
+                    } else {
+                        btnEl.style.background = btnBg;
+                        btnEl.style.border = 'none';
+                        btnEl.style.color = btnText;
+                    }
+                }
+
+                // Icon
+                const iconName = (cfg.icon || '').trim()
+                    .replace(/^(fas|far|fab|fal)\s+/i, '')
+                    .replace(/^fa-/, '') || (defaults.icon || 'fa-star').replace(/^fa-/, '');
+                if (iconWrap) {
+                    iconWrap.innerHTML = `<i class="fas fa-${iconName}"></i>`;
+                }
+            };
+
             const setCard = (card, cfg) => {
                 if (!card) return;
 
@@ -7656,7 +7773,6 @@ footer{
                 const pageRecord = isManagedLinkCard ? getManagedPageRecord(href) : null;
                 const isDisabled = !!(pageRecord && pageRecord.enabled === false);
 
-                // إخفاء البطاقة تماماً إذا كانت الصفحة موقوفة
                 card.style.display = isDisabled ? 'none' : '';
                 card.hidden = isDisabled;
                 card.setAttribute('aria-hidden', isDisabled ? 'true' : 'false');
@@ -7669,27 +7785,32 @@ footer{
                     card.tabIndex = 0;
                 }
 
-                // النص
+                // Text
                 const titleEl = card.querySelector('.featured-cat-title');
                 const subEl = card.querySelector('.featured-cat-sub');
-                const badgeEl = card.querySelector('.featured-cat-badge');
                 if (titleEl) titleEl.innerHTML = cfg.titleHtml || cfg.title || '';
                 if (subEl) subEl.textContent = cfg.sub || '';
-                if (badgeEl) badgeEl.innerHTML = cfg.badgeHtml || '';
 
-                // صورة خلفية
-                const url = (cfg.image || '').trim();
-                if (url && /^https?:\/\//i.test(url)) {
-                    card.style.backgroundImage = `url('${url.replace(/'/g, "%27")}')`;
+                // Button label (respect admin override)
+                const btnEl = card.querySelector('.fcat-car-btn');
+                if (btnEl) btnEl.textContent = (cfg.btnLabel && cfg.btnLabel.trim()) || 'اضغط هنا';
+
+                // Carousel card styling
+                if (card.classList.contains('fcat-car-card')) {
+                    applyCarouselCard(card, cfg);
                 } else {
-                    card.style.backgroundImage = '';
+                    // Legacy fallback
+                    const url = (cfg.image || '').trim();
+                    if (url && /^https?:\/\//i.test(url)) {
+                        card.style.backgroundImage = `url('${url.replace(/'/g, "%27")}')`;
+                    } else {
+                        card.style.backgroundImage = '';
+                    }
                 }
 
-                // خزّن الإعداد الحالي ليستعمله مستمع النقر الدائم
                 card.__featuredCfg = cfg;
                 card.__managedPageRecord = pageRecord;
 
-                // ربط النقر مرة واحدة
                 if (!card.dataset.bound) {
                     card.addEventListener('click', (e) => {
                         e.preventDefault();
@@ -7737,7 +7858,13 @@ footer{
                 categoryId: 'new',
                 title: (state.pageContent.featuredNewTitle || 'المنتجات الجديدة'),
                 sub: (state.pageContent.featuredNewSub || 'منتجات وصلت حديثًا'),
-                image: (state.pageContent.featuredNewImage || '')
+                image: (state.pageContent.featuredNewImage || ''),
+                icon: (state.pageContent.featuredNewIcon || 'fa-star'),
+                bgColor: (state.pageContent.featuredNewBgColor || '#FF8C00'),
+                textColor: (state.pageContent.featuredNewTextColor || '#ffffff'),
+                btnBgColor: (state.pageContent.featuredNewBtnBgColor || 'transparent'),
+                btnTextColor: (state.pageContent.featuredNewBtnTextColor || '#ffffff'),
+                btnLabel: (state.pageContent.featuredNewBtnLabel || 'اضغط هنا')
             });
 
             setCard(offersCard, {
@@ -7745,32 +7872,54 @@ footer{
                 categoryId: 'offers',
                 title: (state.pageContent.featuredOffersTitle || 'العروض والخصومات'),
                 sub: (state.pageContent.featuredOffersSub || 'أفضل الأسعار والتخفيضات'),
-                image: (state.pageContent.featuredOffersImage || '')
+                image: (state.pageContent.featuredOffersImage || ''),
+                icon: (state.pageContent.featuredOffersIcon || 'fa-tag'),
+                bgColor: (state.pageContent.featuredOffersBgColor || '#d81b60'),
+                textColor: (state.pageContent.featuredOffersTextColor || '#ffffff'),
+                btnBgColor: (state.pageContent.featuredOffersBtnBgColor || 'transparent'),
+                btnTextColor: (state.pageContent.featuredOffersBtnTextColor || '#ffffff'),
+                btnLabel: (state.pageContent.featuredOffersBtnLabel || 'اضغط هنا')
             });
 
             setCard(serviceCard, {
                 type: 'service',
                 title: (state.pageContent.featuredServiceTitle || 'قسم الصيانة'),
                 sub: (state.pageContent.featuredServiceSub || 'قدّم طلبك خلال دقيقة'),
-                image: (state.pageContent.featuredServiceImage || '')
+                image: (state.pageContent.featuredServiceImage || ''),
+                icon: (state.pageContent.featuredServiceIcon || 'fa-screwdriver-wrench'),
+                bgColor: (state.pageContent.featuredServiceBgColor || '#0A58CA'),
+                textColor: (state.pageContent.featuredServiceTextColor || '#ffffff'),
+                btnBgColor: (state.pageContent.featuredServiceBtnBgColor || 'transparent'),
+                btnTextColor: (state.pageContent.featuredServiceBtnTextColor || '#ffffff'),
+                btnLabel: (state.pageContent.featuredServiceBtnLabel || 'اضغط هنا')
             });
 
             setCard(liveCard, {
                 type: 'link',
                 href: (state.pageContent.featuredLiveLink || 'repair-live.html'),
-                titleHtml: `<i class="fas fa-video"></i> ${escapeHtml(state.pageContent.featuredLiveTitle || 'البث المباشر')}`,
+                title: (state.pageContent.featuredLiveTitle || 'البث المباشر'),
                 sub: (state.pageContent.featuredLiveSub || 'شاهد عملية الإصلاح مباشرة للعميل'),
-                badgeHtml: `<i class="fas fa-circle-play"></i> ${escapeHtml(state.pageContent.featuredLiveBadge || 'شاهد الآن')}`,
-                image: (state.pageContent.featuredLiveImage || '')
+                image: (state.pageContent.featuredLiveImage || ''),
+                icon: (state.pageContent.featuredLiveIcon || 'fa-video'),
+                bgColor: (state.pageContent.featuredLiveBgColor || '#c62828'),
+                textColor: (state.pageContent.featuredLiveTextColor || '#ffffff'),
+                btnBgColor: (state.pageContent.featuredLiveBtnBgColor || '#ffffff'),
+                btnTextColor: (state.pageContent.featuredLiveBtnTextColor || '#c62828'),
+                btnLabel: (state.pageContent.featuredLiveBadge || state.pageContent.featuredLiveBtnLabel || 'اضغط هنا')
             });
 
             setCard(electronicsCard, {
                 type: 'link',
                 href: (state.pageContent.featuredElectronicsLink || 'electronics-store.html'),
-                titleHtml: `<i class="fas fa-microchip"></i> ${escapeHtml(state.pageContent.featuredElectronicsTitle || 'متجر القطع والالكترونيات')}`,
-                sub: (state.pageContent.featuredElectronicsSub || 'تسوق القطع الإلكترونية والإكسسوارات والمنتجات المتخصصة'),
-                badgeHtml: `<i class="fas fa-store"></i> ${escapeHtml(state.pageContent.featuredElectronicsBadge || 'ادخل الآن')}`,
-                image: (state.pageContent.featuredElectronicsImage || '')
+                title: (state.pageContent.featuredElectronicsTitle || 'متجر القطع والالكترونيات'),
+                sub: (state.pageContent.featuredElectronicsSub || 'قطع متخصصة • إكسسوارات أصلية'),
+                image: (state.pageContent.featuredElectronicsImage || ''),
+                icon: (state.pageContent.featuredElectronicsIcon || 'fa-microchip'),
+                bgColor: (state.pageContent.featuredElectronicsBgColor || '#2d1b4e'),
+                textColor: (state.pageContent.featuredElectronicsTextColor || '#ffffff'),
+                btnBgColor: (state.pageContent.featuredElectronicsBtnBgColor || '#ffffff'),
+                btnTextColor: (state.pageContent.featuredElectronicsBtnTextColor || '#2d1b4e'),
+                btnLabel: (state.pageContent.featuredElectronicsBadge || state.pageContent.featuredElectronicsBtnLabel || 'اضغط هنا')
             });
         }
 
@@ -14596,7 +14745,465 @@ body .shop-sidebar .sidebar-title i {
     padding-bottom: 100px !important;
   }
 }
+
+/* ========================================================= */
+/* ============ V3 BANNER CAROUSEL ===================== */
+/* ========================================================= */
+/* Override the old V2 layout completely — now carousel mode */
+.featured-categories-row.fcat-carousel {
+  position: relative !important;
+  display: block !important;
+  flex-direction: unset !important;
+  gap: 0 !important;
+  padding: 8px 52px 8px !important;
+  margin-bottom: 22px !important;
+  overflow: visible !important;
+  scroll-snap-type: none !important;
+  animation: none !important;
+  direction: ltr;
+}
+
+/* Kill any legacy overlay hacks on V3 cards */
+.fcat-carousel .featured-cat-card::before,
+.fcat-carousel .featured-cat-card::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Nav arrows */
+.fcat-car-nav {
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(10, 88, 202, 0.12) !important;
+  box-shadow: 0 6px 18px rgba(10, 88, 202, 0.12) !important;
+  color: var(--brand-blue-dark) !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 5 !important;
+  transition: all .18s ease !important;
+  padding: 0 !important;
+}
+.fcat-car-prev { right: 6px !important; }
+.fcat-car-next { left: 6px !important; }
+.fcat-car-nav:hover {
+  background: var(--brand-orange) !important;
+  color: #ffffff !important;
+  border-color: var(--brand-orange) !important;
+  transform: translateY(-50%) scale(1.08) !important;
+}
+.fcat-car-nav:active { transform: translateY(-50%) scale(0.95) !important; }
+.fcat-car-nav:disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+}
+.fcat-car-nav i { font-size: 14px !important; }
+
+/* Viewport + track */
+.fcat-car-viewport {
+  overflow: hidden !important;
+  border-radius: 14px !important;
+  direction: ltr;
+}
+.fcat-car-track {
+  display: flex !important;
+  gap: 14px !important;
+  transition: transform .45s cubic-bezier(.22, .8, .2, 1) !important;
+  will-change: transform !important;
+  direction: ltr;
+}
+
+/* Each card */
+.featured-cat-card.fcat-car-card {
+  flex: 0 0 calc((100% - 28px) / 3) !important;
+  min-height: 170px !important;
+  border-radius: 14px !important;
+  border: none !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+  position: relative !important;
+  overflow: hidden !important;
+  color: #fff !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1) !important;
+  transition: transform .2s ease, box-shadow .2s ease !important;
+  background: #0A58CA;
+  animation: none !important;
+  scroll-snap-align: none !important;
+  direction: rtl;
+  text-align: right !important;
+}
+.featured-cat-card.fcat-car-card:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18) !important;
+}
+.featured-cat-card.fcat-car-card:active {
+  transform: translateY(-1px) scale(0.99) !important;
+}
+
+.fcat-car-inner {
+  position: relative;
+  height: 100%;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  direction: rtl;
+  z-index: 2;
+}
+.fcat-car-content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-height: 138px;
+  text-align: right;
+}
+
+.fcat-car-eyebrow {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: 1.5px !important;
+  color: var(--fcat-car-text, #ffffff) !important;
+  opacity: 0.85;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+.fcat-car-eyebrow-text { letter-spacing: 1.5px; }
+
+.fcat-car-live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6);
+  animation: fcat-live-pulse 1.6s infinite;
+}
+@keyframes fcat-live-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(255,255,255,.6); }
+  70%  { box-shadow: 0 0 0 8px rgba(255,255,255,0); }
+  100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+}
+
+.featured-cat-card.fcat-car-card .fcat-car-title {
+  font-size: 19px !important;
+  font-weight: 900 !important;
+  color: var(--fcat-car-text, #ffffff) !important;
+  line-height: 1.2 !important;
+  margin: 4px 0 0 !important;
+  padding: 0 !important;
+  text-shadow: none !important;
+  letter-spacing: -0.2px;
+}
+
+.featured-cat-card.fcat-car-card .fcat-car-sub {
+  font-size: 12px !important;
+  color: var(--fcat-car-text, #ffffff) !important;
+  opacity: 0.82;
+  line-height: 1.5 !important;
+  margin: 4px 0 0 !important;
+  padding: 0 !important;
+  text-shadow: none !important;
+}
+
+.featured-cat-card.fcat-car-card .fcat-car-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 8px 18px !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  width: fit-content !important;
+  margin-top: 8px !important;
+  transition: transform .15s ease, box-shadow .15s ease !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  border: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+.featured-cat-card.fcat-car-card:hover .fcat-car-btn {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Icon decoration */
+.fcat-car-icon-wrap {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fcat-car-text, #ffffff);
+}
+.fcat-car-icon-wrap i {
+  font-size: 32px !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12));
+}
+
+/* Decorative circles */
+.featured-cat-card.fcat-car-card > .fcat-car-inner::after {
+  content: '';
+  position: absolute;
+  left: -30px;
+  bottom: -30px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+  z-index: 0;
+}
+.featured-cat-card.fcat-car-card > .fcat-car-inner::before {
+  content: '';
+  position: absolute;
+  right: -24px;
+  top: -24px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+  z-index: 0;
+}
+.fcat-car-content,
+.fcat-car-icon-wrap {
+  position: relative;
+  z-index: 1;
+}
+
+/* Pagination dots */
+.fcat-car-dots {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  margin-top: 14px !important;
+  direction: ltr;
+}
+.fcat-car-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(10, 88, 202, 0.18);
+  transition: all .25s ease;
+  cursor: pointer;
+}
+.fcat-car-dot.active {
+  width: 24px;
+  background: var(--brand-orange);
+}
+
+/* Tablet: 2 cards visible */
+@media (max-width: 1024px) {
+  .featured-cat-card.fcat-car-card {
+    flex: 0 0 calc((100% - 14px) / 2) !important;
+  }
+}
+
+/* Mobile: 1 card visible */
+@media (max-width: 640px) {
+  .featured-categories-row.fcat-carousel {
+    padding: 6px 40px 6px !important;
+  }
+  .fcat-car-nav {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  .fcat-car-prev { right: 2px !important; }
+  .fcat-car-next { left: 2px !important; }
+  .fcat-car-nav i { font-size: 12px !important; }
+
+  .featured-cat-card.fcat-car-card {
+    flex: 0 0 100% !important;
+    min-height: 155px !important;
+  }
+  .fcat-car-inner { padding: 14px 16px !important; }
+  .fcat-car-content { min-height: 125px !important; }
+  .featured-cat-card.fcat-car-card .fcat-car-title {
+    font-size: 17px !important;
+  }
+  .featured-cat-card.fcat-car-card .fcat-car-sub {
+    font-size: 11.5px !important;
+  }
+  .fcat-car-icon-wrap {
+    width: 58px;
+    height: 58px;
+    border-radius: 14px;
+  }
+  .fcat-car-icon-wrap i {
+    font-size: 26px !important;
+  }
+  .featured-cat-card.fcat-car-card .fcat-car-btn {
+    padding: 7px 14px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* Dark mode: soften white inputs */
+[data-theme="dark"] .fcat-car-nav {
+  background: #282e48 !important;
+  border-color: #363c58 !important;
+  color: #dde0e6 !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35) !important;
+}
+[data-theme="dark"] .fcat-car-nav:hover {
+  background: #ffa726 !important;
+  border-color: #ffa726 !important;
+  color: #1e2235 !important;
+}
+[data-theme="dark"] .fcat-car-dot {
+  background: rgba(255, 255, 255, 0.18);
+}
+[data-theme="dark"] .fcat-car-dot.active {
+  background: #ffa726;
+}
+
 </style>
+
+<script>
+// ================================================================
+// ===== V3 BANNER CAROUSEL — navigation, dots, auto-play ======
+// ================================================================
+(function(){
+  function initCarousel(){
+    const wrap = document.querySelector('.featured-categories-row.fcat-carousel');
+    if (!wrap || wrap.dataset.carouselInit === '1') return;
+    wrap.dataset.carouselInit = '1';
+
+    const track = wrap.querySelector('.fcat-car-track');
+    const cards = Array.from(wrap.querySelectorAll('.fcat-car-card'));
+    const prev  = wrap.querySelector('.fcat-car-prev');
+    const next  = wrap.querySelector('.fcat-car-next');
+    const dotsContainer = wrap.querySelector('.fcat-car-dots');
+    if (!track || !cards.length || !prev || !next || !dotsContainer) return;
+
+    let page = 0;
+    let autoplayId = null;
+    let visible = 3;
+
+    function computeVisible(){
+      const w = window.innerWidth;
+      if (w <= 640) return 1;
+      if (w <= 1024) return 2;
+      return 3;
+    }
+
+    function rebuildDots(){
+      const v = computeVisible();
+      const pages = Math.max(1, cards.length - v + 1);
+      dotsContainer.innerHTML = '';
+      for (let i = 0; i < pages; i++) {
+        const d = document.createElement('span');
+        d.className = 'fcat-car-dot' + (i === Math.min(page, pages-1) ? ' active' : '');
+        d.addEventListener('click', () => { page = i; render(); resetAutoplay(); });
+        dotsContainer.appendChild(d);
+      }
+    }
+
+    function render(){
+      visible = computeVisible();
+      const maxPage = Math.max(0, cards.length - visible);
+      page = Math.min(page, maxPage);
+
+      const cardEl = cards.find(c => !c.hidden && c.style.display !== 'none') || cards[0];
+      if (!cardEl) return;
+
+      const gap = parseFloat(getComputedStyle(track).gap) || 14;
+      const step = cardEl.getBoundingClientRect().width + gap;
+      track.style.transform = `translateX(${page * step}px)`;
+
+      const dots = Array.from(dotsContainer.querySelectorAll('.fcat-car-dot'));
+      dots.forEach((d, i) => d.classList.toggle('active', i === page));
+
+      prev.disabled = page <= 0;
+      next.disabled = page >= maxPage;
+    }
+
+    function go(delta){
+      visible = computeVisible();
+      const maxPage = Math.max(0, cards.length - visible);
+      const target = page + delta;
+      if (target < 0 || target > maxPage) return;
+      page = target;
+      render();
+    }
+
+    function resetAutoplay(){
+      if (autoplayId) clearInterval(autoplayId);
+      autoplayId = setInterval(() => {
+        visible = computeVisible();
+        const maxPage = Math.max(0, cards.length - visible);
+        page = (page >= maxPage) ? 0 : page + 1;
+        render();
+      }, 5500);
+    }
+
+    prev.addEventListener('click', (e) => { e.stopPropagation(); go(-1); resetAutoplay(); });
+    next.addEventListener('click', (e) => { e.stopPropagation(); go(+1); resetAutoplay(); });
+
+    wrap.addEventListener('mouseenter', () => { if (autoplayId) clearInterval(autoplayId); });
+    wrap.addEventListener('mouseleave', resetAutoplay);
+
+    // Touch swipe support (mobile)
+    let touchX = 0, touchActive = false;
+    track.addEventListener('touchstart', (e) => {
+      touchActive = true;
+      touchX = e.touches[0].clientX;
+    }, { passive: true });
+    track.addEventListener('touchend', (e) => {
+      if (!touchActive) return;
+      touchActive = false;
+      const dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) < 40) return;
+      // In RTL carousel (visual), swipe right should go to the previous logical card.
+      // Our track uses translateX positive value to advance, so:
+      if (dx < 0) go(+1); else go(-1);
+      resetAutoplay();
+    }, { passive: true });
+
+    window.addEventListener('resize', () => { rebuildDots(); render(); });
+
+    // Rebuild dots when any card is shown/hidden by admin (e.g. page disabled)
+    const mo = new MutationObserver(() => { rebuildDots(); render(); });
+    cards.forEach(c => mo.observe(c, { attributes: true, attributeFilter: ['style', 'hidden'] }));
+
+    rebuildDots();
+    setTimeout(render, 60);
+    resetAutoplay();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCarousel);
+  } else {
+    initCarousel();
+  }
+  // Retry in case Firebase data injects items after page load
+  [500, 1500, 3500].forEach(t => setTimeout(initCarousel, t));
+})();
+</script>
 
 </body>
 </html>
