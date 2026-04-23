@@ -5979,61 +5979,34 @@ body .product-card .product-image::after,
 </style>
 
 
-<style id="wesam-mobile-cart-count-visible-final">
+
+<style id="wesam-cart-count-master-style-final">
 @media (max-width:768px){
-  #mCartBtn,
-  .m-cart-btn,
-  .m-qs.cart{
-    position:relative !important;
-    overflow:visible !important;
-  }
-
-  #mCartCount,
-  .m-badge,
-  .m-qs-badge,
-  #floatingCartCount,
-  #mobileCartCount{
-    display:flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-    position:absolute !important;
-    top:-8px !important;
-    right:-8px !important;
-    min-width:20px !important;
-    height:20px !important;
-    padding:0 6px !important;
-    border-radius:999px !important;
-    background:#fff !important;
-    color:#ff6a00 !important;
-    border:2px solid #ff8c00 !important;
-    font-size:12px !important;
-    font-weight:900 !important;
-    line-height:1 !important;
-    z-index:20 !important;
-    box-shadow:0 4px 10px rgba(0,0,0,.18) !important;
-    pointer-events:none !important;
-  }
-}
-</style>
-
-
-<style id="wesam-floating-cart-count-mirror-style-final">
-@media (max-width:768px){
+  #floatingCartBtn,
+  #mobileFloatingCartBtn,
+  #cartFloatBtn,
+  #mFloatingCartBtn,
   .floating-cart,
   .mobile-floating-cart,
-  .m-qs.cart,
-  #mCartBtn{
+  .float-cart,
+  .cart-float,
+  .m-qs.cart{
     position:relative !important;
     overflow:visible !important;
   }
 
   #floatingCartCount,
   #mobileCartCount,
+  #mobileFloatingCartCount,
+  #cartFloatCount,
+  #mFloatingCartCount,
   #mQsCartCount,
   #mQSCount,
-  #mobileFloatingCartCount,
+  .wesam-floating-created-count,
   .floating-cart .cart-count,
   .mobile-floating-cart .cart-count,
+  .float-cart .cart-count,
+  .cart-float .cart-count,
   .m-qs.cart .m-qs-badge,
   .m-qs.cart .cart-count,
   [data-floating-cart-count],
@@ -6042,10 +6015,10 @@ body .product-card .product-image::after,
     align-items:center !important;
     justify-content:center !important;
     position:absolute !important;
-    top:-8px !important;
-    right:-8px !important;
-    min-width:20px !important;
-    height:20px !important;
+    top:-9px !important;
+    right:-9px !important;
+    min-width:22px !important;
+    height:22px !important;
     padding:0 6px !important;
     border-radius:999px !important;
     background:#fff !important;
@@ -6054,8 +6027,8 @@ body .product-card .product-image::after,
     font-size:12px !important;
     font-weight:900 !important;
     line-height:1 !important;
-    z-index:50 !important;
-    box-shadow:0 4px 10px rgba(0,0,0,.18) !important;
+    z-index:99999 !important;
+    box-shadow:0 4px 10px rgba(0,0,0,.22) !important;
     pointer-events:none !important;
   }
 }
@@ -16343,84 +16316,115 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 
-<script id="wesam-floating-cart-count-mirror-final">
+
+<script id="wesam-cart-count-master-final">
 (function(){
-  function normalizeCount(value){
-    const n = parseInt(String(value || '0').replace(/[^\d]/g,''), 10);
+  const FLOATING_SELECTORS = [
+    '#floatingCartBtn',
+    '#mobileFloatingCartBtn',
+    '#whatsappCartBtn',
+    '#cartFloatBtn',
+    '#mFloatingCartBtn',
+    '.floating-cart',
+    '.mobile-floating-cart',
+    '.float-cart',
+    '.cart-float',
+    '.m-qs.cart'
+  ];
+
+  const BADGE_SELECTORS = [
+    '#floatingCartCount',
+    '#mobileCartCount',
+    '#mobileFloatingCartCount',
+    '#cartFloatCount',
+    '#mFloatingCartCount',
+    '#mQsCartCount',
+    '#mQSCount',
+    '.floating-cart .cart-count',
+    '.mobile-floating-cart .cart-count',
+    '.float-cart .cart-count',
+    '.cart-float .cart-count',
+    '.m-qs.cart .m-qs-badge',
+    '.m-qs.cart .cart-count',
+    '[data-floating-cart-count]',
+    '[data-mobile-cart-count]'
+  ];
+
+  function num(v){
+    const n = parseInt(String(v || '0').replace(/[^\d]/g,''), 10);
     return Number.isFinite(n) ? n : 0;
   }
 
-  function getCorrectHeaderCount(){
-    const headerMobile = document.getElementById('mCartCount');
-    const headerDesktop = document.getElementById('cartCount');
+  function headerCount(){
+    const m = document.getElementById('mCartCount');
+    const d = document.getElementById('cartCount');
 
-    /* الهيدر في الهاتف هو المصدر الصحيح حسب الفحص */
-    if(headerMobile) return normalizeCount(headerMobile.textContent);
-    if(headerDesktop) return normalizeCount(headerDesktop.textContent);
+    /* المهم: عداد الهيدر هو الصحيح، لذلك نقرأه فقط */
+    if(m && String(m.textContent || '').trim() !== '') return num(m.textContent);
+    if(d && String(d.textContent || '').trim() !== '') return num(d.textContent);
     return 0;
   }
 
-  function writeBadge(el, count){
-    if(!el) return;
-    el.textContent = String(count);
-    el.style.display = 'flex';
-    el.setAttribute('data-cart-count-fixed', String(count));
+  function ensureBadgeOnFloatingButtons(){
+    FLOATING_SELECTORS.forEach(sel => {
+      document.querySelectorAll(sel).forEach(btn => {
+        if(!btn) return;
+        if(btn.id === 'mCartBtn') return;
+        let badge = btn.querySelector('.cart-count, .m-qs-badge, [data-floating-cart-count], [data-mobile-cart-count]');
+        if(!badge){
+          badge = document.createElement('span');
+          badge.className = 'cart-count wesam-floating-created-count';
+          badge.setAttribute('data-floating-cart-count','1');
+          badge.textContent = '0';
+          btn.appendChild(badge);
+        }
+      });
+    });
   }
 
-  function mirrorFloatingCartCount(){
-    const count = getCorrectHeaderCount();
+  function write(el, count){
+    if(!el) return;
+    if(el.id === 'mCartCount') return; /* لا نلمس عداد الهيدر الصحيح */
+    el.textContent = String(count);
+    el.style.setProperty('display','flex','important');
+    el.setAttribute('data-count', String(count));
+  }
 
-    const selectors = [
-      '#floatingCartCount',
-      '#mobileCartCount',
-      '#mQsCartCount',
-      '#mQSCount',
-      '#mobileFloatingCartCount',
-      '.floating-cart .cart-count',
-      '.mobile-floating-cart .cart-count',
-      '.m-qs.cart .m-qs-badge',
-      '.m-qs.cart .cart-count',
-      '[data-floating-cart-count]',
-      '[data-mobile-cart-count]'
-    ];
+  function sync(){
+    ensureBadgeOnFloatingButtons();
+    const c = headerCount();
 
-    selectors.forEach(sel => {
-      document.querySelectorAll(sel).forEach(el => writeBadge(el, count));
+    BADGE_SELECTORS.forEach(sel => {
+      document.querySelectorAll(sel).forEach(el => write(el, c));
     });
 
-    /* لا نغيّر #mCartCount لأنه هو الصحيح، فقط نضمن أن #cartCount مطابق له */
-    const desktop = document.getElementById('cartCount');
-    if(desktop) desktop.textContent = String(count);
+    /* أي عداد سلة عائم مضاف بدون اسم معروف */
+    document.querySelectorAll('[class*="float"] .cart-count, [id*="Float"] .cart-count, [id*="floating"] .cart-count').forEach(el => write(el, c));
   }
 
-  window.mirrorFloatingCartCount = mirrorFloatingCartCount;
+  window.wesamSyncFloatingCartCount = sync;
 
-  function installObserver(id){
+  function watchBadge(id){
     const el = document.getElementById(id);
-    if(!el || el.__wesamMirrorObserver) return;
-    el.__wesamMirrorObserver = true;
-    const obs = new MutationObserver(function(){ setTimeout(mirrorFloatingCartCount, 0); });
-    obs.observe(el, {childList:true, characterData:true, subtree:true});
+    if(!el || el.__wesamCartWatch) return;
+    el.__wesamCartWatch = true;
+    new MutationObserver(sync).observe(el, {childList:true, characterData:true, subtree:true});
   }
 
   document.addEventListener('DOMContentLoaded', function(){
-    installObserver('mCartCount');
-    installObserver('cartCount');
+    watchBadge('mCartCount');
+    watchBadge('cartCount');
 
-    mirrorFloatingCartCount();
-    setTimeout(mirrorFloatingCartCount, 100);
-    setTimeout(mirrorFloatingCartCount, 400);
-    setTimeout(mirrorFloatingCartCount, 900);
+    sync();
+    [50,150,300,700,1200,2000].forEach(t => setTimeout(sync, t));
 
     document.addEventListener('click', function(e){
-      if(e.target.closest('.buy-btn, .add-to-cart, [data-add-to-cart], .quantity-btn, .remove-item, .cart-item, #cartModal')){
-        setTimeout(mirrorFloatingCartCount, 50);
-        setTimeout(mirrorFloatingCartCount, 200);
-        setTimeout(mirrorFloatingCartCount, 600);
+      if(e.target.closest('.buy-btn, .add-to-cart, [data-add-to-cart], .quantity-btn, .remove-item, #cartModal, .cart-modal')){
+        [20,80,180,400,900].forEach(t => setTimeout(sync, t));
       }
     }, true);
 
-    setInterval(mirrorFloatingCartCount, 500);
+    setInterval(sync, 300);
   });
 })();
 </script>
