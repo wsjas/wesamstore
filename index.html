@@ -5267,7 +5267,7 @@ footer{
     font-size:.75rem !important;
     box-shadow:0 2px 4px rgba(0,0,0,.08);
   }
-  body .product-card .discount-badge::after{ content:" On Sale"; }
+  body .product-card .discount-badge::after{ content:none !important; display:none !important; }
   /* stock indicator */
   body .product-card .product-stock{
     font-size:.72rem !important;
@@ -5463,6 +5463,521 @@ footer{
   [data-theme="dark"] body .product-card .product-price{ color:#64b5f6 !important; }
 </style>
 
+
+<style id="page-cards-visible-fix">
+/* إصلاح ظهور كل بطاقات الصفحات المفعّلة: لا تخفِ البطاقات بعد أول ثلاث */
+.featured-categories-row.fcat-carousel{
+  overflow: visible !important;
+}
+.fcat-car-viewport{
+  overflow: visible !important;
+}
+.fcat-car-track{
+  transform: none !important;
+  flex-wrap: wrap !important;
+  align-items: stretch !important;
+}
+.fcat-car-nav,
+.fcat-car-dots{
+  display: none !important;
+}
+.featured-cat-card.fcat-car-card{
+  flex: 0 0 calc((100% - 28px) / 3) !important;
+}
+@media (max-width:1024px){
+  .featured-cat-card.fcat-car-card{
+    flex: 0 0 calc((100% - 14px) / 2) !important;
+  }
+}
+@media (max-width:640px){
+  .featured-categories-row.fcat-carousel{
+    padding: 4px 0 10px !important;
+  }
+  .featured-cat-card.fcat-car-card{
+    flex: 0 0 100% !important;
+  }
+}
+</style>
+
+<style id="wesam-remove-topnav-header-buttons-fix">
+.top-nav{display:none !important;}
+.header-page-actions{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:nowrap;
+  margin-inline-start:10px;
+  margin-inline-end:8px;
+}
+.header-page-btn{
+  border:1px solid rgba(26,35,126,.16);
+  background:#fff;
+  color:#1a237e;
+  border-radius:999px;
+  min-height:40px;
+  padding:8px 14px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  font-family:'Cairo',sans-serif;
+  font-weight:900;
+  font-size:.86rem;
+  cursor:pointer;
+  white-space:nowrap;
+  box-shadow:0 6px 16px rgba(17,37,82,.06);
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
+}
+.header-page-btn:hover{
+  transform:translateY(-1px);
+  border-color:#ff6a00;
+  color:#ff6a00;
+  box-shadow:0 10px 22px rgba(255,106,0,.12);
+}
+.header-page-btn i{color:inherit !important;}
+.header-page-btn.maintenance{
+  background:#fff7f0;
+  color:#ff6a00;
+  border-color:#ffd9b8;
+}
+.header-page-btn.live{
+  background:#fff;
+  color:#1a237e;
+}
+body > header .header-top{
+  justify-content:flex-start !important;
+}
+body > header .contact-info{
+  margin-inline-start:auto !important;
+}
+@media (max-width:1024px){
+  .header-page-btn{padding:7px 11px;font-size:.78rem;min-height:36px;}
+  .header-page-actions{gap:6px;margin-inline-start:6px;}
+}
+@media (max-width:768px){
+  .header-page-actions{display:none !important;}
+}
+[data-theme="dark"] .header-page-btn{
+  background:#252b3e;
+  border-color:#343c52;
+  color:#e5ebf7;
+}
+[data-theme="dark"] .header-page-btn.maintenance{
+  background:rgba(255,106,0,.12);
+  border-color:rgba(255,106,0,.35);
+  color:#ffa726;
+}
+</style>
+
+<style id="wesam-clean-product-card-badges">
+/* حذف التكرار أعلى المنتج: لا يظهر On Sale في أعلى الصورة */
+.product-image .discount-float,
+.product-card .product-image .discount-float,
+body .product-card .product-image .discount-float{
+  display:none !important;
+}
+
+/* حذف القلب/الدائرة المرسومة بالـ CSS أعلى صورة المنتج */
+body .product-card .product-image::before,
+body .product-card .product-image::after,
+.product-card .product-image::before,
+.product-card .product-image::after{
+  content:none !important;
+  display:none !important;
+}
+
+/* حذف زر القلب الحقيقي الذي كان يضاف بالجافاسكربت */
+.wishlist-btn{
+  display:none !important;
+}
+</style>
+
+
+<style id="wesam-search-box-fix">
+/* إصلاح تشوه مربع البحث في قسم المنتجات */
+.products-header{
+  overflow: visible !important;
+}
+
+.products-controls{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:14px !important;
+  flex-wrap:wrap !important;
+}
+
+.search-box{
+  position:relative !important;
+  width:min(100%, 310px) !important;
+  min-width:260px !important;
+  height:56px !important;
+  display:flex !important;
+  align-items:center !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  overflow:visible !important;
+}
+
+.search-box input{
+  width:100% !important;
+  height:56px !important;
+  min-height:56px !important;
+  padding:0 48px 0 18px !important;
+  border:1px solid #dfe5f0 !important;
+  border-radius:24px !important;
+  background:#fff !important;
+  color:#17233c !important;
+  font-size:.95rem !important;
+  line-height:56px !important;
+  outline:none !important;
+  box-shadow:0 10px 22px rgba(17,37,82,.05) !important;
+  box-sizing:border-box !important;
+}
+
+.search-box input:focus{
+  border-color:var(--me-orange, #ff6a00) !important;
+  box-shadow:0 0 0 4px rgba(255,106,0,.12), 0 10px 22px rgba(17,37,82,.05) !important;
+}
+
+.search-box i{
+  position:absolute !important;
+  right:16px !important;
+  left:auto !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  margin:0 !important;
+  z-index:3 !important;
+  color:var(--me-orange, #ff6a00) !important;
+  font-size:18px !important;
+  pointer-events:none !important;
+  width:20px !important;
+  height:20px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+.sort-options select{
+  height:56px !important;
+  min-height:56px !important;
+  border-radius:24px !important;
+  padding:0 18px !important;
+  line-height:56px !important;
+}
+
+@media (max-width:768px){
+  .products-header{
+    padding:14px !important;
+  }
+  .products-header h2{
+    font-size:1.25rem !important;
+  }
+  .products-controls{
+    width:100% !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+    gap:10px !important;
+  }
+  .search-box,
+  .sort-options,
+  .sort-options select{
+    width:100% !important;
+    min-width:0 !important;
+  }
+  .search-box{
+    height:52px !important;
+  }
+  .search-box input{
+    height:52px !important;
+    min-height:52px !important;
+    line-height:52px !important;
+    border-radius:22px !important;
+  }
+  .sort-options select{
+    height:52px !important;
+    min-height:52px !important;
+    line-height:52px !important;
+    border-radius:22px !important;
+  }
+}
+</style>
+
+
+<style id="wesam-mobile-header-clean-fix">
+/* الموبايل: إلغاء شريط الأيقونات بالكامل والإبقاء فقط على حسابي + السلة بجانب اسم المتجر */
+@media (max-width:768px){
+  .m-quickstrip,
+  #mQuickStrip,
+  .mobile-social-icons,
+  .m-quick-actions{
+    display:none !important;
+    visibility:hidden !important;
+    height:0 !important;
+    min-height:0 !important;
+    padding:0 !important;
+    margin:0 !important;
+    overflow:hidden !important;
+  }
+
+  .me-social-strip{
+    display:none !important;
+    visibility:hidden !important;
+  }
+
+  .m-topbar{
+    display:block !important;
+    background:#fff !important;
+    border-bottom:1px solid rgba(255,106,0,.18) !important;
+    box-shadow:0 6px 18px rgba(0,0,0,.06) !important;
+  }
+
+  .m-topbar-inner{
+    min-height:60px !important;
+    padding:8px 12px !important;
+    display:grid !important;
+    grid-template-columns:44px 1fr 44px !important;
+    align-items:center !important;
+    gap:8px !important;
+  }
+
+  /* زر حسابي بدل الشعار في جهة اليمين */
+  #mMenuBtn{
+    grid-column:1 !important;
+    width:44px !important;
+    height:44px !important;
+    border-radius:14px !important;
+    background:linear-gradient(135deg,#ff8c00,#ff6a00) !important;
+    border:none !important;
+    color:#fff !important;
+    box-shadow:0 8px 18px rgba(255,106,0,.25) !important;
+  }
+
+  #mMenuBtn img,
+  #mMenuLogo{
+    display:none !important;
+  }
+
+  #mMenuBtn::before{
+    content:"\f007";
+    font-family:"Font Awesome 6 Free";
+    font-weight:900;
+    color:#fff;
+    font-size:19px;
+    line-height:1;
+  }
+
+  .m-brand{
+    grid-column:2 !important;
+    text-align:center !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    min-width:0 !important;
+  }
+
+  .m-brand-name,
+  #mStoreNameMobile{
+    color:#ff6a00 !important;
+    font-size:1.03rem !important;
+    font-weight:900 !important;
+    text-shadow:none !important;
+    letter-spacing:0 !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  .m-cart-btn,
+  #mCartBtn{
+    grid-column:3 !important;
+    width:44px !important;
+    height:44px !important;
+    border-radius:14px !important;
+    background:#fff !important;
+    border:1px solid rgba(255,106,0,.25) !important;
+    color:#0d2f7a !important;
+    box-shadow:0 8px 18px rgba(0,0,0,.06) !important;
+  }
+
+  #mCartBtn i{
+    color:#0d2f7a !important;
+    font-size:19px !important;
+  }
+
+  #mCartCount,
+  .m-badge{
+    background:#ff6a00 !important;
+    color:#fff !important;
+    border:2px solid #fff !important;
+    top:-7px !important;
+    right:-7px !important;
+  }
+}
+</style>
+
+
+<style id="wesam-mobile-orange-header-final">
+/* جعل هيدر الهاتف باللون البرتقالي */
+@media (max-width:768px){
+  .m-topbar,
+  #mTopbar{
+    background:linear-gradient(135deg,#ff8c00,#ff6a00) !important;
+    border-bottom:1px solid rgba(255,255,255,.22) !important;
+    box-shadow:0 8px 22px rgba(255,106,0,.28) !important;
+  }
+
+  .m-topbar-inner{
+    background:transparent !important;
+  }
+
+  .m-brand-name,
+  #mStoreNameMobile{
+    color:#fff !important;
+    text-shadow:0 2px 8px rgba(0,0,0,.18) !important;
+  }
+
+  #mMenuBtn{
+    background:rgba(255,255,255,.18) !important;
+    border:1px solid rgba(255,255,255,.35) !important;
+    color:#fff !important;
+    box-shadow:none !important;
+  }
+
+  #mMenuBtn::before{
+    color:#fff !important;
+  }
+
+  .m-cart-btn,
+  #mCartBtn{
+    background:rgba(255,255,255,.18) !important;
+    border:1px solid rgba(255,255,255,.35) !important;
+    color:#fff !important;
+    box-shadow:none !important;
+  }
+
+  #mCartBtn i{
+    color:#fff !important;
+  }
+
+  #mCartCount,
+  .m-badge{
+    background:#fff !important;
+    color:#ff6a00 !important;
+    border:2px solid #ff8c00 !important;
+  }
+}
+</style>
+
+
+<style id="wesam-mobile-logo-account-cart-final">
+/* الهاتف: اللوجو في مكانه، وحسابي بجانب السلة */
+@media (max-width:768px){
+  .m-topbar-inner{
+    display:grid !important;
+    grid-template-columns:44px 1fr 44px 44px !important;
+    align-items:center !important;
+    gap:8px !important;
+    min-height:60px !important;
+    padding:8px 12px !important;
+  }
+
+  /* زر اللوجو في جهة اليسار/البداية كما كان */
+  #mMenuBtn{
+    grid-column:1 !important;
+    width:44px !important;
+    height:44px !important;
+    border-radius:14px !important;
+    background:rgba(255,255,255,.18) !important;
+    border:1px solid rgba(255,255,255,.35) !important;
+    box-shadow:none !important;
+    padding:6px !important;
+  }
+
+  #mMenuBtn::before{
+    content:none !important;
+    display:none !important;
+  }
+
+  #mMenuBtn img,
+  #mMenuLogo{
+    display:block !important;
+    width:30px !important;
+    height:30px !important;
+    object-fit:contain !important;
+    margin:auto !important;
+  }
+
+  .m-brand{
+    grid-column:2 !important;
+    text-align:center !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    min-width:0 !important;
+  }
+
+  .m-brand-name,
+  #mStoreNameMobile{
+    color:#fff !important;
+    font-size:1rem !important;
+    font-weight:900 !important;
+    text-shadow:0 2px 8px rgba(0,0,0,.18) !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  /* السلة */
+  .m-cart-btn,
+  #mCartBtn{
+    grid-column:3 !important;
+    width:44px !important;
+    height:44px !important;
+    border-radius:14px !important;
+    background:rgba(255,255,255,.18) !important;
+    border:1px solid rgba(255,255,255,.35) !important;
+    color:#fff !important;
+    box-shadow:none !important;
+  }
+
+  #mCartBtn i{
+    color:#fff !important;
+    font-size:19px !important;
+  }
+
+  /* زر حسابي الجديد بجانب السلة */
+  #mHeaderAccountBtn{
+    grid-column:4 !important;
+    width:44px !important;
+    height:44px !important;
+    border-radius:14px !important;
+    background:rgba(255,255,255,.18) !important;
+    border:1px solid rgba(255,255,255,.35) !important;
+    color:#fff !important;
+    box-shadow:none !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    cursor:pointer !important;
+    padding:0 !important;
+  }
+
+  #mHeaderAccountBtn i{
+    color:#fff !important;
+    font-size:19px !important;
+  }
+
+  #mCartCount,
+  .m-badge{
+    background:#fff !important;
+    color:#ff6a00 !important;
+    border:2px solid #ff8c00 !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <!-- Left social strip (desktop only) -->
@@ -5487,6 +6002,9 @@ footer{
 <button aria-label="السلة" class="m-icon-btn m-cart-btn" id="mCartBtn">
 <i class="fas fa-shopping-cart"></i>
 <span class="m-badge" id="mCartCount">0</span>
+</button>
+<button aria-label="حسابي" class="m-icon-btn" id="mHeaderAccountBtn" type="button">
+<i class="fas fa-user"></i>
 </button>
 </div>
 </div>
@@ -5627,6 +6145,10 @@ footer{
 </div>
 <p class="logo-slogan" id="storeSloganHeader">متخصصون في أجهزة TV-LCD-LED والإلكترونيات</p>
 </div>
+</div>
+<div class="header-page-actions" aria-label="روابط الصفحات الرئيسية">
+<button class="header-page-btn maintenance active" id="navServiceBtn" type="button"><i class="fas fa-tools"></i> الصيانة</button>
+<button class="header-page-btn live" id="navLiveBtn" type="button"><i class="fas fa-video"></i> البث المباشر</button>
 </div>
 <div class="contact-info">
 <div class="phone-number">
@@ -6339,28 +6861,6 @@ footer{
 </div>
 </div>
 <div class="overlay" id="overlay"></div>
-<!-- Top Navigation (New) -->
-<div class="top-nav">
-<div class="container">
-<div class="nav-inner">
-<div class="nav-links">
-<button class="active" id="navServiceBtn" type="button"><i class="fas fa-tools"></i> الصيانة</button>
-<button id="navShopBtn" type="button"><i class="fas fa-store"></i> المتجر</button>
-<button id="navElectronicsStoreBtn" type="button"><i class="fas fa-microchip"></i> متجر القطع والالكترونيات</button>
-<button id="navLiveBtn" type="button"><i class="fas fa-video"></i> البث المباشر</button>
-</div>
-<div class="nav-cta">
-<a href="https://wa.me/962790781206" id="navWhatsApp" rel="noopener" target="_blank">
-<i class="fab fa-whatsapp"></i> واتساب
-</a>
-<a href="/cdn-cgi/l/email-protection#fb8c9e889a969e979e988f899495929888bb9c969a9297d5989496" id="navEmail">
-<i class="fas fa-envelope"></i> ايميل
-</a>
-</div>
-</div>
-</div>
-</div>
-
 <!-- Hero + Service Main Section (New) -->
 
 <!-- Slider Wrapper -->
@@ -6502,8 +7002,8 @@ footer{
   <div class="container">
     <h2 class="section-title">تصنيفات المنتجات</h2>
 
-    <!-- Featured categories - V3 Banner Carousel -->
-    <div class="featured-categories-row fcat-carousel" data-me-carousel-built="1">
+    <!-- Featured categories - V3 Dynamic Banner Carousel -->
+    <div class="featured-categories-row fcat-carousel" data-me-carousel-built="1" id="fcatCarouselWrap">
       <button type="button" class="fcat-car-nav fcat-car-prev" aria-label="السابق">
         <i class="fas fa-chevron-right"></i>
       </button>
@@ -6512,7 +7012,7 @@ footer{
       </button>
 
       <div class="fcat-car-viewport">
-        <div class="fcat-car-track">
+        <div class="fcat-car-track" id="fcatCarouselTrack">
 
           <button class="featured-cat-card fcat-car-card" id="featuredCatNew" type="button" data-category="new" aria-label="المنتجات الجديدة">
             <div class="fcat-car-inner">
@@ -6538,7 +7038,7 @@ footer{
             </div>
           </button>
 
-          <button class="featured-cat-card fcat-car-card fcat-car-card-electronics featured-cat-card-electronics" id="featuredCatElectronics" type="button" data-action="electronics-store" aria-label="متجر القطع والالكترونيات">
+          <button class="featured-cat-card fcat-car-card featured-cat-card-electronics" id="featuredCatElectronics" type="button" data-action="electronics-store" aria-label="متجر القطع والالكترونيات">
             <div class="fcat-car-inner">
               <div class="fcat-car-content">
                 <div class="fcat-car-eyebrow"><span class="fcat-car-eyebrow-text">ELECTRONICS</span></div>
@@ -6562,7 +7062,7 @@ footer{
             </div>
           </button>
 
-          <button class="featured-cat-card fcat-car-card fcat-car-card-live featured-cat-card-live" id="featuredCatLive" type="button" data-action="live-stream" aria-label="البث المباشر">
+          <button class="featured-cat-card fcat-car-card featured-cat-card-live" id="featuredCatLive" type="button" data-action="live-stream" aria-label="البث المباشر">
             <div class="fcat-car-inner">
               <div class="fcat-car-content">
                 <div class="fcat-car-eyebrow">
@@ -6577,20 +7077,23 @@ footer{
             </div>
           </button>
 
+          <!-- Custom/dynamic cards will be injected here by admin -->
+
         </div>
       </div>
 
-      <div class="fcat-car-dots">
-        <span class="fcat-car-dot"></span>
-        <span class="fcat-car-dot"></span>
-        <span class="fcat-car-dot"></span>
-      </div>
+      <div class="fcat-car-dots" id="fcatCarouselDots"></div>
     </div>
 
     <div class="shop-grid">
       <aside class="shop-sidebar">
         <div class="sidebar-title"><span><i class="fas fa-list"></i> القائمة الجانبية</span></div>
         <div class="categories-grid sidebar-list" id="categoriesGrid"></div>
+        <!-- Swipe hint for mobile -->
+        <div class="sidebar-swipe-hint" aria-hidden="true">
+          <i class="fas fa-arrows-left-right"></i>
+          <span>اسحب لرؤية المزيد من التصنيفات</span>
+        </div>
       </aside>
 
       <main class="shop-main">
@@ -7682,7 +8185,7 @@ footer{
             try { applyFeaturedCategoryCards(); } catch (e) { console.warn(e); }
         }
 
-        // بطاقات مميزة تحت السلايدر (المنتجات الجديدة / العروض / الصيانة)
+        // بطاقات مميزة تحت السلايدر - دعم الكاروسيل + البطاقات الديناميكية من admin
         function applyFeaturedCategoryCards() {
             const newCard = document.getElementById('featuredCatNew');
             const offersCard = document.getElementById('featuredCatOffers');
@@ -7690,32 +8193,31 @@ footer{
             const liveCard = document.getElementById('featuredCatLive');
             const electronicsCard = document.getElementById('featuredCatElectronics');
 
-            // Helper: apply carousel-card customization (bgColor, textColor, btnBg, btnText, image, icon)
+            // ====== V3 Carousel style helper: applies bg/text/btn colors + icon + image ======
             const applyCarouselCard = (card, cfg) => {
-                if (!card) return;
-                const iconWrap = card.querySelector('.fcat-car-icon-wrap');
-                const contentEl = card.querySelector('.fcat-car-content');
-                const btnEl = card.querySelector('.fcat-car-btn');
-                const eyebrowText = card.querySelector('.fcat-car-eyebrow-text');
+                if (!card || !card.classList.contains('fcat-car-card')) return;
+                const iconWrap   = card.querySelector('.fcat-car-icon-wrap');
+                const btnEl      = card.querySelector('.fcat-car-btn');
+                const eyebrowTxt = card.querySelector('.fcat-car-eyebrow-text');
 
                 const defaults = {
-                    featuredCatNew:         { bg:'#FF8C00', text:'#ffffff', btnBg:'transparent', btnText:'#ffffff', icon:'fa-star' },
-                    featuredCatOffers:      { bg:'#d81b60', text:'#ffffff', btnBg:'transparent', btnText:'#ffffff', icon:'fa-tag' },
-                    featuredCatService:     { bg:'#0A58CA', text:'#ffffff', btnBg:'transparent', btnText:'#ffffff', icon:'fa-screwdriver-wrench' },
-                    featuredCatLive:        { bg:'#c62828', text:'#ffffff', btnBg:'#ffffff',     btnText:'#c62828', icon:'fa-video' },
-                    featuredCatElectronics: { bg:'#2d1b4e', text:'#ffffff', btnBg:'#ffffff',     btnText:'#2d1b4e', icon:'fa-microchip' }
-                }[card.id] || {};
+                    featuredCatNew:         { bg:'#FF8C00', text:'#ffffff', btnBg:'transparent', btnText:'#ffffff', icon:'fa-star',                eyebrow:'NEW' },
+                    featuredCatOffers:      { bg:'#d81b60', text:'#ffffff', btnBg:'transparent', btnText:'#ffffff', icon:'fa-tag',                 eyebrow:'OFFERS' },
+                    featuredCatService:     { bg:'#0A58CA', text:'#ffffff', btnBg:'transparent', btnText:'#ffffff', icon:'fa-screwdriver-wrench',  eyebrow:'SERVICE' },
+                    featuredCatLive:        { bg:'#c62828', text:'#ffffff', btnBg:'#ffffff',     btnText:'#c62828', icon:'fa-video',               eyebrow:'LIVE' },
+                    featuredCatElectronics: { bg:'#2d1b4e', text:'#ffffff', btnBg:'#ffffff',     btnText:'#2d1b4e', icon:'fa-microchip',           eyebrow:'ELECTRONICS' }
+                }[card.id] || { bg:'#0A58CA', text:'#ffffff', btnBg:'#ffffff', btnText:'#0A58CA', icon:'fa-star', eyebrow:'CARD' };
 
                 const isValidHex = (v) => /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(v||'').trim());
-                const bg      = isValidHex(cfg.bgColor)   ? cfg.bgColor.trim()   : (defaults.bg      || '#0A58CA');
-                const textCol = isValidHex(cfg.textColor) ? cfg.textColor.trim() : (defaults.text    || '#ffffff');
-                const btnBg   = (cfg.btnBgColor && String(cfg.btnBgColor).trim())   || (defaults.btnBg   || 'transparent');
-                const btnText = (cfg.btnTextColor && String(cfg.btnTextColor).trim()) || (defaults.btnText || textCol);
+                const bg      = isValidHex(cfg.bgColor)      ? cfg.bgColor.trim()      : defaults.bg;
+                const textCol = isValidHex(cfg.textColor)    ? cfg.textColor.trim()    : defaults.text;
+                const rawBtnBg = String(cfg.btnBgColor || '').trim();
+                const btnBg   = rawBtnBg || defaults.btnBg;
+                const btnText = isValidHex(cfg.btnTextColor) ? cfg.btnTextColor.trim() : defaults.btnText;
 
-                // Background: image if provided, else solid color
                 const imgUrl = (cfg.image || '').trim();
                 if (imgUrl && /^https?:\/\//i.test(imgUrl)) {
-                    card.style.background = `${bg}`;
+                    card.style.background = bg;
                     card.style.backgroundImage =
                         `linear-gradient(135deg, ${bg}e0 0%, ${bg}bb 100%), url('${imgUrl.replace(/'/g,'%27')}')`;
                     card.style.backgroundSize = 'cover, cover';
@@ -7726,25 +8228,17 @@ footer{
                     card.style.backgroundImage = '';
                 }
 
-                // Text color via CSS var
                 card.style.setProperty('--fcat-car-text', textCol);
                 card.style.setProperty('--fcat-car-bg', bg);
 
-                // Eyebrow text (the LABEL above title) — derive from title first word or keep preset
-                if (eyebrowText && cfg.title) {
-                    const label = {
-                        featuredCatNew: 'NEW',
-                        featuredCatOffers: 'OFFERS',
-                        featuredCatService: 'SERVICE',
-                        featuredCatLive: 'LIVE',
-                        featuredCatElectronics: 'ELECTRONICS'
-                    }[card.id];
-                    if (label) eyebrowText.textContent = label;
+                if (eyebrowTxt && cfg.eyebrow) {
+                    eyebrowTxt.textContent = cfg.eyebrow;
+                } else if (eyebrowTxt && !eyebrowTxt.textContent.trim()) {
+                    eyebrowTxt.textContent = defaults.eyebrow;
                 }
 
-                // Button styling
                 if (btnEl) {
-                    const isTransparentBtn = btnBg === 'transparent' || btnBg === '';
+                    const isTransparentBtn = /^transparent$/i.test(btnBg) || btnBg === '';
                     if (isTransparentBtn) {
                         btnEl.style.background = 'rgba(255,255,255,0.18)';
                         btnEl.style.border = '1.5px solid rgba(255,255,255,0.55)';
@@ -7756,10 +8250,9 @@ footer{
                     }
                 }
 
-                // Icon
-                const iconName = (cfg.icon || '').trim()
+                const iconName = String(cfg.icon || '').trim()
                     .replace(/^(fas|far|fab|fal)\s+/i, '')
-                    .replace(/^fa-/, '') || (defaults.icon || 'fa-star').replace(/^fa-/, '');
+                    .replace(/^fa-/, '') || defaults.icon.replace(/^fa-/, '');
                 if (iconWrap) {
                     iconWrap.innerHTML = `<i class="fas fa-${iconName}"></i>`;
                 }
@@ -7773,6 +8266,7 @@ footer{
                 const pageRecord = isManagedLinkCard ? getManagedPageRecord(href) : null;
                 const isDisabled = !!(pageRecord && pageRecord.enabled === false);
 
+                // إخفاء البطاقة تماماً إذا كانت الصفحة موقوفة
                 card.style.display = isDisabled ? 'none' : '';
                 card.hidden = isDisabled;
                 card.setAttribute('aria-hidden', isDisabled ? 'true' : 'false');
@@ -7785,21 +8279,23 @@ footer{
                     card.tabIndex = 0;
                 }
 
-                // Text
+                // النص
                 const titleEl = card.querySelector('.featured-cat-title');
                 const subEl = card.querySelector('.featured-cat-sub');
                 if (titleEl) titleEl.innerHTML = cfg.titleHtml || cfg.title || '';
                 if (subEl) subEl.textContent = cfg.sub || '';
 
-                // Button label (respect admin override)
-                const btnEl = card.querySelector('.fcat-car-btn');
-                if (btnEl) btnEl.textContent = (cfg.btnLabel && cfg.btnLabel.trim()) || 'اضغط هنا';
+                // Button label (only for carousel cards)
+                const btnLabelEl = card.querySelector('.fcat-car-btn');
+                if (btnLabelEl) {
+                    btnLabelEl.textContent = (cfg.btnLabel && cfg.btnLabel.trim()) || 'اضغط هنا';
+                }
 
                 // Carousel card styling
                 if (card.classList.contains('fcat-car-card')) {
                     applyCarouselCard(card, cfg);
                 } else {
-                    // Legacy fallback
+                    // Legacy fallback: image as background
                     const url = (cfg.image || '').trim();
                     if (url && /^https?:\/\//i.test(url)) {
                         card.style.backgroundImage = `url('${url.replace(/'/g, "%27")}')`;
@@ -7808,9 +8304,11 @@ footer{
                     }
                 }
 
+                // خزّن الإعداد الحالي ليستعمله مستمع النقر الدائم
                 card.__featuredCfg = cfg;
                 card.__managedPageRecord = pageRecord;
 
+                // ربط النقر مرة واحدة
                 if (!card.dataset.bound) {
                     card.addEventListener('click', (e) => {
                         e.preventDefault();
@@ -7852,7 +8350,7 @@ footer{
                 }
             };
 
-            // قيم افتراضية + من page_content إذا موجود
+            // Apply the 5 built-in cards
             setCard(newCard, {
                 type: 'category',
                 categoryId: 'new',
@@ -7898,7 +8396,7 @@ footer{
                 type: 'link',
                 href: (state.pageContent.featuredLiveLink || 'repair-live.html'),
                 title: (state.pageContent.featuredLiveTitle || 'البث المباشر'),
-                sub: (state.pageContent.featuredLiveSub || 'شاهد عملية الإصلاح مباشرة للعميل'),
+                sub: (state.pageContent.featuredLiveSub || 'شاهد عملية الإصلاح مباشرة'),
                 image: (state.pageContent.featuredLiveImage || ''),
                 icon: (state.pageContent.featuredLiveIcon || 'fa-video'),
                 bgColor: (state.pageContent.featuredLiveBgColor || '#c62828'),
@@ -7921,7 +8419,136 @@ footer{
                 btnTextColor: (state.pageContent.featuredElectronicsBtnTextColor || '#2d1b4e'),
                 btnLabel: (state.pageContent.featuredElectronicsBadge || state.pageContent.featuredElectronicsBtnLabel || 'اضغط هنا')
             });
+
+            // ====== DYNAMIC CUSTOM CARDS (added from admin) ======
+            applyCustomFeaturedCards(setCard);
         }
+
+        // Render dynamic custom cards added via admin (state.pageContent.customFeaturedCards)
+        function applyCustomFeaturedCards(setCardFn) {
+            try {
+                const track = document.getElementById('fcatCarouselTrack');
+                if (!track) return;
+
+                // Remove any previously-rendered custom cards
+                track.querySelectorAll('.fcat-car-card[data-custom-card="1"], .fcat-car-card[data-page-card="1"]').forEach(el => el.remove());
+
+                let customCards = [];
+                const raw = state.pageContent && state.pageContent.customFeaturedCards;
+                if (Array.isArray(raw)) {
+                    customCards = raw;
+                } else if (typeof raw === 'string' && raw.trim()) {
+                    try { customCards = JSON.parse(raw); } catch (_) { customCards = []; }
+                }
+                if (!Array.isArray(customCards)) customCards = [];
+
+                const usedManagedUrls = new Set([
+                    normalizeManagedPageUrl(state.pageContent && state.pageContent.featuredElectronicsLink || 'electronics-store.html'),
+                    normalizeManagedPageUrl(state.pageContent && state.pageContent.featuredLiveLink || 'repair-live.html')
+                ]);
+
+                const createDynamicCard = (c, idx, source) => {
+                    if (!c || c.enabled === false) return;
+                    const card = document.createElement('button');
+                    card.type = 'button';
+                    card.id = source + '_' + (c.id || idx);
+                    card.className = 'featured-cat-card fcat-car-card';
+                    card.setAttribute(source === 'featuredCatPage' ? 'data-page-card' : 'data-custom-card', '1');
+                    card.setAttribute('aria-label', c.title || c.name || 'بطاقة');
+
+                    const iconName = String(c.icon || 'fa-link').replace(/^(fas|far|fab|fal)\s+/i,'').replace(/^fa-/,'');
+                    card.innerHTML = `
+                        <div class="fcat-car-inner">
+                            <div class="fcat-car-content">
+                                <div class="fcat-car-eyebrow"><span class="fcat-car-eyebrow-text">${escapeHtml(c.eyebrow || 'PAGE')}</span></div>
+                                <div class="fcat-car-title featured-cat-title">${escapeHtml(c.title || c.name || '')}</div>
+                                <div class="fcat-car-sub featured-cat-sub">${escapeHtml(c.sub || 'صفحة متاحة الآن')}</div>
+                                <span class="fcat-car-btn">${escapeHtml(c.btnLabel || 'اضغط هنا')}</span>
+                            </div>
+                            <div class="fcat-car-icon-wrap"><i class="fas fa-${iconName}"></i></div>
+                        </div>
+                    `;
+                    track.appendChild(card);
+
+                    const cfg = {
+                        title: c.title || c.name || '',
+                        sub: c.sub || 'صفحة متاحة الآن',
+                        image: c.image || '',
+                        icon: c.icon || 'fa-link',
+                        bgColor: c.bgColor || '#0A58CA',
+                        textColor: c.textColor || '#ffffff',
+                        btnBgColor: c.btnBgColor || 'transparent',
+                        btnTextColor: c.btnTextColor || '#ffffff',
+                        btnLabel: c.btnLabel || 'اضغط هنا',
+                        eyebrow: c.eyebrow || 'PAGE',
+                        type: 'link',
+                        href: c.href || c.url || '#'
+                    };
+
+                    if (c.action === 'category' && c.categoryId) {
+                        cfg.type = 'category';
+                        cfg.categoryId = c.categoryId;
+                    }
+
+                    const normalizedHref = normalizeManagedPageUrl(cfg.href);
+                    if (normalizedHref) usedManagedUrls.add(normalizedHref);
+                    setCardFn(card, cfg);
+                };
+
+                customCards.forEach((c, idx) => createDynamicCard(c, idx, 'featuredCatCustom'));
+
+                // تفعيل صفحة من إدارة الصفحات سيُظهر بطاقتها تلقائياً هنا
+                const managedPages = Array.isArray(state.sitePages) ? state.sitePages : [];
+                managedPages
+                    .filter(p => p && p.enabled !== false && p.url)
+                    .forEach((p, idx) => {
+                        const normalized = normalizeManagedPageUrl(p.url);
+                        if (!normalized || usedManagedUrls.has(normalized)) return;
+                        createDynamicCard({
+                            id: p.id || ('page_' + idx),
+                            title: p.name || p.url,
+                            sub: p.sub || 'صفحة متاحة الآن',
+                            href: p.url,
+                            icon: p.icon || 'fa-link',
+                            image: p.image || '',
+                            bgColor: p.bgColor || '#0A58CA',
+                            textColor: p.textColor || '#ffffff',
+                            btnBgColor: p.btnBgColor || 'transparent',
+                            btnTextColor: p.btnTextColor || '#ffffff',
+                            btnLabel: p.btnLabel || 'اضغط هنا',
+                            eyebrow: p.eyebrow || 'PAGE',
+                            enabled: true
+                        }, idx, 'featuredCatPage');
+                    });
+
+                if (typeof rebuildCarousel === 'function') rebuildCarousel();
+            } catch (e) {
+                console.warn('applyCustomFeaturedCards failed', e);
+            }
+        }
+
+
+        // تحميل بطاقات الصفحات المفعّلة بشكل مستقل عن تحميل المنتجات
+        async function refreshManagedPageCards() {
+            try {
+                const fireDb = (window.WesamFirebase && window.WesamFirebase.db) || window.db || db;
+                if (!fireDb || !state) return;
+                const snap = await fireDb.collection('site_pages').get();
+                const pages = [];
+                snap.forEach(doc => pages.push({ id: doc.id, ...doc.data() }));
+                state.sitePages = pages;
+                applyFeaturedCategoryCards();
+            } catch (e) {
+                console.warn('refreshManagedPageCards failed', e);
+            }
+        }
+        window.refreshManagedPageCards = refreshManagedPageCards;
+        document.addEventListener('DOMContentLoaded', function(){
+            setTimeout(refreshManagedPageCards, 400);
+            setTimeout(refreshManagedPageCards, 1800);
+            setTimeout(refreshManagedPageCards, 4000);
+        });
+
 
 // Normalize external links to ensure they open correctly (adds https:// when missing)
         function normalizeUrl(url) {
@@ -12867,26 +13494,7 @@ function enhanceProductCards() {
 
         const productId = imgDiv.dataset.productId || '';
 
-        // Wishlist button
-        const wishBtn = document.createElement('button');
-        wishBtn.className = 'wishlist-btn' + (wesWishlist.has(productId) ? ' active' : '');
-        wishBtn.innerHTML = '<i class="fas fa-heart"></i>';
-        wishBtn.title = 'أضف للمفضلة';
-        wishBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isNow = wesWishlist.toggle(productId);
-            wishBtn.classList.toggle('active', isNow);
-        });
-        imgDiv.appendChild(wishBtn);
-
-        // "New" badge for recent products (created within last 7 days)
-        const prodCard = card;
-        if (!prodCard.querySelector('.discount-float') && Math.random() < 0.3) {
-            const badge = document.createElement('div');
-            badge.className = 'product-badge-new';
-            badge.textContent = 'جديد';
-            imgDiv.appendChild(badge);
-        }
+        // تم إلغاء زر القلب العلوي والشارات العشوائية حتى لا تظهر عناصر غير مفيدة فوق صورة المنتج.
 
         // Share button in actions
         const actionsDiv = card.querySelector('.product-actions');
@@ -14747,9 +15355,9 @@ body .shop-sidebar .sidebar-title i {
 }
 
 /* ========================================================= */
-/* ============ V3 BANNER CAROUSEL ===================== */
+/* ============ V3 CAROUSEL (replaces V2) =============== */
 /* ========================================================= */
-/* Override the old V2 layout completely — now carousel mode */
+/* Override V2 layout when carousel is active */
 .featured-categories-row.fcat-carousel {
   position: relative !important;
   display: block !important;
@@ -14761,16 +15369,19 @@ body .shop-sidebar .sidebar-title i {
   scroll-snap-type: none !important;
   animation: none !important;
   direction: ltr;
+  background: transparent !important;
 }
 
-/* Kill any legacy overlay hacks on V3 cards */
+/* Hide V2 stuff if it ever leaks in */
+.fcat-carousel .v2-chips-row,
+.fcat-carousel .v2-hero-wrap { display: none !important; }
+
 .fcat-carousel .featured-cat-card::before,
 .fcat-carousel .featured-cat-card::after {
   display: none !important;
   content: none !important;
 }
 
-/* Nav arrows */
 .fcat-car-nav {
   position: absolute !important;
   top: 50% !important;
@@ -14781,7 +15392,7 @@ body .shop-sidebar .sidebar-title i {
   background: #ffffff !important;
   border: 1px solid rgba(10, 88, 202, 0.12) !important;
   box-shadow: 0 6px 18px rgba(10, 88, 202, 0.12) !important;
-  color: var(--brand-blue-dark) !important;
+  color: var(--brand-blue-dark, #073B8A) !important;
   cursor: pointer !important;
   display: flex !important;
   align-items: center !important;
@@ -14793,19 +15404,15 @@ body .shop-sidebar .sidebar-title i {
 .fcat-car-prev { right: 6px !important; }
 .fcat-car-next { left: 6px !important; }
 .fcat-car-nav:hover {
-  background: var(--brand-orange) !important;
+  background: var(--brand-orange, #FF8C00) !important;
   color: #ffffff !important;
-  border-color: var(--brand-orange) !important;
+  border-color: var(--brand-orange, #FF8C00) !important;
   transform: translateY(-50%) scale(1.08) !important;
 }
 .fcat-car-nav:active { transform: translateY(-50%) scale(0.95) !important; }
-.fcat-car-nav:disabled {
-  opacity: 0.35 !important;
-  cursor: not-allowed !important;
-}
+.fcat-car-nav:disabled { opacity: 0.35 !important; cursor: not-allowed !important; }
 .fcat-car-nav i { font-size: 14px !important; }
 
-/* Viewport + track */
 .fcat-car-viewport {
   overflow: hidden !important;
   border-radius: 14px !important;
@@ -14819,7 +15426,6 @@ body .shop-sidebar .sidebar-title i {
   direction: ltr;
 }
 
-/* Each card */
 .featured-cat-card.fcat-car-card {
   flex: 0 0 calc((100% - 28px) / 3) !important;
   min-height: 170px !important;
@@ -14855,7 +15461,6 @@ body .shop-sidebar .sidebar-title i {
   justify-content: space-between;
   gap: 12px;
   direction: rtl;
-  z-index: 2;
 }
 .fcat-car-content {
   flex: 1 1 auto;
@@ -14865,6 +15470,53 @@ body .shop-sidebar .sidebar-title i {
   align-items: flex-start;
   min-height: 138px;
   text-align: right;
+  position: relative;
+  z-index: 1;
+}
+.fcat-car-icon-wrap {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fcat-car-text, #ffffff);
+  position: relative;
+  z-index: 1;
+}
+.fcat-car-icon-wrap i {
+  font-size: 32px !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12));
+}
+
+.fcat-car-inner::after {
+  content: '';
+  position: absolute;
+  left: -30px;
+  bottom: -30px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+  z-index: 0;
+}
+.fcat-car-inner::before {
+  content: '';
+  position: absolute;
+  right: -24px;
+  top: -24px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .fcat-car-eyebrow {
@@ -14883,8 +15535,6 @@ body .shop-sidebar .sidebar-title i {
   box-shadow: none !important;
   text-shadow: none !important;
 }
-.fcat-car-eyebrow-text { letter-spacing: 1.5px; }
-
 .fcat-car-live-dot {
   display: inline-block;
   width: 8px;
@@ -14910,7 +15560,6 @@ body .shop-sidebar .sidebar-title i {
   text-shadow: none !important;
   letter-spacing: -0.2px;
 }
-
 .featured-cat-card.fcat-car-card .fcat-car-sub {
   font-size: 12px !important;
   color: var(--fcat-car-text, #ffffff) !important;
@@ -14919,8 +15568,8 @@ body .shop-sidebar .sidebar-title i {
   margin: 4px 0 0 !important;
   padding: 0 !important;
   text-shadow: none !important;
+  display: block !important;
 }
-
 .featured-cat-card.fcat-car-card .fcat-car-btn {
   display: inline-flex !important;
   align-items: center !important;
@@ -14935,8 +15584,6 @@ body .shop-sidebar .sidebar-title i {
   transition: transform .15s ease, box-shadow .15s ease !important;
   backdrop-filter: blur(4px) !important;
   -webkit-backdrop-filter: blur(4px) !important;
-  border: none !important;
-  box-shadow: none !important;
   text-shadow: none !important;
 }
 .featured-cat-card.fcat-car-card:hover .fcat-car-btn {
@@ -14944,58 +15591,6 @@ body .shop-sidebar .sidebar-title i {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Icon decoration */
-.fcat-car-icon-wrap {
-  flex-shrink: 0;
-  width: 72px;
-  height: 72px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--fcat-car-text, #ffffff);
-}
-.fcat-car-icon-wrap i {
-  font-size: 32px !important;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12));
-}
-
-/* Decorative circles */
-.featured-cat-card.fcat-car-card > .fcat-car-inner::after {
-  content: '';
-  position: absolute;
-  left: -30px;
-  bottom: -30px;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-  pointer-events: none;
-  z-index: 0;
-}
-.featured-cat-card.fcat-car-card > .fcat-car-inner::before {
-  content: '';
-  position: absolute;
-  right: -24px;
-  top: -24px;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.08);
-  pointer-events: none;
-  z-index: 0;
-}
-.fcat-car-content,
-.fcat-car-icon-wrap {
-  position: relative;
-  z-index: 1;
-}
-
-/* Pagination dots */
 .fcat-car-dots {
   display: flex !important;
   justify-content: center !important;
@@ -15013,24 +15608,26 @@ body .shop-sidebar .sidebar-title i {
 }
 .fcat-car-dot.active {
   width: 24px;
-  background: var(--brand-orange);
+  background: var(--brand-orange, #FF8C00);
 }
 
-/* Tablet: 2 cards visible */
+/* Tablet */
 @media (max-width: 1024px) {
   .featured-cat-card.fcat-car-card {
     flex: 0 0 calc((100% - 14px) / 2) !important;
   }
 }
 
-/* Mobile: 1 card visible */
+/* Mobile — better-tuned spacing + larger tap area */
 @media (max-width: 640px) {
   .featured-categories-row.fcat-carousel {
-    padding: 6px 40px 6px !important;
+    padding: 4px 42px 4px !important;
+    margin-bottom: 14px !important;
   }
   .fcat-car-nav {
     width: 36px !important;
     height: 36px !important;
+    box-shadow: 0 4px 12px rgba(10,88,202,.14) !important;
   }
   .fcat-car-prev { right: 2px !important; }
   .fcat-car-next { left: 2px !important; }
@@ -15038,31 +15635,55 @@ body .shop-sidebar .sidebar-title i {
 
   .featured-cat-card.fcat-car-card {
     flex: 0 0 100% !important;
-    min-height: 155px !important;
+    min-height: 150px !important;
+    border-radius: 12px !important;
   }
-  .fcat-car-inner { padding: 14px 16px !important; }
-  .fcat-car-content { min-height: 125px !important; }
+  .fcat-car-inner { padding: 13px 15px !important; gap: 10px !important; }
+  .fcat-car-content { min-height: 120px !important; }
   .featured-cat-card.fcat-car-card .fcat-car-title {
-    font-size: 17px !important;
+    font-size: 16px !important;
   }
   .featured-cat-card.fcat-car-card .fcat-car-sub {
-    font-size: 11.5px !important;
+    font-size: 11px !important;
+  }
+  .fcat-car-eyebrow {
+    font-size: 10px !important;
+    letter-spacing: 1px !important;
   }
   .fcat-car-icon-wrap {
-    width: 58px;
-    height: 58px;
-    border-radius: 14px;
+    width: 54px !important;
+    height: 54px !important;
+    border-radius: 12px !important;
   }
   .fcat-car-icon-wrap i {
-    font-size: 26px !important;
+    font-size: 24px !important;
   }
   .featured-cat-card.fcat-car-card .fcat-car-btn {
-    padding: 7px 14px !important;
-    font-size: 12px !important;
+    padding: 6px 12px !important;
+    font-size: 11.5px !important;
+    margin-top: 6px !important;
   }
+  .fcat-car-dots {
+    margin-top: 10px !important;
+    gap: 5px !important;
+  }
+  .fcat-car-dot { width: 6px; height: 6px; }
+  .fcat-car-dot.active { width: 18px; }
 }
 
-/* Dark mode: soften white inputs */
+/* Very small */
+@media (max-width: 380px) {
+  .featured-categories-row.fcat-carousel { padding: 4px 36px 4px !important; }
+  .fcat-car-nav { width: 32px !important; height: 32px !important; }
+  .fcat-car-prev { right: 0 !important; }
+  .fcat-car-next { left: 0 !important; }
+  .featured-cat-card.fcat-car-card { min-height: 140px !important; }
+  .fcat-car-inner { padding: 11px 13px !important; }
+  .fcat-car-icon-wrap { width: 48px !important; height: 48px !important; }
+  .fcat-car-icon-wrap i { font-size: 20px !important; }
+}
+
+/* Dark mode */
 [data-theme="dark"] .fcat-car-nav {
   background: #282e48 !important;
   border-color: #363c58 !important;
@@ -15081,128 +15702,560 @@ body .shop-sidebar .sidebar-title i {
   background: #ffa726;
 }
 
+/* ========================================================= */
+/* ============ FLOATING CART BUTTON (FAB) =========== */
+/* ========================================================= */
+.m-cart-fab { display: none; }
+
+@media (max-width: 768px) {
+  .m-cart-fab {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 16px !important;
+    width: 58px !important;
+    height: 58px !important;
+    border-radius: 50% !important;
+    border: none !important;
+    cursor: pointer !important;
+    z-index: 9000 !important;
+    background: linear-gradient(135deg, #FF8C00 0%, #E87A00 55%, #0A58CA 200%) !important;
+    box-shadow:
+      0 10px 28px rgba(255, 140, 0, 0.45),
+      0 4px 12px rgba(10, 88, 202, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #ffffff !important;
+    font-size: 22px !important;
+    padding: 0 !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .m-cart-fab::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 140, 0, 0.22) 0%, transparent 65%);
+    z-index: -1;
+    pointer-events: none;
+  }
+  .m-cart-fab::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 40%;
+    border-radius: 50%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, transparent 100%);
+    pointer-events: none;
+  }
+  .m-cart-fab:active { transform: scale(0.93); }
+  .m-cart-fab i {
+    color: #ffffff !important;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.18));
+  }
+  .m-cart-fab-badge {
+    position: absolute !important;
+    top: -2px !important;
+    right: -2px !important;
+    min-width: 22px !important;
+    height: 22px !important;
+    padding: 0 6px !important;
+    border-radius: 999px !important;
+    background: #ffffff !important;
+    color: var(--brand-orange, #FF8C00) !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 2.5px solid var(--brand-orange, #FF8C00) !important;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2) !important;
+    line-height: 1 !important;
+    z-index: 2;
+  }
+  @supports (padding: max(0px)) {
+    .m-cart-fab {
+      bottom: max(20px, env(safe-area-inset-bottom, 0px) + 12px) !important;
+      right: max(16px, env(safe-area-inset-right, 0px) + 12px) !important;
+    }
+  }
+}
+@media (max-width: 420px) {
+  .m-cart-fab {
+    width: 52px !important;
+    height: 52px !important;
+    font-size: 20px !important;
+  }
+}
+[data-theme="dark"] .m-cart-fab {
+  background: linear-gradient(135deg, #ffa726 0%, #ef6c00 55%, #5c6bc0 200%) !important;
+}
+[data-theme="dark"] .m-cart-fab-badge {
+  background: #282e48 !important;
+  color: #ffa726 !important;
+  border-color: #ffa726 !important;
+}
+
+/* ========================================================= */
+/* ============ BRAND NAME ORANGE =================== */
+/* ========================================================= */
+.logo-subtext,
+#storeNameHeader {
+  color: var(--brand-orange, #FF8C00) !important;
+  font-weight: 900 !important;
+}
+[data-theme="dark"] .logo-subtext,
+[data-theme="dark"] #storeNameHeader { color: #ffa726 !important; }
+
+@media (max-width: 768px) {
+  .m-brand-name,
+  #mStoreNameMobile {
+    color: var(--brand-orange, #FF8C00) !important;
+    font-weight: 900 !important;
+  }
+}
+[data-theme="dark"] .m-brand-name,
+[data-theme="dark"] #mStoreNameMobile { color: #ffa726 !important; }
+
+#mDrawerStoreName {
+  color: var(--brand-orange, #FF8C00) !important;
+  font-weight: 900 !important;
+}
+
+/* ========================================================= */
+/* ============ SIDEBAR SWIPE HINT (mobile only) ====== */
+/* ========================================================= */
+.sidebar-swipe-hint {
+  display: none;
+}
+@media (max-width: 768px) {
+  .sidebar-swipe-hint {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 6px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--brand-blue-dark, #073B8A);
+    background: rgba(10, 88, 202, 0.05);
+    border-radius: 10px;
+    animation: swipe-hint-pulse 2.2s ease-in-out infinite;
+    user-select: none;
+  }
+  .sidebar-swipe-hint i {
+    color: var(--brand-orange, #FF8C00);
+    font-size: 14px;
+    animation: swipe-hint-arrow 1.8s ease-in-out infinite;
+  }
+}
+@keyframes swipe-hint-pulse {
+  0%, 100% { opacity: 0.75; }
+  50%      { opacity: 1; }
+}
+@keyframes swipe-hint-arrow {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(-4px); }
+}
+[data-theme="dark"] .sidebar-swipe-hint {
+  color: #dde0e6;
+  background: rgba(92, 107, 192, 0.15);
+}
+[data-theme="dark"] .sidebar-swipe-hint i {
+  color: #ffa726;
+}
+
+/* ========================================================= */
+/* ============ SIDEBAR — CHIP STYLE =========== */
+/* ========================================================= */
+.shop-sidebar .categories-grid.sidebar-list .category-card,
+body .shop-sidebar .category-card {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  padding: 12px 14px !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(10, 88, 202, 0.10) !important;
+  box-shadow: 0 2px 10px rgba(10, 88, 202, 0.05) !important;
+  cursor: pointer !important;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease !important;
+  color: var(--brand-blue-dark, #073B8A) !important;
+  font-weight: 700 !important;
+  margin-bottom: 8px;
+}
+.shop-sidebar .categories-grid.sidebar-list .category-card:hover,
+body .shop-sidebar .category-card:hover {
+  transform: translateY(-2px) !important;
+  border-color: rgba(255, 140, 0, 0.40) !important;
+  box-shadow: 0 8px 22px rgba(10, 88, 202, 0.10) !important;
+}
+.shop-sidebar .categories-grid.sidebar-list .category-card.active,
+body .shop-sidebar .category-card.active {
+  background: linear-gradient(135deg, #FF8C00 0%, #E87A00 100%) !important;
+  border-color: #E87A00 !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 22px rgba(255, 140, 0, 0.30) !important;
+}
+.shop-sidebar .category-card .category-icon,
+body .shop-sidebar .category-card .category-icon {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: linear-gradient(135deg, rgba(10, 88, 202, 0.12), rgba(10, 88, 202, 0.04)) !important;
+  border: none !important;
+  color: var(--brand-blue, #0A58CA) !important;
+  flex-shrink: 0 !important;
+}
+.shop-sidebar .category-card.active .category-icon,
+body .shop-sidebar .category-card.active .category-icon {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+}
+.shop-sidebar .category-card .category-icon i,
+body .shop-sidebar .category-card .category-icon i {
+  color: var(--brand-blue, #0A58CA) !important;
+  font-size: 17px;
+}
+.shop-sidebar .category-card.active .category-icon i {
+  color: #ffffff !important;
+}
+.shop-sidebar .category-card .category-icon img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
+}
+.shop-sidebar .category-card .category-name {
+  flex: 1 1 auto !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  color: var(--brand-blue-dark, #073B8A) !important;
+  text-align: right !important;
+}
+.shop-sidebar .category-card.active .category-name {
+  color: #ffffff !important;
+}
+.shop-sidebar .category-card .category-count {
+  display: inline-flex !important;
+  align-items: center;
+  padding: 3px 10px !important;
+  border-radius: 999px !important;
+  background: rgba(10, 88, 202, 0.08) !important;
+  color: var(--brand-blue, #0A58CA) !important;
+  font-weight: 800 !important;
+  font-size: 11px !important;
+  flex-shrink: 0 !important;
+  min-width: 28px;
+  justify-content: center;
+}
+.shop-sidebar .category-card.active .category-count {
+  background: rgba(255, 255, 255, 0.28) !important;
+  color: #ffffff !important;
+}
+body .shop-sidebar {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 4px !important;
+}
+body .shop-sidebar .sidebar-title {
+  background: transparent !important;
+  color: var(--brand-blue-dark, #073B8A) !important;
+  padding: 4px 8px 12px !important;
+  font-weight: 900 !important;
+  font-size: 1rem !important;
+  border-bottom: 1px solid rgba(10, 88, 202, 0.08) !important;
+  border-radius: 0 !important;
+}
+body .shop-sidebar .sidebar-title i {
+  color: var(--brand-orange, #FF8C00) !important;
+}
+
+/* Sidebar horizontal scroll on mobile */
+@media (max-width: 768px) {
+  body .shop-sidebar { padding: 0 !important; }
+  body .shop-sidebar .sidebar-title {
+    padding: 0 4px 8px !important;
+    font-size: 0.95rem !important;
+  }
+  body .shop-sidebar .categories-grid.sidebar-list {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 10px !important;
+    overflow-x: auto !important;
+    padding: 4px 2px 10px !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+  body .shop-sidebar .categories-grid.sidebar-list::-webkit-scrollbar { display: none; }
+  body .shop-sidebar .category-card {
+    flex: 0 0 auto !important;
+    scroll-snap-align: start !important;
+    padding: 10px 14px 10px 10px !important;
+    gap: 9px !important;
+    border-radius: 14px !important;
+    white-space: nowrap;
+    margin-bottom: 0 !important;
+  }
+  body .shop-sidebar .category-card .category-icon {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+  }
+  body .shop-sidebar .category-card .category-icon i { font-size: 14px; }
+  body .shop-sidebar .category-card .category-name { font-size: 13px !important; }
+  body .shop-sidebar .category-card .category-count { font-size: 10px !important; padding: 2px 7px !important; }
+}
+
+[data-theme="dark"] body .shop-sidebar .category-card {
+  background: #282e48 !important;
+  border-color: #363c58 !important;
+  color: #dde0e6 !important;
+}
+[data-theme="dark"] body .shop-sidebar .category-card .category-name { color: #e8eaed !important; }
+[data-theme="dark"] body .shop-sidebar .sidebar-title {
+  color: #e8eaed !important;
+  border-bottom-color: #363c58 !important;
+}
+
+/* ========================================================= */
+/* ============ MOBILE FIXES ==================== */
+/* ========================================================= */
+@media (max-width: 768px) {
+  .shop-section { padding: 14px 0 24px !important; }
+  .shop-section .section-title {
+    font-size: 1.1rem !important;
+    font-weight: 900 !important;
+    padding: 0 14px !important;
+    margin-bottom: 10px !important;
+  }
+  .shop-section .container {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  .shop-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+
+  .products-header {
+    padding: 12px !important;
+    border-radius: 14px !important;
+  }
+  .products-header h2 {
+    font-size: 1rem !important;
+    font-weight: 900 !important;
+    margin-bottom: 10px !important;
+  }
+  .products-controls { gap: 8px !important; flex-direction: column !important; }
+}
+
 </style>
 
+<!-- ============ FLOATING CART BUTTON ============ -->
+<button type="button" class="m-cart-btn m-cart-fab" id="mCartFab" aria-label="السلة" style="display:none;">
+  <i class="fas fa-shopping-cart"></i>
+  <span class="m-cart-fab-badge" id="mCartFabBadge">0</span>
+</button>
+
 <script>
-// ================================================================
-// ===== V3 BANNER CAROUSEL — navigation, dots, auto-play ======
-// ================================================================
+// ========== FAB sync with cart count ==========
 (function(){
-  function initCarousel(){
-    const wrap = document.querySelector('.featured-categories-row.fcat-carousel');
-    if (!wrap || wrap.dataset.carouselInit === '1') return;
-    wrap.dataset.carouselInit = '1';
+  function syncBadge(){
+    const src = document.getElementById('mCartCount');
+    const dst = document.getElementById('mCartFabBadge');
+    if (!src || !dst) return;
+    const n = parseInt((src.textContent || '0').trim(), 10) || 0;
+    dst.textContent = n;
+    dst.style.display = n > 0 ? 'flex' : 'none';
+  }
+  function init(){
+    syncBadge();
+    const src = document.getElementById('mCartCount');
+    if (src && 'MutationObserver' in window) {
+      new MutationObserver(syncBadge).observe(src, { childList:true, characterData:true, subtree:true });
+    }
+    setInterval(syncBadge, 1500);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
 
-    const track = wrap.querySelector('.fcat-car-track');
-    const cards = Array.from(wrap.querySelectorAll('.fcat-car-card'));
-    const prev  = wrap.querySelector('.fcat-car-prev');
-    const next  = wrap.querySelector('.fcat-car-next');
-    const dotsContainer = wrap.querySelector('.fcat-car-dots');
-    if (!track || !cards.length || !prev || !next || !dotsContainer) return;
+// ========== V3 CAROUSEL engine (exposed as window.rebuildCarousel) ==========
+(function(){
+  let carouselInited = false;
+  let page = 0;
+  let autoplayId = null;
 
-    let page = 0;
-    let autoplayId = null;
-    let visible = 3;
+  function visibleCount(){
+    const w = window.innerWidth;
+    if (w <= 640) return 1;
+    if (w <= 1024) return 2;
+    return 3;
+  }
 
-    function computeVisible(){
-      const w = window.innerWidth;
-      if (w <= 640) return 1;
-      if (w <= 1024) return 2;
-      return 3;
+  function getVisibleCards(){
+    const track = document.getElementById('fcatCarouselTrack');
+    if (!track) return [];
+    return Array.from(track.querySelectorAll('.fcat-car-card'))
+      .filter(c => !c.hidden && c.style.display !== 'none');
+  }
+
+  function render(){
+    const wrap = document.getElementById('fcatCarouselWrap');
+    const track = document.getElementById('fcatCarouselTrack');
+    const dotsEl = document.getElementById('fcatCarouselDots');
+    if (!wrap || !track || !dotsEl) return;
+
+    const cards = getVisibleCards();
+    const vis = visibleCount();
+    const maxPage = Math.max(0, cards.length - vis);
+    page = Math.min(Math.max(0, page), maxPage);
+
+    const ref = cards[0];
+    if (ref) {
+      const gap = parseFloat(getComputedStyle(track).gap) || 14;
+      const step = ref.getBoundingClientRect().width + gap;
+      track.style.transform = `translateX(${page * step}px)`;
     }
 
-    function rebuildDots(){
-      const v = computeVisible();
-      const pages = Math.max(1, cards.length - v + 1);
-      dotsContainer.innerHTML = '';
-      for (let i = 0; i < pages; i++) {
+    const pagesCount = Math.max(1, cards.length - vis + 1);
+    if (dotsEl.children.length !== pagesCount) {
+      dotsEl.innerHTML = '';
+      for (let i = 0; i < pagesCount; i++) {
         const d = document.createElement('span');
-        d.className = 'fcat-car-dot' + (i === Math.min(page, pages-1) ? ' active' : '');
+        d.className = 'fcat-car-dot';
         d.addEventListener('click', () => { page = i; render(); resetAutoplay(); });
-        dotsContainer.appendChild(d);
+        dotsEl.appendChild(d);
       }
     }
+    Array.from(dotsEl.children).forEach((d, i) => {
+      d.classList.toggle('active', i === page);
+    });
 
-    function render(){
-      visible = computeVisible();
-      const maxPage = Math.max(0, cards.length - visible);
-      page = Math.min(page, maxPage);
+    const prev = wrap.querySelector('.fcat-car-prev');
+    const next = wrap.querySelector('.fcat-car-next');
+    if (prev) prev.disabled = page <= 0;
+    if (next) next.disabled = page >= maxPage;
+  }
 
-      const cardEl = cards.find(c => !c.hidden && c.style.display !== 'none') || cards[0];
-      if (!cardEl) return;
+  function go(delta){
+    const cards = getVisibleCards();
+    const vis = visibleCount();
+    const maxPage = Math.max(0, cards.length - vis);
+    const target = page + delta;
+    if (target < 0 || target > maxPage) return;
+    page = target;
+    render();
+  }
 
-      const gap = parseFloat(getComputedStyle(track).gap) || 14;
-      const step = cardEl.getBoundingClientRect().width + gap;
-      track.style.transform = `translateX(${page * step}px)`;
-
-      const dots = Array.from(dotsContainer.querySelectorAll('.fcat-car-dot'));
-      dots.forEach((d, i) => d.classList.toggle('active', i === page));
-
-      prev.disabled = page <= 0;
-      next.disabled = page >= maxPage;
-    }
-
-    function go(delta){
-      visible = computeVisible();
-      const maxPage = Math.max(0, cards.length - visible);
-      const target = page + delta;
-      if (target < 0 || target > maxPage) return;
-      page = target;
+  function resetAutoplay(){
+    if (autoplayId) clearInterval(autoplayId);
+    autoplayId = setInterval(() => {
+      const cards = getVisibleCards();
+      const vis = visibleCount();
+      const maxPage = Math.max(0, cards.length - vis);
+      page = (page >= maxPage) ? 0 : page + 1;
       render();
-    }
+    }, 5500);
+  }
 
-    function resetAutoplay(){
-      if (autoplayId) clearInterval(autoplayId);
-      autoplayId = setInterval(() => {
-        visible = computeVisible();
-        const maxPage = Math.max(0, cards.length - visible);
-        page = (page >= maxPage) ? 0 : page + 1;
-        render();
-      }, 5500);
-    }
+  function initCarousel(){
+    if (carouselInited) return;
+    const wrap = document.getElementById('fcatCarouselWrap');
+    const track = document.getElementById('fcatCarouselTrack');
+    if (!wrap || !track) return;
 
-    prev.addEventListener('click', (e) => { e.stopPropagation(); go(-1); resetAutoplay(); });
-    next.addEventListener('click', (e) => { e.stopPropagation(); go(+1); resetAutoplay(); });
+    const prev = wrap.querySelector('.fcat-car-prev');
+    const next = wrap.querySelector('.fcat-car-next');
+    if (prev) prev.addEventListener('click', (e) => { e.stopPropagation(); go(-1); resetAutoplay(); });
+    if (next) next.addEventListener('click', (e) => { e.stopPropagation(); go(+1); resetAutoplay(); });
 
     wrap.addEventListener('mouseenter', () => { if (autoplayId) clearInterval(autoplayId); });
     wrap.addEventListener('mouseleave', resetAutoplay);
 
-    // Touch swipe support (mobile)
-    let touchX = 0, touchActive = false;
-    track.addEventListener('touchstart', (e) => {
-      touchActive = true;
-      touchX = e.touches[0].clientX;
-    }, { passive: true });
+    // Touch swipe
+    let touchX = 0;
+    track.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
     track.addEventListener('touchend', (e) => {
-      if (!touchActive) return;
-      touchActive = false;
       const dx = e.changedTouches[0].clientX - touchX;
       if (Math.abs(dx) < 40) return;
-      // In RTL carousel (visual), swipe right should go to the previous logical card.
-      // Our track uses translateX positive value to advance, so:
       if (dx < 0) go(+1); else go(-1);
       resetAutoplay();
     }, { passive: true });
 
-    window.addEventListener('resize', () => { rebuildDots(); render(); });
+    window.addEventListener('resize', render);
 
-    // Rebuild dots when any card is shown/hidden by admin (e.g. page disabled)
-    const mo = new MutationObserver(() => { rebuildDots(); render(); });
-    cards.forEach(c => mo.observe(c, { attributes: true, attributeFilter: ['style', 'hidden'] }));
-
-    rebuildDots();
-    setTimeout(render, 60);
+    carouselInited = true;
+    render();
     resetAutoplay();
   }
+
+  window.rebuildCarousel = function(){
+    if (!carouselInited) initCarousel();
+    setTimeout(render, 60);
+  };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initCarousel);
   } else {
     initCarousel();
   }
-  // Retry in case Firebase data injects items after page load
-  [500, 1500, 3500].forEach(t => setTimeout(initCarousel, t));
+  // Retry a few times for Firebase-injected cards
+  [400, 1200, 2500, 4500].forEach(t => setTimeout(() => {
+    initCarousel();
+    if (typeof render === 'function') render();
+  }, t));
 })();
+</script>
+
+
+
+<script id="wesam-mobile-logo-account-cart-js-final">
+document.addEventListener('DOMContentLoaded', function(){
+  const logoBtn = document.getElementById('mMenuBtn');
+  const drawer = document.getElementById('mDrawer');
+  const backdrop = document.getElementById('mDrawerBackdrop');
+
+  if(logoBtn){
+    logoBtn.setAttribute('aria-label','القائمة');
+    logoBtn.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      if(drawer) drawer.classList.add('open');
+      if(backdrop) backdrop.classList.add('show');
+    }, true);
+  }
+
+  const acc = document.getElementById('mHeaderAccountBtn');
+  if(acc){
+    acc.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      const accountBtn = document.getElementById('userAccountBtn') || document.getElementById('mUserAccountBtn') || document.getElementById('mQSAccountBtn');
+      if(accountBtn){
+        accountBtn.click();
+        return;
+      }
+      const modal = document.getElementById('userAuthModal');
+      if(modal) modal.style.display = 'block';
+    });
+  }
+});
 </script>
 
 </body>

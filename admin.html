@@ -304,6 +304,341 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
   .stat-card{padding:16px;}
   .topbar-actions{flex-wrap:wrap;}
 }
+
+/* ========================================================= */
+/* ========== FEATURED CATEGORIES EDITOR =================== */
+/* ========================================================= */
+.fcat-editor{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px;
+  margin-bottom:18px;
+  box-shadow:0 2px 8px rgba(15,27,76,.04);
+  transition:box-shadow .2s ease, border-color .2s ease;
+}
+.fcat-editor:hover{
+  box-shadow:0 6px 20px rgba(15,27,76,.08);
+  border-color:#d8deef;
+}
+.fcat-editor-head{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin-bottom:16px;
+  padding-bottom:14px;
+  border-bottom:1px solid var(--border);
+}
+.fcat-editor-title{flex:0 0 auto;margin-right:auto;}
+.fcat-editor-title h4{
+  font-size:.95rem;
+  font-weight:800;
+  color:var(--text);
+  margin:4px 0 0;
+}
+.fcat-editor-badge{
+  display:inline-block;
+  background:rgba(255,140,0,.12);
+  color:var(--accent);
+  font-size:.7rem;
+  font-weight:800;
+  padding:3px 10px;
+  border-radius:999px;
+  letter-spacing:.3px;
+}
+
+/* Live preview (mirrors how the card looks on the site) */
+.fcat-preview{
+  flex:1 1 auto;
+  min-width:0;
+  min-height:130px;
+  max-width:360px;
+  border-radius:14px;
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  position:relative;
+  overflow:hidden;
+  direction:rtl;
+  box-shadow:0 4px 14px rgba(0,0,0,.12);
+  transition:background .2s ease, color .2s ease;
+}
+.fcat-preview::before{
+  content:'';
+  position:absolute;
+  right:-20px;top:-20px;
+  width:70px;height:70px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.1);
+  pointer-events:none;
+}
+.fcat-preview::after{
+  content:'';
+  position:absolute;
+  left:-20px;bottom:-20px;
+  width:90px;height:90px;border-radius:50%;
+  background:rgba(255,255,255,.06);
+  pointer-events:none;
+}
+.fcat-preview-content{
+  flex:1 1 auto;
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;
+  align-items:flex-start;
+  gap:4px;
+  min-width:0;
+}
+.fcat-preview-eyebrow{
+  font-size:10px;font-weight:900;letter-spacing:1.5px;
+  opacity:.85;
+  display:inline-flex;align-items:center;gap:5px;
+}
+.fcat-preview-live-dot{
+  display:inline-block;width:7px;height:7px;border-radius:50%;
+  background:#fff;
+  animation:fcatPulsePreview 1.6s infinite;
+}
+@keyframes fcatPulsePreview{
+  0%{box-shadow:0 0 0 0 rgba(255,255,255,.6);}
+  70%{box-shadow:0 0 0 6px rgba(255,255,255,0);}
+  100%{box-shadow:0 0 0 0 rgba(255,255,255,0);}
+}
+.fcat-preview-title{
+  font-size:16px;font-weight:900;line-height:1.2;
+}
+.fcat-preview-sub{
+  font-size:11px;opacity:.82;line-height:1.4;
+}
+.fcat-preview-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  margin-top:6px;
+  padding:6px 14px;
+  border-radius:8px;
+  font-size:11.5px;font-weight:800;
+  transition:all .15s ease;
+}
+.fcat-preview-icon{
+  flex-shrink:0;
+  width:54px;height:54px;
+  border-radius:13px;
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.22);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;z-index:1;
+  overflow:hidden;
+}
+.fcat-preview-icon i{font-size:22px;}
+.fcat-preview-icon img{
+  width:100%;height:100%;object-fit:cover;border-radius:12px;
+}
+
+/* Fields layout */
+.fcat-fields{gap:12px 16px !important;}
+
+/* Icon input + picker button */
+.fcat-icon-input-wrap{
+  display:flex;gap:6px;align-items:stretch;
+}
+.fcat-icon-input-wrap input{flex:1;min-width:0;}
+.fcat-icon-picker-btn{
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--primary);
+  width:44px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:all .15s ease;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.fcat-icon-picker-btn:hover{
+  background:rgba(255,140,0,.08);
+  border-color:var(--accent);
+  color:var(--accent);
+}
+.fcat-icon-picker-btn i{font-size:14px;}
+
+/* Color picker + hex */
+.fcat-color-wrap{
+  display:flex;gap:6px;align-items:stretch;
+}
+.fcat-color-wrap input[type="color"]{
+  width:48px;
+  height:42px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  cursor:pointer;
+  padding:3px;
+  background:#fff;
+  flex-shrink:0;
+}
+.fcat-color-wrap input[type="text"]{
+  flex:1;min-width:0;
+  font-family:'Courier New',monospace;
+  text-transform:uppercase;
+  font-size:.82rem;
+}
+.form-group small code{
+  background:#f1f5f9;
+  padding:1px 6px;
+  border-radius:4px;
+  font-size:.75rem;
+  font-family:'Courier New',monospace;
+}
+
+/* Icon picker modal */
+.fcat-icon-modal{
+  position:fixed;inset:0;z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+}
+.fcat-icon-modal[hidden]{display:none;}
+.fcat-icon-modal-backdrop{
+  position:absolute;inset:0;
+  background:rgba(15,27,76,.55);
+  backdrop-filter:blur(4px);
+}
+.fcat-icon-modal-body{
+  position:relative;
+  background:#fff;
+  border-radius:var(--radius);
+  max-width:640px;
+  width:100%;
+  max-height:80vh;
+  display:flex;flex-direction:column;
+  box-shadow:0 20px 60px rgba(15,27,76,.35);
+  overflow:hidden;
+}
+.fcat-icon-modal-head{
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:#f8fafc;
+}
+.fcat-icon-modal-head h4{
+  font-size:1rem;font-weight:800;color:var(--text);
+  display:flex;align-items:center;gap:8px;
+}
+.fcat-icon-modal-head h4 i{color:var(--accent);}
+.fcat-icon-modal-close{
+  border:none;background:transparent;
+  font-size:28px;line-height:1;
+  color:var(--text-muted);cursor:pointer;
+  width:36px;height:36px;
+  border-radius:10px;
+  transition:all .15s ease;
+}
+.fcat-icon-modal-close:hover{
+  background:rgba(239,68,68,.1);color:var(--danger);
+}
+.fcat-icon-search{
+  margin:14px 20px 6px;
+  padding:10px 14px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  font-size:.9rem;
+}
+.fcat-icon-search:focus{
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(255,140,0,.12);
+}
+.fcat-icon-grid{
+  padding:10px 16px 20px;
+  overflow-y:auto;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(74px,1fr));
+  gap:8px;
+  flex:1;
+}
+.fcat-icon-cell{
+  display:flex;flex-direction:column;align-items:center;
+  gap:4px;padding:10px 4px;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:10px;
+  cursor:pointer;
+  transition:all .12s ease;
+  text-align:center;
+}
+.fcat-icon-cell:hover{
+  background:rgba(255,140,0,.08);
+  border-color:var(--accent);
+  transform:translateY(-2px);
+}
+.fcat-icon-cell i{font-size:20px;color:var(--primary);}
+.fcat-icon-cell:hover i{color:var(--accent);}
+.fcat-icon-cell .fcat-icon-name{
+  font-size:9px;color:var(--text-muted);
+  line-height:1.1;word-break:break-all;
+  font-family:'Courier New',monospace;
+}
+
+@media(max-width:768px){
+  .fcat-editor-head{
+    flex-direction:column;
+    align-items:stretch;
+    gap:12px;
+  }
+  .fcat-preview{max-width:none;}
+  .fcat-editor-title{margin-right:0;}
+  .fcat-icon-grid{grid-template-columns:repeat(auto-fill,minmax(60px,1fr));}
+}
+
+/* ========== Custom cards manager ========== */
+#fcatAddCustomBtn:hover{
+  background:#e87a00 !important;
+  transform:translateY(-1px);
+  box-shadow:0 5px 14px rgba(255,140,0,.35) !important;
+}
+#fcatAddCustomBtn:active{transform:translateY(0);}
+
+.fcat-custom-editor{
+  position:relative;
+  border-right:4px solid var(--accent);
+  animation:fcatCustomFadeIn .3s ease-out;
+}
+@keyframes fcatCustomFadeIn{
+  from{opacity:0;transform:translateY(-8px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.fcat-custom-delete-btn:hover{
+  background:var(--danger) !important;
+  color:#fff !important;
+  transform:scale(1.05);
+}
+.fcat-custom-move-up-btn:hover,
+.fcat-custom-move-down-btn:hover{
+  background:var(--primary) !important;
+  color:#fff !important;
+}
+.fcat-custom-move-up-btn:disabled,
+.fcat-custom-move-down-btn:disabled{
+  opacity:.35;
+  cursor:not-allowed !important;
+}
+.fcat-custom-editor[data-disabled="1"]{
+  opacity:.55;
+  border-right-color:#94a3b8;
+}
+.fcat-custom-editor[data-disabled="1"] .fcat-custom-preview{
+  filter:grayscale(0.5);
+}
+
+#fcatCustomCardsContainer:empty::before{
+  content:'لم تضف أي بطاقات بعد. اضغط "إضافة بطاقة جديدة" للبدء.';
+  display:block;
+  text-align:center;
+  padding:30px 20px;
+  color:var(--text-muted);
+  background:#f8fafc;
+  border:2px dashed var(--border);
+  border-radius:14px;
+  font-size:.9rem;
+}
 </style>
 <script src="shared-admin-auth.js"></script>
 <script src="shared-firebase.js"></script>
@@ -590,32 +925,439 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
             </div>
           </div>
 
-          <h3 style="margin:28px 0 16px;font-size:1rem;"><i class="fas fa-images" style="color:var(--accent);margin-left:8px;"></i>تصنيفات مميزة</h3>
-          <div class="settings-grid">
-            <div class="form-group"><label>عنوان: المنتجات الجديدة</label><input id="featuredNewTitle" type="text" placeholder="المنتجات الجديدة"/></div>
-            <div class="form-group"><label>رابط صورة المنتجات الجديدة</label><input id="featuredNewImage" type="text" placeholder="https://.../new.jpg"/></div>
-            <div class="form-group"><label>وصف قصير: المنتجات الجديدة</label><input id="featuredNewSub" type="text" placeholder="منتجات وصلت حديثًا"/></div>
-            <div class="form-group"><label>عنوان: العروض والخصومات</label><input id="featuredOffersTitle" type="text" placeholder="العروض والخصومات"/></div>
-            <div class="form-group"><label>رابط صورة العروض</label><input id="featuredOffersImage" type="text" placeholder="https://.../offers.jpg"/></div>
-            <div class="form-group"><label>وصف قصير: العروض والخصومات</label><input id="featuredOffersSub" type="text" placeholder="أفضل الأسعار والتخفيضات"/></div>
-            <div class="form-group"><label>عنوان: قسم الصيانة</label><input id="featuredServiceTitle" type="text" placeholder="قسم الصيانة"/></div>
-            <div class="form-group"><label>رابط صورة الصيانة</label><input id="featuredServiceImage" type="text" placeholder="https://.../service.jpg"/></div>
-            <div class="form-group"><label>وصف قصير: قسم الصيانة</label><input id="featuredServiceSub" type="text" placeholder="قدّم طلبك خلال دقيقة"/></div>
-            <div class="form-group"><label>عنوان: متجر القطع والالكترونيات</label><input id="featuredElectronicsTitle" type="text" placeholder="متجر القطع والالكترونيات"/></div>
-            <div class="form-group"><label>رابط صورة متجر القطع والالكترونيات</label><input id="featuredElectronicsImage" type="text" placeholder="https://.../electronics.jpg"/></div>
-            <div class="form-group"><label>وصف قصير: متجر القطع والالكترونيات</label><input id="featuredElectronicsSub" type="text" placeholder="تسوق القطع الإلكترونية والإكسسوارات والمنتجات المتخصصة"/></div>
-            <div class="form-group"><label>نص الزر: متجر القطع والالكترونيات</label><input id="featuredElectronicsBadge" type="text" placeholder="ادخل الآن"/></div>
-            <div class="form-group"><label>رابط البطاقة</label><input id="featuredElectronicsLink" type="text" placeholder="electronics-store.html"/></div>
+          <h3 style="margin:28px 0 16px;font-size:1rem;"><i class="fas fa-images" style="color:var(--accent);margin-left:8px;"></i>بطاقات التصنيفات المميزة (الكاروسيل)</h3>
+          <p style="margin:-8px 0 18px;color:var(--text-muted);font-size:.85rem;line-height:1.6;background:#fff8ea;border-right:3px solid var(--accent);padding:10px 14px;border-radius:8px;">
+            <i class="fas fa-circle-info" style="color:var(--accent);"></i>
+            هذه البطاقات تظهر ككاروسيل بالصفحة الرئيسية. لكل بطاقة: عنوان، وصف، لون خلفية، لون نص، لون زر + نصّه، أيقونة، وصورة اختيارية. المعاينة فوق الحقول تتحدّث مباشرة.
+          </p>
+
+          <!-- Card 1: New Products -->
+          <div class="fcat-editor" data-card-id="new">
+            <div class="fcat-editor-head">
+              <div class="fcat-preview" id="fcatPreviewNew" style="background:#FF8C00; color:#fff;">
+                <div class="fcat-preview-content">
+                  <div class="fcat-preview-eyebrow" id="fcatPreviewNewEyebrow">NEW</div>
+                  <div class="fcat-preview-title" id="fcatPreviewNewTitle">المنتجات الجديدة</div>
+                  <div class="fcat-preview-sub" id="fcatPreviewNewSub">منتجات وصلت حديثًا</div>
+                  <span class="fcat-preview-btn" id="fcatPreviewNewBtn" style="background:transparent; border:1.5px solid rgba(255,255,255,.55); color:#fff;">اضغط هنا</span>
+                </div>
+                <div class="fcat-preview-icon" id="fcatPreviewNewIconWrap"><i class="fas fa-star"></i></div>
+              </div>
+              <div class="fcat-editor-title">
+                <span class="fcat-editor-badge">بطاقة ١</span>
+                <h4>المنتجات الجديدة</h4>
+              </div>
+            </div>
+            <div class="settings-grid fcat-fields">
+              <div class="form-group"><label>العنوان</label><input id="featuredNewTitle" type="text" placeholder="المنتجات الجديدة"/></div>
+              <div class="form-group"><label>الوصف القصير</label><input id="featuredNewSub" type="text" placeholder="منتجات وصلت حديثًا"/></div>
+              <div class="form-group">
+                <label>أيقونة</label>
+                <div class="fcat-icon-input-wrap">
+                  <input id="featuredNewIcon" type="text" placeholder="fa-star"/>
+                  <button type="button" class="fcat-icon-picker-btn" data-fcat-open-picker="featuredNewIcon"><i class="fas fa-th"></i></button>
+                </div>
+              </div>
+              <div class="form-group"><label>نص الزر</label><input id="featuredNewBtnLabel" type="text" placeholder="اضغط هنا"/></div>
+              <div class="form-group">
+                <label>لون الخلفية</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredNewBgColor" type="color" value="#FF8C00"/>
+                  <input id="featuredNewBgColorHex" type="text" value="#FF8C00"/>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>لون النص</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredNewTextColor" type="color" value="#FFFFFF"/>
+                  <input id="featuredNewTextColorHex" type="text" value="#FFFFFF"/>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>لون خلفية الزر</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredNewBtnBgColor" type="color" value="#FFFFFF"/>
+                  <input id="featuredNewBtnBgColorHex" type="text" value="transparent" placeholder="transparent أو #HEX"/>
+                </div>
+                <small>اكتب <code>transparent</code> لزر شفاف مع إطار</small>
+              </div>
+              <div class="form-group">
+                <label>لون نص الزر</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredNewBtnTextColor" type="color" value="#FFFFFF"/>
+                  <input id="featuredNewBtnTextColorHex" type="text" value="#FFFFFF"/>
+                </div>
+              </div>
+              <div class="form-group" style="grid-column:1/-1;">
+                <label>رابط صورة (اختياري — تظهر كخلفية مع تدرج من اللون الرئيسي)</label>
+                <input id="featuredNewImage" type="text" placeholder="https://.../new.jpg"/>
+              </div>
+            </div>
           </div>
 
-          <h3 style="margin:28px 0 16px;font-size:1rem;"><i class="fas fa-video" style="color:var(--accent);margin-left:8px;"></i>بطاقة البث المباشر في الصفحة الرئيسية</h3>
-          <div class="settings-grid">
-            <div class="form-group"><label>عنوان: البث المباشر</label><input id="featuredLiveTitle" type="text" placeholder="البث المباشر"/></div>
-            <div class="form-group"><label>رابط صورة بطاقة البث</label><input id="featuredLiveImage" type="text" placeholder="https://.../live.jpg"/></div>
-            <div class="form-group"><label>وصف قصير: البث المباشر</label><input id="featuredLiveSub" type="text" placeholder="شاهد عملية الإصلاح مباشرة للعميل"/></div>
-            <div class="form-group"><label>نص الزر: البث المباشر</label><input id="featuredLiveBadge" type="text" placeholder="شاهد الآن"/></div>
-            <div class="form-group"><label>رابط البطاقة</label><input id="featuredLiveLink" type="text" placeholder="repair-live.html"/></div>
+          <!-- Card 2: Offers -->
+          <div class="fcat-editor" data-card-id="offers">
+            <div class="fcat-editor-head">
+              <div class="fcat-preview" id="fcatPreviewOffers" style="background:#d81b60; color:#fff;">
+                <div class="fcat-preview-content">
+                  <div class="fcat-preview-eyebrow">OFFERS</div>
+                  <div class="fcat-preview-title" id="fcatPreviewOffersTitle">العروض والخصومات</div>
+                  <div class="fcat-preview-sub" id="fcatPreviewOffersSub">أفضل الأسعار والتخفيضات</div>
+                  <span class="fcat-preview-btn" id="fcatPreviewOffersBtn" style="background:transparent; border:1.5px solid rgba(255,255,255,.55); color:#fff;">اضغط هنا</span>
+                </div>
+                <div class="fcat-preview-icon" id="fcatPreviewOffersIconWrap"><i class="fas fa-tag"></i></div>
+              </div>
+              <div class="fcat-editor-title">
+                <span class="fcat-editor-badge">بطاقة ٢</span>
+                <h4>العروض والخصومات</h4>
+              </div>
+            </div>
+            <div class="settings-grid fcat-fields">
+              <div class="form-group"><label>العنوان</label><input id="featuredOffersTitle" type="text" placeholder="العروض والخصومات"/></div>
+              <div class="form-group"><label>الوصف القصير</label><input id="featuredOffersSub" type="text" placeholder="أفضل الأسعار والتخفيضات"/></div>
+              <div class="form-group">
+                <label>أيقونة</label>
+                <div class="fcat-icon-input-wrap">
+                  <input id="featuredOffersIcon" type="text" placeholder="fa-tag"/>
+                  <button type="button" class="fcat-icon-picker-btn" data-fcat-open-picker="featuredOffersIcon"><i class="fas fa-th"></i></button>
+                </div>
+              </div>
+              <div class="form-group"><label>نص الزر</label><input id="featuredOffersBtnLabel" type="text" placeholder="اضغط هنا"/></div>
+              <div class="form-group"><label>لون الخلفية</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredOffersBgColor" type="color" value="#D81B60"/>
+                  <input id="featuredOffersBgColorHex" type="text" value="#D81B60"/>
+                </div>
+              </div>
+              <div class="form-group"><label>لون النص</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredOffersTextColor" type="color" value="#FFFFFF"/>
+                  <input id="featuredOffersTextColorHex" type="text" value="#FFFFFF"/>
+                </div>
+              </div>
+              <div class="form-group"><label>لون خلفية الزر</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredOffersBtnBgColor" type="color" value="#FFFFFF"/>
+                  <input id="featuredOffersBtnBgColorHex" type="text" value="transparent"/>
+                </div>
+              </div>
+              <div class="form-group"><label>لون نص الزر</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredOffersBtnTextColor" type="color" value="#FFFFFF"/>
+                  <input id="featuredOffersBtnTextColorHex" type="text" value="#FFFFFF"/>
+                </div>
+              </div>
+              <div class="form-group" style="grid-column:1/-1;"><label>رابط صورة (اختياري)</label><input id="featuredOffersImage" type="text" placeholder="https://.../offers.jpg"/></div>
+            </div>
           </div>
+
+          <!-- Card 3: Electronics -->
+          <div class="fcat-editor" data-card-id="electronics">
+            <div class="fcat-editor-head">
+              <div class="fcat-preview" id="fcatPreviewElectronics" style="background:#2d1b4e; color:#fff;">
+                <div class="fcat-preview-content">
+                  <div class="fcat-preview-eyebrow">ELECTRONICS</div>
+                  <div class="fcat-preview-title" id="fcatPreviewElectronicsTitle">متجر القطع والإلكترونيات</div>
+                  <div class="fcat-preview-sub" id="fcatPreviewElectronicsSub">قطع متخصصة • إكسسوارات أصلية</div>
+                  <span class="fcat-preview-btn" id="fcatPreviewElectronicsBtn" style="background:#fff; color:#2d1b4e;">اضغط هنا</span>
+                </div>
+                <div class="fcat-preview-icon" id="fcatPreviewElectronicsIconWrap"><i class="fas fa-microchip"></i></div>
+              </div>
+              <div class="fcat-editor-title">
+                <span class="fcat-editor-badge">بطاقة ٣</span>
+                <h4>متجر القطع والإلكترونيات</h4>
+              </div>
+            </div>
+            <div class="settings-grid fcat-fields">
+              <div class="form-group"><label>العنوان</label><input id="featuredElectronicsTitle" type="text" placeholder="متجر القطع والإلكترونيات"/></div>
+              <div class="form-group"><label>الوصف القصير</label><input id="featuredElectronicsSub" type="text" placeholder="قطع متخصصة • إكسسوارات أصلية"/></div>
+              <div class="form-group">
+                <label>أيقونة</label>
+                <div class="fcat-icon-input-wrap">
+                  <input id="featuredElectronicsIcon" type="text" placeholder="fa-microchip"/>
+                  <button type="button" class="fcat-icon-picker-btn" data-fcat-open-picker="featuredElectronicsIcon"><i class="fas fa-th"></i></button>
+                </div>
+              </div>
+              <div class="form-group"><label>نص الزر</label><input id="featuredElectronicsBadge" type="text" placeholder="اضغط هنا"/></div>
+              <div class="form-group"><label>لون الخلفية</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredElectronicsBgColor" type="color" value="#2D1B4E"/>
+                  <input id="featuredElectronicsBgColorHex" type="text" value="#2D1B4E"/>
+                </div>
+              </div>
+              <div class="form-group"><label>لون النص</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredElectronicsTextColor" type="color" value="#FFFFFF"/>
+                  <input id="featuredElectronicsTextColorHex" type="text" value="#FFFFFF"/>
+                </div>
+              </div>
+              <div class="form-group"><label>لون خلفية الزر</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredElectronicsBtnBgColor" type="color" value="#FFFFFF"/>
+                  <input id="featuredElectronicsBtnBgColorHex" type="text" value="#FFFFFF"/>
+                </div>
+              </div>
+              <div class="form-group"><label>لون نص الزر</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredElectronicsBtnTextColor" type="color" value="#2D1B4E"/>
+                  <input id="featuredElectronicsBtnTextColorHex" type="text" value="#2D1B4E"/>
+                </div>
+              </div>
+              <div class="form-group" style="grid-column:1/-1;"><label>رابط صورة (اختياري)</label><input id="featuredElectronicsImage" type="text" placeholder="https://.../electronics.jpg"/></div>
+              <div class="form-group" style="grid-column:1/-1;"><label>رابط البطاقة</label><input id="featuredElectronicsLink" type="text" placeholder="electronics-store.html"/></div>
+            </div>
+          </div>
+
+          <!-- Card 4: Service -->
+          <div class="fcat-editor" data-card-id="service">
+            <div class="fcat-editor-head">
+              <div class="fcat-preview" id="fcatPreviewService" style="background:#0A58CA; color:#fff;">
+                <div class="fcat-preview-content">
+                  <div class="fcat-preview-eyebrow">SERVICE</div>
+                  <div class="fcat-preview-title" id="fcatPreviewServiceTitle">قسم الصيانة</div>
+                  <div class="fcat-preview-sub" id="fcatPreviewServiceSub">قدّم طلبك خلال دقيقة</div>
+                  <span class="fcat-preview-btn" id="fcatPreviewServiceBtn" style="background:transparent; border:1.5px solid rgba(255,255,255,.55); color:#fff;">اضغط هنا</span>
+                </div>
+                <div class="fcat-preview-icon" id="fcatPreviewServiceIconWrap"><i class="fas fa-screwdriver-wrench"></i></div>
+              </div>
+              <div class="fcat-editor-title">
+                <span class="fcat-editor-badge">بطاقة ٤</span>
+                <h4>قسم الصيانة</h4>
+              </div>
+            </div>
+            <div class="settings-grid fcat-fields">
+              <div class="form-group"><label>العنوان</label><input id="featuredServiceTitle" type="text" placeholder="قسم الصيانة"/></div>
+              <div class="form-group"><label>الوصف القصير</label><input id="featuredServiceSub" type="text" placeholder="قدّم طلبك خلال دقيقة"/></div>
+              <div class="form-group">
+                <label>أيقونة</label>
+                <div class="fcat-icon-input-wrap">
+                  <input id="featuredServiceIcon" type="text" placeholder="fa-screwdriver-wrench"/>
+                  <button type="button" class="fcat-icon-picker-btn" data-fcat-open-picker="featuredServiceIcon"><i class="fas fa-th"></i></button>
+                </div>
+              </div>
+              <div class="form-group"><label>نص الزر</label><input id="featuredServiceBtnLabel" type="text" placeholder="اضغط هنا"/></div>
+              <div class="form-group"><label>لون الخلفية</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredServiceBgColor" type="color" value="#0A58CA"/>
+                  <input id="featuredServiceBgColorHex" type="text" value="#0A58CA"/>
+                </div>
+              </div>
+              <div class="form-group"><label>لون النص</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredServiceTextColor" type="color" value="#FFFFFF"/>
+                  <input id="featuredServiceTextColorHex" type="text" value="#FFFFFF"/>
+                </div>
+              </div>
+              <div class="form-group"><label>لون خلفية الزر</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredServiceBtnBgColor" type="color" value="#FFFFFF"/>
+                  <input id="featuredServiceBtnBgColorHex" type="text" value="transparent"/>
+                </div>
+              </div>
+              <div class="form-group"><label>لون نص الزر</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredServiceBtnTextColor" type="color" value="#FFFFFF"/>
+                  <input id="featuredServiceBtnTextColorHex" type="text" value="#FFFFFF"/>
+                </div>
+              </div>
+              <div class="form-group" style="grid-column:1/-1;"><label>رابط صورة (اختياري)</label><input id="featuredServiceImage" type="text" placeholder="https://.../service.jpg"/></div>
+            </div>
+          </div>
+
+          <!-- Card 5: Live -->
+          <div class="fcat-editor" data-card-id="live">
+            <div class="fcat-editor-head">
+              <div class="fcat-preview" id="fcatPreviewLive" style="background:#c62828; color:#fff;">
+                <div class="fcat-preview-content">
+                  <div class="fcat-preview-eyebrow"><span class="fcat-preview-live-dot"></span> LIVE</div>
+                  <div class="fcat-preview-title" id="fcatPreviewLiveTitle">البث المباشر</div>
+                  <div class="fcat-preview-sub" id="fcatPreviewLiveSub">شاهد عملية الإصلاح مباشرة</div>
+                  <span class="fcat-preview-btn" id="fcatPreviewLiveBtn" style="background:#fff; color:#c62828;">اضغط هنا</span>
+                </div>
+                <div class="fcat-preview-icon" id="fcatPreviewLiveIconWrap"><i class="fas fa-video"></i></div>
+              </div>
+              <div class="fcat-editor-title">
+                <span class="fcat-editor-badge">بطاقة ٥</span>
+                <h4>البث المباشر</h4>
+              </div>
+            </div>
+            <div class="settings-grid fcat-fields">
+              <div class="form-group"><label>العنوان</label><input id="featuredLiveTitle" type="text" placeholder="البث المباشر"/></div>
+              <div class="form-group"><label>الوصف القصير</label><input id="featuredLiveSub" type="text" placeholder="شاهد عملية الإصلاح مباشرة"/></div>
+              <div class="form-group">
+                <label>أيقونة</label>
+                <div class="fcat-icon-input-wrap">
+                  <input id="featuredLiveIcon" type="text" placeholder="fa-video"/>
+                  <button type="button" class="fcat-icon-picker-btn" data-fcat-open-picker="featuredLiveIcon"><i class="fas fa-th"></i></button>
+                </div>
+              </div>
+              <div class="form-group"><label>نص الزر</label><input id="featuredLiveBadge" type="text" placeholder="اضغط هنا"/></div>
+              <div class="form-group"><label>لون الخلفية</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredLiveBgColor" type="color" value="#C62828"/>
+                  <input id="featuredLiveBgColorHex" type="text" value="#C62828"/>
+                </div>
+              </div>
+              <div class="form-group"><label>لون النص</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredLiveTextColor" type="color" value="#FFFFFF"/>
+                  <input id="featuredLiveTextColorHex" type="text" value="#FFFFFF"/>
+                </div>
+              </div>
+              <div class="form-group"><label>لون خلفية الزر</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredLiveBtnBgColor" type="color" value="#FFFFFF"/>
+                  <input id="featuredLiveBtnBgColorHex" type="text" value="#FFFFFF"/>
+                </div>
+              </div>
+              <div class="form-group"><label>لون نص الزر</label>
+                <div class="fcat-color-wrap">
+                  <input id="featuredLiveBtnTextColor" type="color" value="#C62828"/>
+                  <input id="featuredLiveBtnTextColorHex" type="text" value="#C62828"/>
+                </div>
+              </div>
+              <div class="form-group" style="grid-column:1/-1;"><label>رابط صورة (اختياري)</label><input id="featuredLiveImage" type="text" placeholder="https://.../live.jpg"/></div>
+              <div class="form-group" style="grid-column:1/-1;"><label>رابط البطاقة</label><input id="featuredLiveLink" type="text" placeholder="repair-live.html"/></div>
+            </div>
+          </div>
+
+          <!-- Icon picker modal -->
+          <div class="fcat-icon-modal" id="fcatIconModal" hidden>
+            <div class="fcat-icon-modal-backdrop" data-fcat-close-picker></div>
+            <div class="fcat-icon-modal-body">
+              <div class="fcat-icon-modal-head">
+                <h4><i class="fas fa-icons"></i> اختر أيقونة</h4>
+                <button type="button" class="fcat-icon-modal-close" data-fcat-close-picker>&times;</button>
+              </div>
+              <input type="text" class="fcat-icon-search" id="fcatIconSearch" placeholder="ابحث: star, tag, tv, tools..."/>
+              <div class="fcat-icon-grid" id="fcatIconGrid"></div>
+            </div>
+          </div>
+
+          <!-- ============ CUSTOM / DYNAMIC CARDS MANAGER ============ -->
+          <div style="display:flex;align-items:center;gap:12px;margin:32px 0 14px;">
+            <h3 style="font-size:1rem;margin:0;flex:1;">
+              <i class="fas fa-plus-circle" style="color:var(--accent);margin-left:8px;"></i>
+              بطاقات إضافية (اختياري)
+            </h3>
+            <button type="button" id="fcatAddCustomBtn" style="background:var(--accent);color:#fff;border:none;padding:9px 18px;border-radius:10px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:.88rem;box-shadow:0 3px 10px rgba(255,140,0,.25);transition:all .15s ease;">
+              <i class="fas fa-plus"></i> إضافة بطاقة جديدة
+            </button>
+          </div>
+          <p style="margin:-4px 0 16px;color:var(--text-muted);font-size:.85rem;line-height:1.6;background:#f0f9ff;border-right:3px solid #0ea5e9;padding:10px 14px;border-radius:8px;">
+            <i class="fas fa-circle-info" style="color:#0ea5e9;"></i>
+            هذه البطاقات تُضاف للكاروسيل بعد البطاقات الأساسية الخمس. يمكنك إضافة بطاقات غير محدودة لتصنيفات، روابط داخلية، أو روابط خارجية.
+          </p>
+
+          <div id="fcatCustomCardsContainer"></div>
+
+          <template id="fcatCustomCardTemplate">
+            <div class="fcat-editor fcat-custom-editor" data-custom-id="">
+              <div class="fcat-editor-head">
+                <div class="fcat-preview fcat-custom-preview" style="background:#0A58CA;color:#fff;">
+                  <div class="fcat-preview-content">
+                    <div class="fcat-preview-eyebrow"><span class="fcat-custom-eyebrow-preview">CARD</span></div>
+                    <div class="fcat-preview-title fcat-custom-title-preview">بطاقة جديدة</div>
+                    <div class="fcat-preview-sub fcat-custom-sub-preview">وصف البطاقة</div>
+                    <span class="fcat-preview-btn fcat-custom-btn-preview" style="background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.55);color:#fff;">اضغط هنا</span>
+                  </div>
+                  <div class="fcat-preview-icon fcat-custom-icon-preview"><i class="fas fa-star"></i></div>
+                </div>
+                <div class="fcat-editor-title" style="display:flex;flex-direction:column;gap:6px;">
+                  <span class="fcat-editor-badge">بطاقة مخصّصة</span>
+                  <div style="display:flex;gap:6px;">
+                    <button type="button" class="fcat-custom-delete-btn" title="حذف" style="background:#fee2e2;color:var(--danger);border:none;width:36px;height:36px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                    <button type="button" class="fcat-custom-move-up-btn" title="تحريك للأعلى" style="background:#f1f5f9;color:var(--primary);border:none;width:36px;height:36px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;">
+                      <i class="fas fa-arrow-up"></i>
+                    </button>
+                    <button type="button" class="fcat-custom-move-down-btn" title="تحريك للأسفل" style="background:#f1f5f9;color:var(--primary);border:none;width:36px;height:36px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;">
+                      <i class="fas fa-arrow-down"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="settings-grid fcat-fields">
+                <div class="form-group"><label>العنوان</label><input class="fcat-custom-title" type="text" placeholder="اسم البطاقة"/></div>
+                <div class="form-group"><label>الوصف القصير</label><input class="fcat-custom-sub" type="text" placeholder="وصف مختصر"/></div>
+                <div class="form-group">
+                  <label>التسمية العلوية (Eyebrow)</label>
+                  <input class="fcat-custom-eyebrow" type="text" placeholder="CARD أو NEW"/>
+                  <small>النص الصغير فوق العنوان (إنجليزي عادةً)</small>
+                </div>
+                <div class="form-group">
+                  <label>أيقونة</label>
+                  <div class="fcat-icon-input-wrap">
+                    <input class="fcat-custom-icon" type="text" placeholder="fa-star"/>
+                    <button type="button" class="fcat-icon-picker-btn fcat-custom-icon-picker" title="اختر"><i class="fas fa-th"></i></button>
+                  </div>
+                </div>
+                <div class="form-group"><label>نص الزر</label><input class="fcat-custom-btn-label" type="text" placeholder="اضغط هنا"/></div>
+
+                <div class="form-group">
+                  <label>نوع الإجراء</label>
+                  <select class="fcat-custom-action" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:.88rem;background:#fff;font-family:inherit;">
+                    <option value="category">تصنيف داخلي</option>
+                    <option value="link">صفحة في الموقع</option>
+                    <option value="external">رابط خارجي</option>
+                  </select>
+                </div>
+
+                <div class="form-group fcat-custom-category-group">
+                  <label>معرّف التصنيف</label>
+                  <input class="fcat-custom-category-id" type="text" placeholder="مثلاً: new, offers, or category-id"/>
+                  <small>ID التصنيف من قائمة التصنيفات</small>
+                </div>
+
+                <div class="form-group fcat-custom-href-group" style="grid-column:1/-1;display:none;">
+                  <label>الرابط</label>
+                  <input class="fcat-custom-href" type="text" placeholder="مثلاً: electronics-store.html أو https://example.com"/>
+                </div>
+
+                <div class="form-group">
+                  <label>لون الخلفية</label>
+                  <div class="fcat-color-wrap">
+                    <input class="fcat-custom-bg-color" type="color" value="#0A58CA"/>
+                    <input class="fcat-custom-bg-hex" type="text" value="#0A58CA"/>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>لون النص</label>
+                  <div class="fcat-color-wrap">
+                    <input class="fcat-custom-text-color" type="color" value="#FFFFFF"/>
+                    <input class="fcat-custom-text-hex" type="text" value="#FFFFFF"/>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>خلفية الزر</label>
+                  <div class="fcat-color-wrap">
+                    <input class="fcat-custom-btn-bg-color" type="color" value="#FFFFFF"/>
+                    <input class="fcat-custom-btn-bg-hex" type="text" value="transparent"/>
+                  </div>
+                  <small>اكتب <code>transparent</code> لزر شفاف</small>
+                </div>
+                <div class="form-group">
+                  <label>لون نص الزر</label>
+                  <div class="fcat-color-wrap">
+                    <input class="fcat-custom-btn-text-color" type="color" value="#FFFFFF"/>
+                    <input class="fcat-custom-btn-text-hex" type="text" value="#FFFFFF"/>
+                  </div>
+                </div>
+
+                <div class="form-group" style="grid-column:1/-1;">
+                  <label>رابط صورة (اختياري)</label>
+                  <input class="fcat-custom-image" type="text" placeholder="https://.../image.jpg"/>
+                </div>
+                <div class="form-group" style="grid-column:1/-1;">
+                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input class="fcat-custom-enabled" type="checkbox" checked style="width:auto;margin:0;"/>
+                    <span>البطاقة مفعّلة (تظهر في الكاروسيل)</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </template>
 
           <h3 style="margin:28px 0 16px;font-size:1rem;"><i class="fas fa-tower-broadcast" style="color:var(--accent);margin-left:8px;"></i>صفحة البث المباشر</h3>
           <div class="settings-grid">
@@ -883,6 +1625,56 @@ async function loadSettings() {
       $('featuredLiveSub') && ($('featuredLiveSub').value = p.featuredLiveSub || '');
       $('featuredLiveBadge') && ($('featuredLiveBadge').value = p.featuredLiveBadge || '');
       $('featuredLiveLink') && ($('featuredLiveLink').value = p.featuredLiveLink || 'repair-live.html');
+
+      // ===== V3 Carousel: load icons, colors, button labels =====
+      const fcatV3Defaults = {
+        featuredNewIcon:'fa-star',
+        featuredNewBgColor:'#FF8C00', featuredNewTextColor:'#FFFFFF',
+        featuredNewBtnBgColor:'transparent', featuredNewBtnTextColor:'#FFFFFF',
+        featuredNewBtnLabel:'اضغط هنا',
+
+        featuredOffersIcon:'fa-tag',
+        featuredOffersBgColor:'#D81B60', featuredOffersTextColor:'#FFFFFF',
+        featuredOffersBtnBgColor:'transparent', featuredOffersBtnTextColor:'#FFFFFF',
+        featuredOffersBtnLabel:'اضغط هنا',
+
+        featuredServiceIcon:'fa-screwdriver-wrench',
+        featuredServiceBgColor:'#0A58CA', featuredServiceTextColor:'#FFFFFF',
+        featuredServiceBtnBgColor:'transparent', featuredServiceBtnTextColor:'#FFFFFF',
+        featuredServiceBtnLabel:'اضغط هنا',
+
+        featuredLiveIcon:'fa-video',
+        featuredLiveBgColor:'#C62828', featuredLiveTextColor:'#FFFFFF',
+        featuredLiveBtnBgColor:'#FFFFFF', featuredLiveBtnTextColor:'#C62828',
+
+        featuredElectronicsIcon:'fa-microchip',
+        featuredElectronicsBgColor:'#2D1B4E', featuredElectronicsTextColor:'#FFFFFF',
+        featuredElectronicsBtnBgColor:'#FFFFFF', featuredElectronicsBtnTextColor:'#2D1B4E'
+      };
+      Object.keys(fcatV3Defaults).forEach(k => {
+        const el = $(k);
+        if (!el) return;
+        el.value = (p[k] !== undefined && p[k] !== null && p[k] !== '') ? p[k] : fcatV3Defaults[k];
+        // Sync hex text inputs with color picker values
+        if (/Color$/.test(k)) {
+          const hexEl = $(k + 'Hex');
+          if (hexEl) {
+            const v = el.value;
+            hexEl.value = v;
+            // If it's a valid hex, also update the color input itself
+            if (/^#[0-9a-f]{6}$/i.test(v)) el.value = v;
+          }
+        }
+      });
+      // Refresh previews after loading
+      if (typeof window.updateAllFcatPreviews === 'function') {
+        window.updateAllFcatPreviews();
+      }
+
+      // Load dynamic custom cards
+      if (typeof window.loadCustomFeaturedCards === 'function') {
+        window.loadCustomFeaturedCards(p.customFeaturedCards);
+      }
       $('livePageYoutubeVideoId') && ($('livePageYoutubeVideoId').value = p.livePageYoutubeVideoId || '');
       $('livePageFacebookVideoUrl') && ($('livePageFacebookVideoUrl').value = p.livePageFacebookVideoUrl || '');
       $('livePageServiceLink') && ($('livePageServiceLink').value = p.livePageServiceLink || 'index.html?openService=1');
@@ -1186,27 +1978,67 @@ $('pageContentForm').addEventListener('submit', async e => {
   e.preventDefault();
   try {
     const data = {};
+    // Safe fallback in case normalizeServicesList isn't defined globally
+    const _normalizeServices = (typeof normalizeServicesList === 'function')
+      ? normalizeServicesList
+      : function(v){
+          return String(v || '')
+            .split(/\r?\n/)
+            .map(s => s.trim())
+            .filter(Boolean);
+        };
+
     ['storeName','storeSlogan','phoneNumber','storeAddress','storeTagline','specializationText',
      'footerAbout','storeEmail','workingHours','servicesList',
-     'featuredNewTitle','featuredNewImage','featuredNewSub','featuredOffersTitle','featuredOffersImage','featuredOffersSub',
+     'featuredNewTitle','featuredNewImage','featuredNewSub',
+     'featuredNewIcon','featuredNewBgColor','featuredNewTextColor','featuredNewBtnBgColor','featuredNewBtnTextColor','featuredNewBtnLabel',
+     'featuredOffersTitle','featuredOffersImage','featuredOffersSub',
+     'featuredOffersIcon','featuredOffersBgColor','featuredOffersTextColor','featuredOffersBtnBgColor','featuredOffersBtnTextColor','featuredOffersBtnLabel',
      'featuredServiceTitle','featuredServiceImage','featuredServiceSub',
-     'featuredElectronicsTitle','featuredElectronicsImage','featuredElectronicsSub',
-     'featuredElectronicsBadge','featuredElectronicsLink',
+     'featuredServiceIcon','featuredServiceBgColor','featuredServiceTextColor','featuredServiceBtnBgColor','featuredServiceBtnTextColor','featuredServiceBtnLabel',
+     'featuredElectronicsTitle','featuredElectronicsImage','featuredElectronicsSub','featuredElectronicsBadge','featuredElectronicsLink',
+     'featuredElectronicsIcon','featuredElectronicsBgColor','featuredElectronicsTextColor','featuredElectronicsBtnBgColor','featuredElectronicsBtnTextColor',
      'featuredLiveTitle','featuredLiveImage','featuredLiveSub','featuredLiveBadge','featuredLiveLink',
+     'featuredLiveIcon','featuredLiveBgColor','featuredLiveTextColor','featuredLiveBtnBgColor','featuredLiveBtnTextColor',
      'livePageYoutubeVideoId','livePageFacebookVideoUrl','livePageServiceLink','livePageTrackLink',
      'liveVideosSectionTitle','liveVideosSectionSub',
      'liveVideo1Title','liveVideo1Url','liveVideo2Title','liveVideo2Url','liveVideo3Title','liveVideo3Url',
      'liveVideo4Title','liveVideo4Url','liveVideo5Title','liveVideo5Url','liveVideo6Title','liveVideo6Url'].forEach(key => {
       const el = $(key);
       if (el) {
+        const raw = (el.value !== undefined && el.value !== null) ? String(el.value) : '';
         data[key] = key === 'servicesList'
-          ? normalizeServicesList(el.value)
-          : el.value.trim();
+          ? _normalizeServices(raw)
+          : raw.trim();
       }
     });
+    // Include dynamic custom cards as a JSON-serializable array
+    if (typeof window.getCustomFeaturedCards === 'function') {
+      try {
+        const custom = window.getCustomFeaturedCards();
+        // Make sure nothing is undefined (Firestore rejects undefined)
+        data.customFeaturedCards = Array.isArray(custom) ? custom.map(c => {
+          const safe = {};
+          Object.keys(c || {}).forEach(k => {
+            const v = c[k];
+            safe[k] = (v === undefined || v === null) ? '' : v;
+          });
+          return safe;
+        }) : [];
+      } catch (ce) {
+        console.warn('getCustomFeaturedCards failed:', ce);
+        data.customFeaturedCards = [];
+      }
+    }
     await db.collection('settings').doc('page_content').set(data, { merge: true });
     showToast('✅ تم حفظ محتوى الصفحة', 'success');
-  } catch(e) { showToast('❌ خطأ في حفظ المحتوى', 'error'); }
+  } catch(err) {
+    console.error('❌ Save error:', err);
+    const msg = (err && err.code)
+      ? `❌ خطأ في الحفظ: ${err.code} — ${err.message || ''}`
+      : (err && err.message) ? `❌ ${err.message}` : '❌ خطأ في حفظ المحتوى';
+    showToast(msg, 'error');
+  }
 });
 
 // ===== Slider Admin =====
@@ -1464,6 +2296,474 @@ $('seedPagesBtn').addEventListener('click', async () => {
     showToast('❌ خطأ في الاستيراد: ' + e.message, 'error');
   }
 });
+
+// ===========================================================
+// ===== FEATURED CATEGORIES EDITOR: preview + icon picker ===
+// ===========================================================
+(function(){
+  function isValidHex(v){ return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(v||'').trim()); }
+  function get(id){ return document.getElementById(id); }
+  function cleanIcon(s){
+    return String(s||'').trim().replace(/^(fas|far|fab|fal)\s+/i,'').replace(/^fa-/,'');
+  }
+
+  const CARDS = [
+    { id:'new',         label:'NEW',         defaultIcon:'fa-star',                defaultBtnBg:'transparent', defaultBtnText:'#FFFFFF' },
+    { id:'offers',      label:'OFFERS',      defaultIcon:'fa-tag',                 defaultBtnBg:'transparent', defaultBtnText:'#FFFFFF' },
+    { id:'electronics', label:'ELECTRONICS', defaultIcon:'fa-microchip',           defaultBtnBg:'#FFFFFF',     defaultBtnText:'#2D1B4E' },
+    { id:'service',     label:'SERVICE',     defaultIcon:'fa-screwdriver-wrench',  defaultBtnBg:'transparent', defaultBtnText:'#FFFFFF' },
+    { id:'live',        label:'LIVE',        defaultIcon:'fa-video',               defaultBtnBg:'#FFFFFF',     defaultBtnText:'#C62828', isLive:true, btnLabelField:'Badge' }
+  ];
+
+  function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  function updatePreview(card){
+    const k = cap(card.id);
+    const fieldKey = 'featured' + k;
+
+    const previewEl  = get('fcatPreview' + k);
+    const titleEl    = get('fcatPreview' + k + 'Title');
+    const subEl      = get('fcatPreview' + k + 'Sub');
+    const btnEl      = get('fcatPreview' + k + 'Btn');
+    const iconWrap   = get('fcatPreview' + k + 'IconWrap');
+    if (!previewEl) return;
+
+    const titleIn  = get(fieldKey + 'Title');
+    const subIn    = get(fieldKey + 'Sub');
+    const iconIn   = get(fieldKey + 'Icon');
+    const bgIn     = get(fieldKey + 'BgColor');
+    const textIn   = get(fieldKey + 'TextColor');
+    const btnBgIn  = get(fieldKey + 'BtnBgColor');
+    const btnTxtIn = get(fieldKey + 'BtnTextColor');
+    const btnLabIn = card.btnLabelField === 'Badge'
+      ? get(fieldKey + 'Badge')
+      : get(fieldKey + 'BtnLabel');
+    const imgIn    = get(fieldKey + 'Image');
+
+    // Background
+    const bgBase = isValidHex(bgIn && bgIn.value) ? bgIn.value : '#0A58CA';
+    const imgUrl = (imgIn && imgIn.value.trim()) || '';
+    if (imgUrl && /^https?:\/\//i.test(imgUrl)) {
+      previewEl.style.background = `linear-gradient(135deg, ${bgBase}e0 0%, ${bgBase}bb 100%), url('${imgUrl.replace(/'/g,'%27')}') center/cover no-repeat`;
+    } else {
+      previewEl.style.background = bgBase;
+    }
+
+    // Text color
+    const textCol = isValidHex(textIn && textIn.value) ? textIn.value : '#FFFFFF';
+    previewEl.style.color = textCol;
+
+    // Title & sub
+    if (titleEl) titleEl.textContent = (titleIn && titleIn.value.trim()) || titleEl.textContent;
+    if (subEl)   subEl.textContent   = (subIn && subIn.value.trim()) || '';
+
+    // Icon
+    if (iconWrap) {
+      const iconName = cleanIcon(iconIn && iconIn.value) || cleanIcon(card.defaultIcon);
+      iconWrap.innerHTML = `<i class="fas fa-${iconName}"></i>`;
+    }
+
+    // Button
+    if (btnEl) {
+      const btnBg  = (btnBgIn && btnBgIn.value) ? btnBgIn.value : card.defaultBtnBg;
+      // Check hex input for 'transparent' keyword
+      const hexIn = get(fieldKey + 'BtnBgColorHex');
+      let effectiveBg = btnBg;
+      if (hexIn && /^transparent$/i.test(hexIn.value.trim())) {
+        effectiveBg = 'transparent';
+      } else if (hexIn && isValidHex(hexIn.value)) {
+        effectiveBg = hexIn.value;
+      }
+
+      const btnText = isValidHex(btnTxtIn && btnTxtIn.value) ? btnTxtIn.value : card.defaultBtnText;
+      btnEl.textContent = (btnLabIn && btnLabIn.value.trim()) || 'اضغط هنا';
+
+      if (effectiveBg === 'transparent') {
+        btnEl.style.background = 'rgba(255,255,255,0.2)';
+        btnEl.style.border = '1.5px solid rgba(255,255,255,0.55)';
+        btnEl.style.color = btnText;
+      } else {
+        btnEl.style.background = effectiveBg;
+        btnEl.style.border = 'none';
+        btnEl.style.color = btnText;
+      }
+    }
+  }
+
+  // Sync color picker <-> hex text
+  function syncColorPair(colorId, hexId){
+    const colorIn = get(colorId), hexIn = get(hexId);
+    if (!colorIn || !hexIn) return;
+    colorIn.addEventListener('input', () => {
+      hexIn.value = colorIn.value.toUpperCase();
+    });
+    hexIn.addEventListener('input', () => {
+      const v = hexIn.value.trim();
+      if (isValidHex(v)) {
+        const full = v.length === 4 ? '#' + v.slice(1).split('').map(c=>c+c).join('') : v;
+        colorIn.value = full.toUpperCase();
+      }
+    });
+  }
+
+  function wireCard(card){
+    const k = cap(card.id);
+    const fieldKey = 'featured' + k;
+    const refresh = () => updatePreview(card);
+
+    const fields = [
+      'Title','Sub','Icon',
+      'BgColor','BgColorHex',
+      'TextColor','TextColorHex',
+      'BtnBgColor','BtnBgColorHex',
+      'BtnTextColor','BtnTextColorHex',
+      'Image'
+    ];
+    fields.forEach(f => {
+      const el = get(fieldKey + f);
+      if (el) {
+        el.addEventListener('input', refresh);
+        el.addEventListener('change', refresh);
+      }
+    });
+    // button label field varies (Badge vs BtnLabel)
+    const labelId = card.btnLabelField === 'Badge'
+      ? (fieldKey + 'Badge')
+      : (fieldKey + 'BtnLabel');
+    const labelEl = get(labelId);
+    if (labelEl) {
+      labelEl.addEventListener('input', refresh);
+      labelEl.addEventListener('change', refresh);
+    }
+
+    // Sync all 4 color pairs
+    ['Bg','Text','BtnBg','BtnText'].forEach(prefix => {
+      syncColorPair(fieldKey + prefix + 'Color', fieldKey + prefix + 'ColorHex');
+    });
+  }
+
+  window.updateAllFcatPreviews = function(){
+    CARDS.forEach(updatePreview);
+  };
+
+  CARDS.forEach(wireCard);
+
+  // ========== ICON PICKER MODAL ==========
+  const COMMON_ICONS = [
+    'star','bolt','fire','tag','tags','percent','gift','ticket',
+    'screwdriver-wrench','wrench','tools','hammer','gear','cogs','microchip',
+    'video','circle-play','film','tv','podcast','signal','broadcast-tower',
+    'memory','hard-drive','server','desktop','laptop',
+    'mobile-screen','tablet','headphones','keyboard','mouse',
+    'plug','battery-full','lightbulb','bell','satellite-dish',
+    'store','shop','truck','box','cart-shopping','bag-shopping',
+    'heart','thumbs-up','check','crown','medal','trophy','award',
+    'rocket','wand-magic-sparkles','fire-flame-curved','sparkles',
+    'user','users','handshake','phone','envelope','location-dot',
+    'clock','calendar','chart-line','chart-pie','dollar-sign',
+    'shield-halved','lock','key','credit-card','receipt',
+    'wifi','bluetooth','satellite','tower-cell',
+    'camera','image','palette','brush','paint-roller'
+  ];
+
+  const modal = get('fcatIconModal');
+  const grid  = get('fcatIconGrid');
+  const searchInput = get('fcatIconSearch');
+  let activePickerTarget = null;
+
+  function renderIconGrid(filter){
+    if (!grid) return;
+    const f = (filter||'').trim().toLowerCase();
+    const list = f ? COMMON_ICONS.filter(n => n.includes(f)) : COMMON_ICONS;
+    grid.innerHTML = list.map(name =>
+      `<div class="fcat-icon-cell" data-icon="fa-${name}">
+        <i class="fas fa-${name}"></i>
+        <span class="fcat-icon-name">${name}</span>
+      </div>`
+    ).join('');
+    grid.querySelectorAll('.fcat-icon-cell').forEach(cell => {
+      cell.addEventListener('click', () => {
+        const iconValue = cell.getAttribute('data-icon');
+        if (activePickerTarget) {
+          const input = get(activePickerTarget);
+          if (input) {
+            input.value = iconValue;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        }
+        closePicker();
+      });
+    });
+  }
+  function openPicker(targetId){
+    activePickerTarget = targetId;
+    if (!modal) return;
+    modal.hidden = false;
+    if (searchInput) { searchInput.value = ''; searchInput.focus(); }
+    renderIconGrid('');
+  }
+  function closePicker(){
+    if (modal) modal.hidden = true;
+    activePickerTarget = null;
+  }
+
+  document.querySelectorAll('[data-fcat-open-picker]').forEach(btn => {
+    btn.addEventListener('click', () => openPicker(btn.getAttribute('data-fcat-open-picker')));
+  });
+  document.querySelectorAll('[data-fcat-close-picker]').forEach(el => {
+    el.addEventListener('click', closePicker);
+  });
+  if (searchInput) {
+    searchInput.addEventListener('input', () => renderIconGrid(searchInput.value));
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal && !modal.hidden) closePicker();
+  });
+
+  // Run once on load
+  setTimeout(() => { if (window.updateAllFcatPreviews) window.updateAllFcatPreviews(); }, 400);
+
+  // ===========================================================
+  // ========== CUSTOM / DYNAMIC CARDS MANAGER ================
+  // ===========================================================
+  const customContainer = document.getElementById('fcatCustomCardsContainer');
+  const customTemplate  = document.getElementById('fcatCustomCardTemplate');
+  const addCustomBtn    = document.getElementById('fcatAddCustomBtn');
+
+  function genId(){
+    return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+
+  function hexOrKeyword(v){
+    v = String(v||'').trim();
+    if (/^transparent$/i.test(v)) return 'transparent';
+    if (isValidHex(v)) return v;
+    return null;
+  }
+
+  function updateCustomPreview(editor){
+    if (!editor) return;
+    const q = sel => editor.querySelector(sel);
+    const preview = q('.fcat-custom-preview');
+    const titlePv = q('.fcat-custom-title-preview');
+    const subPv   = q('.fcat-custom-sub-preview');
+    const eyePv   = q('.fcat-custom-eyebrow-preview');
+    const iconPv  = q('.fcat-custom-icon-preview');
+    const btnPv   = q('.fcat-custom-btn-preview');
+
+    const title   = (q('.fcat-custom-title') && q('.fcat-custom-title').value.trim()) || 'بطاقة جديدة';
+    const sub     = (q('.fcat-custom-sub') && q('.fcat-custom-sub').value.trim()) || '';
+    const eyebrow = (q('.fcat-custom-eyebrow') && q('.fcat-custom-eyebrow').value.trim()) || 'CARD';
+    const icon    = cleanIcon(q('.fcat-custom-icon') && q('.fcat-custom-icon').value) || 'star';
+    const btnLabel= (q('.fcat-custom-btn-label') && q('.fcat-custom-btn-label').value.trim()) || 'اضغط هنا';
+
+    const bg      = (q('.fcat-custom-bg-color') && q('.fcat-custom-bg-color').value) || '#0A58CA';
+    const textCol = (q('.fcat-custom-text-color') && q('.fcat-custom-text-color').value) || '#FFFFFF';
+    const btnBgHex = (q('.fcat-custom-btn-bg-hex') && q('.fcat-custom-btn-bg-hex').value.trim()) || '';
+    const btnBg   = hexOrKeyword(btnBgHex) || (q('.fcat-custom-btn-bg-color') && q('.fcat-custom-btn-bg-color').value) || '#FFFFFF';
+    const btnText = (q('.fcat-custom-btn-text-color') && q('.fcat-custom-btn-text-color').value) || '#FFFFFF';
+
+    const imgUrl  = (q('.fcat-custom-image') && q('.fcat-custom-image').value.trim()) || '';
+
+    if (titlePv) titlePv.textContent = title;
+    if (subPv)   subPv.textContent   = sub;
+    if (eyePv)   eyePv.textContent   = eyebrow;
+    if (iconPv)  iconPv.innerHTML    = `<i class="fas fa-${icon}"></i>`;
+
+    if (preview) {
+      if (imgUrl && /^https?:\/\//i.test(imgUrl)) {
+        preview.style.background = `linear-gradient(135deg, ${bg}e0 0%, ${bg}bb 100%), url('${imgUrl.replace(/'/g,'%27')}') center/cover no-repeat`;
+      } else {
+        preview.style.background = bg;
+      }
+      preview.style.color = textCol;
+    }
+
+    if (btnPv) {
+      btnPv.textContent = btnLabel;
+      if (btnBg === 'transparent') {
+        btnPv.style.background = 'rgba(255,255,255,0.2)';
+        btnPv.style.border = '1.5px solid rgba(255,255,255,.55)';
+        btnPv.style.color = btnText;
+      } else {
+        btnPv.style.background = btnBg;
+        btnPv.style.border = 'none';
+        btnPv.style.color = btnText;
+      }
+    }
+
+    // Handle action-type field visibility
+    const action = q('.fcat-custom-action') && q('.fcat-custom-action').value;
+    const catGroup  = q('.fcat-custom-category-group');
+    const hrefGroup = q('.fcat-custom-href-group');
+    if (catGroup)  catGroup.style.display  = (action === 'category') ? '' : 'none';
+    if (hrefGroup) hrefGroup.style.display = (action === 'link' || action === 'external') ? '' : 'none';
+
+    // Disabled state visual
+    const enabledEl = q('.fcat-custom-enabled');
+    const isEnabled = enabledEl ? enabledEl.checked : true;
+    editor.setAttribute('data-disabled', isEnabled ? '0' : '1');
+  }
+
+  function createCustomEditor(data){
+    data = data || {};
+    const clone = customTemplate.content.cloneNode(true);
+    const editor = clone.querySelector('.fcat-custom-editor');
+    editor.setAttribute('data-custom-id', data.id || genId());
+
+    const q = sel => editor.querySelector(sel);
+
+    // Populate values
+    q('.fcat-custom-title').value     = data.title   || '';
+    q('.fcat-custom-sub').value       = data.sub     || '';
+    q('.fcat-custom-eyebrow').value   = data.eyebrow || 'CARD';
+    q('.fcat-custom-icon').value      = data.icon    || 'fa-star';
+    q('.fcat-custom-btn-label').value = data.btnLabel|| 'اضغط هنا';
+    q('.fcat-custom-action').value    = data.action  || 'category';
+    q('.fcat-custom-category-id').value = data.categoryId || '';
+    q('.fcat-custom-href').value      = data.href    || '';
+    q('.fcat-custom-image').value     = data.image   || '';
+    q('.fcat-custom-enabled').checked = data.enabled !== false;
+
+    const setColorPair = (colorSel, hexSel, val, fallback) => {
+      const c = q(colorSel), h = q(hexSel);
+      const v = (val && String(val).trim()) || fallback;
+      if (/^#[0-9a-f]{3,6}$/i.test(v) && c) c.value = v;
+      if (h) h.value = v || fallback;
+    };
+    setColorPair('.fcat-custom-bg-color',       '.fcat-custom-bg-hex',      data.bgColor,      '#0A58CA');
+    setColorPair('.fcat-custom-text-color',     '.fcat-custom-text-hex',    data.textColor,    '#FFFFFF');
+    setColorPair('.fcat-custom-btn-bg-color',   '.fcat-custom-btn-bg-hex',  data.btnBgColor,   'transparent');
+    setColorPair('.fcat-custom-btn-text-color', '.fcat-custom-btn-text-hex',data.btnTextColor, '#FFFFFF');
+
+    // Wire up inputs → live preview
+    const refresh = () => updateCustomPreview(editor);
+    editor.querySelectorAll('input, select').forEach(el => {
+      el.addEventListener('input', refresh);
+      el.addEventListener('change', refresh);
+    });
+
+    // Sync color<->hex pairs
+    [
+      ['.fcat-custom-bg-color',       '.fcat-custom-bg-hex'],
+      ['.fcat-custom-text-color',     '.fcat-custom-text-hex'],
+      ['.fcat-custom-btn-bg-color',   '.fcat-custom-btn-bg-hex'],
+      ['.fcat-custom-btn-text-color', '.fcat-custom-btn-text-hex']
+    ].forEach(([c,h]) => {
+      const ce = q(c), he = q(h);
+      if (!ce || !he) return;
+      ce.addEventListener('input', () => { he.value = ce.value.toUpperCase(); refresh(); });
+      he.addEventListener('input', () => {
+        const v = he.value.trim();
+        if (isValidHex(v)) ce.value = (v.length === 4 ? '#' + v.slice(1).split('').map(x=>x+x).join('') : v).toUpperCase();
+        refresh();
+      });
+    });
+
+    // Icon picker
+    q('.fcat-custom-icon-picker').addEventListener('click', () => {
+      const input = q('.fcat-custom-icon');
+      if (!input) return;
+      input.id = input.id || ('fcatCustomIcon_' + editor.getAttribute('data-custom-id'));
+      openPicker(input.id);
+    });
+
+    // Delete
+    q('.fcat-custom-delete-btn').addEventListener('click', () => {
+      if (!confirm('حذف هذه البطاقة؟')) return;
+      editor.remove();
+      updateMoveButtonsVisibility();
+    });
+
+    // Move up/down
+    q('.fcat-custom-move-up-btn').addEventListener('click', () => {
+      const prev = editor.previousElementSibling;
+      if (prev) editor.parentNode.insertBefore(editor, prev);
+      updateMoveButtonsVisibility();
+    });
+    q('.fcat-custom-move-down-btn').addEventListener('click', () => {
+      const next = editor.nextElementSibling;
+      if (next) editor.parentNode.insertBefore(next, editor);
+      updateMoveButtonsVisibility();
+    });
+
+    return editor;
+  }
+
+  function updateMoveButtonsVisibility(){
+    if (!customContainer) return;
+    const editors = Array.from(customContainer.querySelectorAll('.fcat-custom-editor'));
+    editors.forEach((ed, i) => {
+      const up   = ed.querySelector('.fcat-custom-move-up-btn');
+      const down = ed.querySelector('.fcat-custom-move-down-btn');
+      if (up)   up.disabled   = (i === 0);
+      if (down) down.disabled = (i === editors.length - 1);
+    });
+  }
+
+  // Add new card
+  if (addCustomBtn) {
+    addCustomBtn.addEventListener('click', () => {
+      if (!customContainer || !customTemplate) return;
+      const editor = createCustomEditor({});
+      customContainer.appendChild(editor);
+      updateCustomPreview(editor);
+      updateMoveButtonsVisibility();
+      editor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+
+  // Load existing custom cards from Firestore (called by window.loadCustomFeaturedCards)
+  window.loadCustomFeaturedCards = function(rawData){
+    if (!customContainer) return;
+    customContainer.innerHTML = '';
+    let arr = [];
+    if (Array.isArray(rawData)) arr = rawData;
+    else if (typeof rawData === 'string' && rawData.trim()) {
+      try { arr = JSON.parse(rawData); } catch(_) { arr = []; }
+    }
+    if (!Array.isArray(arr)) arr = [];
+    arr.forEach(data => {
+      const editor = createCustomEditor(data || {});
+      customContainer.appendChild(editor);
+      updateCustomPreview(editor);
+    });
+    updateMoveButtonsVisibility();
+  };
+
+  // Collect all custom cards as an array (called by save handler)
+  window.getCustomFeaturedCards = function(){
+    if (!customContainer) return [];
+    return Array.from(customContainer.querySelectorAll('.fcat-custom-editor')).map(ed => {
+      const q = sel => ed.querySelector(sel);
+      const val = (sel, fallback) => {
+        const el = q(sel);
+        if (!el) return fallback || '';
+        if (el.type === 'checkbox') return !!el.checked;
+        const v = (el.value !== undefined && el.value !== null) ? String(el.value) : '';
+        return v.trim() || (fallback || '');
+      };
+      const btnBgHex = val('.fcat-custom-btn-bg-hex', '');
+      return {
+        id:           ed.getAttribute('data-custom-id') || genId(),
+        title:        val('.fcat-custom-title', ''),
+        sub:          val('.fcat-custom-sub', ''),
+        eyebrow:      val('.fcat-custom-eyebrow', 'CARD'),
+        icon:         val('.fcat-custom-icon', 'fa-star'),
+        btnLabel:     val('.fcat-custom-btn-label', 'اضغط هنا'),
+        action:       val('.fcat-custom-action', 'category'),
+        categoryId:   val('.fcat-custom-category-id', ''),
+        href:         val('.fcat-custom-href', ''),
+        image:        val('.fcat-custom-image', ''),
+        bgColor:      val('.fcat-custom-bg-color', '#0A58CA'),
+        textColor:    val('.fcat-custom-text-color', '#FFFFFF'),
+        btnBgColor:   (typeof hexOrKeyword === 'function' ? hexOrKeyword(btnBgHex) : null) || val('.fcat-custom-btn-bg-color', '#FFFFFF'),
+        btnTextColor: val('.fcat-custom-btn-text-color', '#FFFFFF'),
+        enabled:      (q('.fcat-custom-enabled') ? !!q('.fcat-custom-enabled').checked : true)
+      };
+    });
+  };
+})();
 </script>
 
 </body>
