@@ -4070,6 +4070,17 @@ header.glass i {
   box-shadow:0 10px 22px rgba(34,197,94,.34);
 }
 .header-service-btn i{ color:#fff !important; }
+.header-track-btn{
+  background:linear-gradient(135deg,#0d6efd,#084298) !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.18) !important;
+  box-shadow:0 8px 20px rgba(13,110,253,.22) !important;
+}
+.header-track-btn:hover{ transform:translateY(-1px); filter:brightness(1.05); }
+.header-track-btn i{ color:#fff !important; }
+@media (max-width: 768px){
+  .m-topbar .m-track-btn i{ color:#0d6efd !important; }
+}
 .header-electronics-btn{
   background:var(--me-orange, #ff6a00);
   color:#fff;
@@ -5564,6 +5575,9 @@ footer{
 <button type="button" aria-label="الصيانة" class="m-icon-btn m-service-btn" id="mHeaderServiceBtn" title="الصيانة">
 <i class="fas fa-tools"></i>
 </button>
+<button type="button" aria-label="تتبع الطلب" class="m-icon-btn m-track-btn" id="mHeaderTrackBtn" title="تتبع الطلب">
+<i class="fas fa-truck-fast"></i>
+</button>
 
 <button type="button" aria-label="حسابي" class="m-icon-btn m-account-btn" id="mQSAccountBtn">
 <i class="fas fa-user"></i>
@@ -5625,6 +5639,7 @@ footer{
 <button class="m-link-btn" id="mGoCategories"><i class="fas fa-list"></i> الأقسام</button>
 <button class="m-link-btn" id="mGoProducts"><i class="fas fa-box-open"></i> المنتجات</button>
 <button class="m-link-btn" id="mOpenService"><i class="fas fa-screwdriver-wrench"></i> طلب صيانة</button>
+<button class="m-link-btn" id="mOpenTrack"><i class="fas fa-truck-fast"></i> تتبع الطلب</button>
 <button class="m-link-btn" id="mLiveBtn"><i class="fas fa-video"></i> البث المباشر</button>
 <button class="m-link-btn" id="mUserAccountBtn"><i class="fas fa-user"></i> حسابي</button>
 <button class="m-link-btn" id="mAdminPanelBtn" style="display:none !important;"><i class="fas fa-user-cog"></i> لوحة التحكم</button>
@@ -5688,6 +5703,9 @@ footer{
 <div class="logo-header-buttons" id="logoHeaderButtons">
 <button class="header-page-btn header-service-btn" id="navServiceBtn" type="button">
 <i class="fas fa-tools"></i> الصيانة
+</button>
+<button class="header-page-btn header-track-btn" id="navTrackOrderBtn" type="button">
+<i class="fas fa-truck-fast"></i> تتبع الطلب
 </button>
 <button class="header-page-btn header-electronics-btn" id="navElectronicsStoreBtn" type="button">
 <i class="fas fa-microchip"></i> متجر القطع والالكترونيات
@@ -6692,22 +6710,28 @@ footer{
 </div>
 </section>
 
-<!-- Order Tracking -->
-<section style="padding:20px 0;">
-<div class="container">
-  <div class="track-order-section" id="trackOrderSection">
-    <h3 style="font-size:1.1rem;margin-bottom:12px;"><i class="fas fa-truck"></i> تتبع طلبك</h3>
-    <div style="display:flex;gap:10px;margin-bottom:16px;">
-      <input type="text" id="trackOrderInput" placeholder="أدخل رقم الطلب (مثال: OR-1234567)" style="flex:1;padding:10px 14px;border:1px solid var(--border-color);border-radius:10px;font-family:'Cairo';" />
-      <button id="trackOrderBtn" style="padding:10px 20px;background:var(--primary-color);color:#fff;border:none;border-radius:10px;cursor:pointer;font-family:'Cairo';font-weight:700;">تتبع</button>
+<!-- Order Tracking Modal -->
+<div class="modal" id="trackOrderModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fas fa-truck-fast"></i> تتبع الطلب</h3>
+      <button class="close-modal" id="closeTrackOrderModal">×</button>
     </div>
-    <div id="trackResult" style="display:none;">
-      <div class="track-timeline" id="trackTimeline"></div>
-      <div id="trackDetails" style="margin-top:16px;font-size:0.9rem;color:var(--text-color);"></div>
+    <div class="modal-body">
+      <div class="track-order-section" id="trackOrderSection">
+        <h3 style="font-size:1.1rem;margin-bottom:12px;"><i class="fas fa-truck"></i> أدخل رقم الطلب أو طلب الصيانة</h3>
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+          <input type="text" id="trackOrderInput" placeholder="مثال: OR-1234567 أو SR-1234567" style="flex:1;min-width:220px;padding:10px 14px;border:1px solid var(--border-color);border-radius:10px;font-family:'Cairo';" />
+          <button id="trackOrderBtn" style="padding:10px 20px;background:var(--primary-color);color:#fff;border:none;border-radius:10px;cursor:pointer;font-family:'Cairo';font-weight:700;">تتبع</button>
+        </div>
+        <div id="trackResult" style="display:none;">
+          <div class="track-timeline" id="trackTimeline"></div>
+          <div id="trackDetails" style="margin-top:16px;font-size:0.9rem;color:var(--text-color);"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
-</section>
 
 <!-- Footer -->
 <footer>
@@ -15891,6 +15915,155 @@ body .shop-sidebar .sidebar-title i {
   }, true);
 })();
 </script>
+
+
+
+<script>
+/* ===== TRACK ORDER POPUP SUPPORT ===== */
+(function(){
+  function ready(fn){ if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn); else fn(); }
+  function openTrackPopup(){
+    try{ if(typeof closeMobileDrawer === 'function') closeMobileDrawer(); }catch(e){}
+    var modal = document.getElementById('trackOrderModal');
+    if(modal){
+      if(typeof openModal === 'function') openModal(modal);
+      else {
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        var overlay = document.getElementById('overlay');
+        if(overlay) overlay.classList.add('active');
+      }
+      var input = document.getElementById('trackOrderInput');
+      if(input) setTimeout(function(){ input.focus(); }, 250);
+    }
+  }
+  function bindTrackButton(id){
+    var el = document.getElementById(id);
+    if(!el || el.dataset.trackBound === '1') return;
+    el.dataset.trackBound = '1';
+    el.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      openTrackPopup();
+    });
+  }
+  ready(function(){
+    ['navTrackOrderBtn','mHeaderTrackBtn','mOpenTrack'].forEach(bindTrackButton);
+    var closeBtn = document.getElementById('closeTrackOrderModal');
+    if(closeBtn && closeBtn.dataset.trackCloseBound !== '1'){
+      closeBtn.dataset.trackCloseBound = '1';
+      closeBtn.addEventListener('click', function(){
+        var modal = document.getElementById('trackOrderModal');
+        if(modal){
+          if(typeof closeModal === 'function') closeModal(modal);
+          else {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+            var overlay = document.getElementById('overlay');
+            if(overlay) overlay.classList.remove('active');
+          }
+        }
+      });
+    }
+  });
+  [400,1200,2500].forEach(function(t){ setTimeout(function(){
+    ['navTrackOrderBtn','mHeaderTrackBtn','mOpenTrack'].forEach(bindTrackButton);
+  }, t); });
+})();
+</script>
+
+<!-- ===== QR DIRECT LINKS SUPPORT - Added by ChatGPT ===== -->
+<script>
+(function(){
+  function ready(fn){
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+    else fn();
+  }
+
+  function tryOpenService(){
+    const modal = document.getElementById('serviceRequestModal');
+    if (modal) {
+      if (typeof openModal === 'function') {
+        openModal(modal);
+      } else {
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        const overlay = document.getElementById('overlay');
+        if (overlay) overlay.classList.add('active');
+      }
+      return true;
+    }
+
+    const btn = document.getElementById('openServiceRequestBtn');
+    if (btn) {
+      btn.click();
+      return true;
+    }
+
+    const sec = document.getElementById('serviceHome') || document.getElementById('serviceSection');
+    if (sec) {
+      sec.scrollIntoView({behavior:'smooth', block:'start'});
+      return true;
+    }
+    return false;
+  }
+
+  function openTrackModal(){
+    const modal = document.getElementById('trackOrderModal');
+    if (modal) {
+      if (typeof openModal === 'function') {
+        openModal(modal);
+      } else {
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        const overlay = document.getElementById('overlay');
+        if (overlay) overlay.classList.add('active');
+      }
+      const input = document.getElementById('trackOrderInput');
+      if (input) setTimeout(function(){ input.focus(); }, 350);
+      return true;
+    }
+    return false;
+  }
+
+  function scrollToShop(){
+    const shop = document.querySelector('.categories-section') || document.querySelector('.products-section');
+    if (shop) shop.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  ready(function(){
+    const params = new URLSearchParams(location.search);
+    const hash = (location.hash || '').replace('#','').toLowerCase();
+
+    const openVal = (params.get('open') || '').toLowerCase();
+
+    // QR links supported:
+    // https://wesam.store/?openService=1
+    // https://wesam.store/?open=service
+    // https://wesam.store/#service
+    if (params.get('openService') === '1' || openVal === 'service' || hash === 'service' || hash === 'maintenance') {
+      setTimeout(function(){
+        if(!tryOpenService()){
+          setTimeout(tryOpenService, 900);
+        }
+      }, 650);
+    }
+
+    // QR link:
+    // https://wesam.store/?open=track
+    // https://wesam.store/?track=1
+    // https://wesam.store/#track
+    if (params.get('track') === '1' || openVal === 'track' || hash === 'trackordersection' || hash === 'track' || hash === 'tracking') {
+      setTimeout(openTrackModal, 700);
+    }
+
+    if (params.get('shop') === '1' || hash === 'shop') {
+      setTimeout(scrollToShop, 700);
+    }
+  });
+})();
+</script>
+<!-- ===== /QR DIRECT LINKS SUPPORT ===== -->
 
 </body>
 </html>
