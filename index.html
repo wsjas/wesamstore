@@ -4041,6 +4041,43 @@ header.glass i {
 .mini-item{ background:#fff; border:1px solid #eee; border-radius:14px; padding:12px; box-shadow:0 10px 18px rgba(0,0,0,0.06); }
 .mini-item .row{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
 .mini-muted{ opacity:.75; font-size:.9rem; }
+
+/* ===== Header moved buttons: service + electronics store ===== */
+.header-page-btn{
+  border:none;
+  cursor:pointer;
+  padding:10px 16px;
+  border-radius:999px;
+  font-weight:800;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  white-space:nowrap;
+  transition:transform .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.header-page-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 18px rgba(0,0,0,.12);
+}
+.header-service-btn{
+  background:linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+  color:#fff;
+  box-shadow:0 6px 16px rgba(34,197,94,.28);
+}
+.header-service-btn:hover{
+  background:linear-gradient(135deg, #15803d 0%, #16a34a 100%);
+  box-shadow:0 10px 22px rgba(34,197,94,.34);
+}
+.header-service-btn i{ color:#fff !important; }
+.header-electronics-btn{
+  background:var(--me-orange, #ff6a00);
+  color:#fff;
+}
+.header-electronics-btn i{ color:#fff !important; }
+@media (max-width: 768px){
+  .header-page-btn{ display:none !important; }
+}
 </style>
 
 <style>
@@ -5267,7 +5304,7 @@ footer{
     font-size:.75rem !important;
     box-shadow:0 2px 4px rgba(0,0,0,.08);
   }
-  body .product-card .discount-badge::after{ content:none !important; display:none !important; }
+  body .product-card .discount-badge::after{ content:" On Sale"; }
   /* stock indicator */
   body .product-card .product-stock{
     font-size:.72rem !important;
@@ -5465,575 +5502,43 @@ footer{
 
 
 <style id="page-cards-visible-fix">
-/* إصلاح ظهور كل بطاقات الصفحات المفعّلة: لا تخفِ البطاقات بعد أول ثلاث */
-.featured-categories-row.fcat-carousel{
-  overflow: visible !important;
-}
-.fcat-car-viewport{
-  overflow: visible !important;
-}
-.fcat-car-track{
-  transform: none !important;
-  flex-wrap: wrap !important;
-  align-items: stretch !important;
-}
-.fcat-car-nav,
-.fcat-car-dots{
-  display: none !important;
-}
-.featured-cat-card.fcat-car-card{
-  flex: 0 0 calc((100% - 28px) / 3) !important;
-}
-@media (max-width:1024px){
-  .featured-cat-card.fcat-car-card{
-    flex: 0 0 calc((100% - 14px) / 2) !important;
-  }
-}
-@media (max-width:640px){
-  .featured-categories-row.fcat-carousel{
-    padding: 4px 0 10px !important;
-  }
-  .featured-cat-card.fcat-car-card{
-    flex: 0 0 100% !important;
-  }
-}
+/* carousel mode active */
 </style>
-
-<style id="wesam-remove-topnav-header-buttons-fix">
-.top-nav{display:none !important;}
-.header-page-actions{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  flex-wrap:nowrap;
-  margin-inline-start:10px;
-  margin-inline-end:8px;
-}
-.header-page-btn{
-  border:1px solid rgba(26,35,126,.16);
-  background:#fff;
-  color:#1a237e;
-  border-radius:999px;
-  min-height:40px;
-  padding:8px 14px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:7px;
-  font-family:'Cairo',sans-serif;
-  font-weight:900;
-  font-size:.86rem;
-  cursor:pointer;
-  white-space:nowrap;
-  box-shadow:0 6px 16px rgba(17,37,82,.06);
-  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
-}
-.header-page-btn:hover{
-  transform:translateY(-1px);
-  border-color:#ff6a00;
-  color:#ff6a00;
-  box-shadow:0 10px 22px rgba(255,106,0,.12);
-}
-.header-page-btn i{color:inherit !important;}
-.header-page-btn.maintenance{
-  background:#fff7f0;
-  color:#ff6a00;
-  border-color:#ffd9b8;
-}
-.header-page-btn.live{
-  background:#fff;
-  color:#1a237e;
-}
-body > header .header-top{
-  justify-content:flex-start !important;
-}
-body > header .contact-info{
-  margin-inline-start:auto !important;
-}
-@media (max-width:1024px){
-  .header-page-btn{padding:7px 11px;font-size:.78rem;min-height:36px;}
-  .header-page-actions{gap:6px;margin-inline-start:6px;}
-}
+<style id="wesam-reference-header-buttons-position">
+.logo-main{display:flex !important;align-items:center !important;gap:10px !important;flex-wrap:wrap !important;}
+.logo-header-buttons{display:inline-flex;align-items:center;gap:8px;margin-right:4px;}
+.logo-header-buttons .header-page-btn{padding:7px 12px !important;font-size:.78rem !important;line-height:1.1 !important;min-height:34px;box-shadow:0 4px 10px rgba(0,0,0,.08);}
+@media (max-width:768px){.logo-header-buttons{display:none !important;}}
+</style>
+<style id="wesam-mobile-header-reference-final">
 @media (max-width:768px){
-  .header-page-actions{display:none !important;}
-}
-[data-theme="dark"] .header-page-btn{
-  background:#252b3e;
-  border-color:#343c52;
-  color:#e5ebf7;
-}
-[data-theme="dark"] .header-page-btn.maintenance{
-  background:rgba(255,106,0,.12);
-  border-color:rgba(255,106,0,.35);
-  color:#ffa726;
-}
-</style>
-
-<style id="wesam-clean-product-card-badges">
-/* حذف التكرار أعلى المنتج: لا يظهر On Sale في أعلى الصورة */
-.product-image .discount-float,
-.product-card .product-image .discount-float,
-body .product-card .product-image .discount-float{
-  display:none !important;
-}
-
-/* حذف القلب/الدائرة المرسومة بالـ CSS أعلى صورة المنتج */
-body .product-card .product-image::before,
-body .product-card .product-image::after,
-.product-card .product-image::before,
-.product-card .product-image::after{
-  content:none !important;
-  display:none !important;
-}
-
-/* حذف زر القلب الحقيقي الذي كان يضاف بالجافاسكربت */
-.wishlist-btn{
-  display:none !important;
-}
-</style>
-
-
-<style id="wesam-search-box-fix">
-/* إصلاح تشوه مربع البحث في قسم المنتجات */
-.products-header{
-  overflow: visible !important;
-}
-
-.products-controls{
-  display:flex !important;
-  align-items:center !important;
-  justify-content:flex-start !important;
-  gap:14px !important;
-  flex-wrap:wrap !important;
-}
-
-.search-box{
-  position:relative !important;
-  width:min(100%, 310px) !important;
-  min-width:260px !important;
-  height:56px !important;
-  display:flex !important;
-  align-items:center !important;
-  background:transparent !important;
-  border:0 !important;
-  box-shadow:none !important;
-  overflow:visible !important;
-}
-
-.search-box input{
-  width:100% !important;
-  height:56px !important;
-  min-height:56px !important;
-  padding:0 48px 0 18px !important;
-  border:1px solid #dfe5f0 !important;
-  border-radius:24px !important;
-  background:#fff !important;
-  color:#17233c !important;
-  font-size:.95rem !important;
-  line-height:56px !important;
-  outline:none !important;
-  box-shadow:0 10px 22px rgba(17,37,82,.05) !important;
-  box-sizing:border-box !important;
-}
-
-.search-box input:focus{
-  border-color:var(--me-orange, #ff6a00) !important;
-  box-shadow:0 0 0 4px rgba(255,106,0,.12), 0 10px 22px rgba(17,37,82,.05) !important;
-}
-
-.search-box i{
-  position:absolute !important;
-  right:16px !important;
-  left:auto !important;
-  top:50% !important;
-  transform:translateY(-50%) !important;
-  margin:0 !important;
-  z-index:3 !important;
-  color:var(--me-orange, #ff6a00) !important;
-  font-size:18px !important;
-  pointer-events:none !important;
-  width:20px !important;
-  height:20px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-}
-
-.sort-options select{
-  height:56px !important;
-  min-height:56px !important;
-  border-radius:24px !important;
-  padding:0 18px !important;
-  line-height:56px !important;
-}
-
-@media (max-width:768px){
-  .products-header{
-    padding:14px !important;
-  }
-  .products-header h2{
-    font-size:1.25rem !important;
-  }
-  .products-controls{
-    width:100% !important;
-    flex-direction:column !important;
-    align-items:stretch !important;
-    gap:10px !important;
-  }
-  .search-box,
-  .sort-options,
-  .sort-options select{
-    width:100% !important;
-    min-width:0 !important;
-  }
-  .search-box{
-    height:52px !important;
-  }
-  .search-box input{
-    height:52px !important;
-    min-height:52px !important;
-    line-height:52px !important;
-    border-radius:22px !important;
-  }
-  .sort-options select{
-    height:52px !important;
-    min-height:52px !important;
-    line-height:52px !important;
-    border-radius:22px !important;
-  }
-}
-</style>
-
-
-<style id="wesam-mobile-header-clean-fix">
-/* الموبايل: إلغاء شريط الأيقونات بالكامل والإبقاء فقط على حسابي + السلة بجانب اسم المتجر */
-@media (max-width:768px){
-  .m-quickstrip,
-  #mQuickStrip,
-  .mobile-social-icons,
-  .m-quick-actions{
-    display:none !important;
-    visibility:hidden !important;
-    height:0 !important;
-    min-height:0 !important;
-    padding:0 !important;
-    margin:0 !important;
-    overflow:hidden !important;
-  }
-
-  .me-social-strip{
-    display:none !important;
-    visibility:hidden !important;
-  }
-
+  .m-quickstrip{display:none !important;}
   .m-topbar{
     display:block !important;
-    background:#fff !important;
-    border-bottom:1px solid rgba(255,106,0,.18) !important;
-    box-shadow:0 6px 18px rgba(0,0,0,.06) !important;
-  }
-
-  .m-topbar-inner{
-    min-height:60px !important;
-    padding:8px 12px !important;
-    display:grid !important;
-    grid-template-columns:44px 1fr 44px !important;
-    align-items:center !important;
-    gap:8px !important;
-  }
-
-  /* زر حسابي بدل الشعار في جهة اليمين */
-  #mMenuBtn{
-    grid-column:1 !important;
-    width:44px !important;
-    height:44px !important;
-    border-radius:14px !important;
-    background:linear-gradient(135deg,#ff8c00,#ff6a00) !important;
-    border:none !important;
-    color:#fff !important;
-    box-shadow:0 8px 18px rgba(255,106,0,.25) !important;
-  }
-
-  #mMenuBtn img,
-  #mMenuLogo{
-    display:none !important;
-  }
-
-  #mMenuBtn::before{
-    content:"\f007";
-    font-family:"Font Awesome 6 Free";
-    font-weight:900;
-    color:#fff;
-    font-size:19px;
-    line-height:1;
-  }
-
-  .m-brand{
-    grid-column:2 !important;
-    text-align:center !important;
-    display:flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-    min-width:0 !important;
-  }
-
-  .m-brand-name,
-  #mStoreNameMobile{
-    color:#ff6a00 !important;
-    font-size:1.03rem !important;
-    font-weight:900 !important;
-    text-shadow:none !important;
-    letter-spacing:0 !important;
-    white-space:nowrap !important;
-    overflow:hidden !important;
-    text-overflow:ellipsis !important;
-  }
-
-  .m-cart-btn,
-  #mCartBtn{
-    grid-column:3 !important;
-    width:44px !important;
-    height:44px !important;
-    border-radius:14px !important;
-    background:#fff !important;
-    border:1px solid rgba(255,106,0,.25) !important;
-    color:#0d2f7a !important;
-    box-shadow:0 8px 18px rgba(0,0,0,.06) !important;
-  }
-
-  #mCartBtn i{
-    color:#0d2f7a !important;
-    font-size:19px !important;
-  }
-
-  #mCartCount,
-  .m-badge{
-    background:#ff6a00 !important;
-    color:#fff !important;
-    border:2px solid #fff !important;
-    top:-7px !important;
-    right:-7px !important;
-  }
-}
-</style>
-
-
-<style id="wesam-mobile-orange-header-final">
-/* جعل هيدر الهاتف باللون البرتقالي */
-@media (max-width:768px){
-  .m-topbar,
-  #mTopbar{
-    background:linear-gradient(135deg,#ff8c00,#ff6a00) !important;
+    background:linear-gradient(135deg,#ff7a00 0%,#ff8c00 55%,#ffab2e 100%) !important;
     border-bottom:1px solid rgba(255,255,255,.22) !important;
-    box-shadow:0 8px 22px rgba(255,106,0,.28) !important;
+    box-shadow:0 8px 22px rgba(255,122,0,.28) !important;
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
   }
-
   .m-topbar-inner{
-    background:transparent !important;
-  }
-
-  .m-brand-name,
-  #mStoreNameMobile{
-    color:#fff !important;
-    text-shadow:0 2px 8px rgba(0,0,0,.18) !important;
-  }
-
-  #mMenuBtn{
-    background:rgba(255,255,255,.18) !important;
-    border:1px solid rgba(255,255,255,.35) !important;
-    color:#fff !important;
-    box-shadow:none !important;
-  }
-
-  #mMenuBtn::before{
-    color:#fff !important;
-  }
-
-  .m-cart-btn,
-  #mCartBtn{
-    background:rgba(255,255,255,.18) !important;
-    border:1px solid rgba(255,255,255,.35) !important;
-    color:#fff !important;
-    box-shadow:none !important;
-  }
-
-  #mCartBtn i{
-    color:#fff !important;
-  }
-
-  #mCartCount,
-  .m-badge{
-    background:#fff !important;
-    color:#ff6a00 !important;
-    border:2px solid #ff8c00 !important;
-  }
-}
-</style>
-
-
-<style id="wesam-mobile-logo-account-cart-final">
-/* الهاتف: اللوجو في مكانه، وحسابي بجانب السلة */
-@media (max-width:768px){
-  .m-topbar-inner{
-    display:grid !important;
-    grid-template-columns:44px 1fr 44px 44px !important;
+    display:flex !important;
     align-items:center !important;
+    justify-content:space-between !important;
     gap:8px !important;
-    min-height:60px !important;
-    padding:8px 12px !important;
+    padding:7px 10px !important;
+    min-height:50px !important;
   }
-
-  /* زر اللوجو في جهة اليسار/البداية كما كان */
-  #mMenuBtn{
-    grid-column:1 !important;
-    width:44px !important;
-    height:44px !important;
-    border-radius:14px !important;
-    background:rgba(255,255,255,.18) !important;
-    border:1px solid rgba(255,255,255,.35) !important;
-    box-shadow:none !important;
-    padding:6px !important;
-  }
-
-  #mMenuBtn::before{
-    content:none !important;
-    display:none !important;
-  }
-
-  #mMenuBtn img,
-  #mMenuLogo{
-    display:block !important;
-    width:30px !important;
-    height:30px !important;
-    object-fit:contain !important;
-    margin:auto !important;
-  }
-
-  .m-brand{
-    grid-column:2 !important;
-    text-align:center !important;
-    display:flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-    min-width:0 !important;
-  }
-
-  .m-brand-name,
-  #mStoreNameMobile{
-    color:#fff !important;
-    font-size:1rem !important;
-    font-weight:900 !important;
-    text-shadow:0 2px 8px rgba(0,0,0,.18) !important;
-    white-space:nowrap !important;
-    overflow:hidden !important;
-    text-overflow:ellipsis !important;
-  }
-
-  /* السلة */
-  .m-cart-btn,
-  #mCartBtn{
-    grid-column:3 !important;
-    width:44px !important;
-    height:44px !important;
-    border-radius:14px !important;
-    background:rgba(255,255,255,.18) !important;
-    border:1px solid rgba(255,255,255,.35) !important;
-    color:#fff !important;
-    box-shadow:none !important;
-  }
-
-  #mCartBtn i{
-    color:#fff !important;
-    font-size:19px !important;
-  }
-
-  /* زر حسابي الجديد بجانب السلة */
-  #mHeaderAccountBtn{
-    grid-column:4 !important;
-    width:44px !important;
-    height:44px !important;
-    border-radius:14px !important;
-    background:rgba(255,255,255,.18) !important;
-    border:1px solid rgba(255,255,255,.35) !important;
-    color:#fff !important;
-    box-shadow:none !important;
-    display:inline-flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-    cursor:pointer !important;
-    padding:0 !important;
-  }
-
-  #mHeaderAccountBtn i{
-    color:#fff !important;
-    font-size:19px !important;
-  }
-
-  #mCartCount,
-  .m-badge{
-    background:#fff !important;
-    color:#ff6a00 !important;
-    border:2px solid #ff8c00 !important;
-  }
+  .m-brand{flex:1 1 auto !important;text-align:center !important;min-width:0 !important;}
+  .m-brand-name{color:#fff !important;font-weight:900 !important;text-shadow:0 1px 2px rgba(0,0,0,.18) !important;}
+  .m-mobile-actions{display:inline-flex !important;align-items:center !important;gap:7px !important;flex:0 0 auto !important;}
+  .m-topbar .m-icon-btn{background:rgba(255,255,255,.96) !important;border:1px solid rgba(255,255,255,.75) !important;color:#0d2b64 !important;box-shadow:0 4px 12px rgba(0,0,0,.12) !important;}
+  .m-topbar .m-icon-btn i{color:#0d2b64 !important;}
+  .m-topbar .m-account-btn i{color:#ff8c00 !important;}
+  .m-topbar .m-cart-btn i{color:#0d2b64 !important;}
+  .m-badge{background:#d32f2f !important;color:#fff !important;border:2px solid #fff !important;}
 }
 </style>
-
-
-
-<style id="wesam-cart-count-master-style-final">
-@media (max-width:768px){
-  #floatingCartBtn,
-  #mobileFloatingCartBtn,
-  #cartFloatBtn,
-  #mFloatingCartBtn,
-  .floating-cart,
-  .mobile-floating-cart,
-  .float-cart,
-  .cart-float,
-  .m-qs.cart{
-    position:relative !important;
-    overflow:visible !important;
-  }
-
-  #floatingCartCount,
-  #mobileCartCount,
-  #mobileFloatingCartCount,
-  #cartFloatCount,
-  #mFloatingCartCount,
-  #mQsCartCount,
-  #mQSCount,
-  .wesam-floating-created-count,
-  .floating-cart .cart-count,
-  .mobile-floating-cart .cart-count,
-  .float-cart .cart-count,
-  .cart-float .cart-count,
-  .m-qs.cart .m-qs-badge,
-  .m-qs.cart .cart-count,
-  [data-floating-cart-count],
-  [data-mobile-cart-count]{
-    display:flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-    position:absolute !important;
-    top:-9px !important;
-    right:-9px !important;
-    min-width:22px !important;
-    height:22px !important;
-    padding:0 6px !important;
-    border-radius:999px !important;
-    background:#fff !important;
-    color:#ff6a00 !important;
-    border:2px solid #ff8c00 !important;
-    font-size:12px !important;
-    font-weight:900 !important;
-    line-height:1 !important;
-    z-index:99999 !important;
-    box-shadow:0 4px 10px rgba(0,0,0,.22) !important;
-    pointer-events:none !important;
-  }
-}
-</style>
-
 </head>
 <body>
 <!-- Left social strip (desktop only) -->
@@ -6055,39 +5560,22 @@ body .product-card .product-image::after,
 <div class="m-brand" id="mBrand">
 <span class="m-brand-name" id="mStoreNameMobile">وسام للالكترونيات</span>
 </div>
-<button aria-label="السلة" class="m-icon-btn m-cart-btn" id="mCartBtn">
+<div class="m-mobile-actions" aria-label="أزرار الموبايل">
+<button type="button" aria-label="الصيانة" class="m-icon-btn m-service-btn" id="mHeaderServiceBtn" title="الصيانة">
+<i class="fas fa-tools"></i>
+</button>
+
+<button type="button" aria-label="حسابي" class="m-icon-btn m-account-btn" id="mQSAccountBtn">
+<i class="fas fa-user"></i>
+</button>
+<button aria-label="السلة" class="m-icon-btn m-cart-btn" id="mCartBtn" type="button">
 <i class="fas fa-shopping-cart"></i>
 <span class="m-badge" id="mCartCount">0</span>
 </button>
-<button aria-label="حسابي" class="m-icon-btn" id="mHeaderAccountBtn" type="button">
-<i class="fas fa-user"></i>
-</button>
 </div>
 </div>
-<!-- Mobile Quick Actions Strip (visible on mobile) -->
-<div class="m-quickstrip" id="mQuickStrip">
-<div class="container m-quickstrip-inner">
-<a aria-label="واتساب" class="m-qs whatsapp" href="https://wa.me/962790781206" id="mQSWhatsApp" rel="noopener" target="_blank">
-<i class="fab fa-whatsapp"></i>
-</a>
-<a aria-label="فيسبوك" class="m-qs facebook" href="https://facebook.com" id="mQSFb" rel="noopener" target="_blank">
-<i class="fab fa-facebook-f"></i>
-</a>
-<a aria-label="الموقع" class="m-qs maps" href="https://maps.google.com" id="mQSMaps" rel="noopener" target="_blank">
-<i class="fas fa-location-dot"></i>
-</a>
-<a aria-label="يوتيوب" class="m-qs youtube" href="https://youtube.com" id="mQSYt" rel="noopener" target="_blank">
-<i class="fab fa-youtube"></i>
-</a>
-<a aria-label="الإيميل" class="m-qs email" href="/cdn-cgi/l/email-protection#2f584a5c4e424a434a4c5b5d4041464c5c6f48424e4643014c4042" id="mQSEmail">
-<i class="fas fa-envelope"></i>
-</a>
-<button type="button" aria-label="حسابي" class="m-qs account" id="mQSAccountBtn"><i class="fas fa-user"></i></button>
-
 </div>
-</div>
-
-<!-- /Mobile Quick Actions Strip -->
+<!-- Mobile Quick Actions Strip removed in reference -->
 <!-- Mobile Drawer -->
 <div class="m-drawer-backdrop" id="mDrawerBackdrop"></div>
 <aside aria-hidden="true" class="m-drawer" id="mDrawer">
@@ -6197,14 +5685,18 @@ body .product-card .product-image::after,
 <div class="logo-text-container">
 <div class="logo-main">
 <span class="logo-subtext" id="storeNameHeader">وسام للالكترونيات</span>
+<div class="logo-header-buttons" id="logoHeaderButtons">
+<button class="header-page-btn header-service-btn" id="navServiceBtn" type="button">
+<i class="fas fa-tools"></i> الصيانة
+</button>
+<button class="header-page-btn header-electronics-btn" id="navElectronicsStoreBtn" type="button">
+<i class="fas fa-microchip"></i> متجر القطع والالكترونيات
+</button>
+</div>
 <span class="logo-text" id="wesamLogo">wesam</span>
 </div>
 <p class="logo-slogan" id="storeSloganHeader">متخصصون في أجهزة TV-LCD-LED والإلكترونيات</p>
 </div>
-</div>
-<div class="header-page-actions" aria-label="روابط الصفحات الرئيسية">
-<button class="header-page-btn maintenance active" id="navServiceBtn" type="button"><i class="fas fa-tools"></i> الصيانة</button>
-<button class="header-page-btn live" id="navLiveBtn" type="button"><i class="fas fa-video"></i> البث المباشر</button>
 </div>
 <div class="contact-info">
 <div class="phone-number">
@@ -6213,9 +5705,6 @@ body .product-card .product-image::after,
 <div>
 <i class="fas fa-map-marker-alt"></i> <span id="storeAddressHeader">عمان - شفابدران</span>
 </div>
-<div>
-<i class="fas fa-truck"></i> التوصيل متاح
-                    </div>
 <!-- Social Media Links -->
 <div class="social-links" id="socialLinks"></div>
 </div>
@@ -6917,6 +6406,8 @@ body .product-card .product-image::after,
 </div>
 </div>
 <div class="overlay" id="overlay"></div>
+<!-- Top Navigation removed: service/electronics buttons moved to header -->
+
 <!-- Hero + Service Main Section (New) -->
 
 <!-- Slider Wrapper -->
@@ -10146,7 +9637,7 @@ async function saveSliderSettings(slides){
   return cleaned;
 }
 
-const defaultLinks = ['#productsSectionTitle','#featuredCatOffers','#serviceRequestsSection'];
+const defaultLinks = ['#productsSectionTitle','#featuredCatOffers','#service-request'];
 function renderHomeSliderSlides(slides){
   const viewport = document.getElementById('homeSlider');
   if(!viewport) return;
@@ -10164,7 +9655,7 @@ function renderHomeSliderSlides(slides){
     const img = normalizeImageUrl(s.imageUrl || '');
     const title = String(s.title || '').trim();
     const subtitle = String(s.subtitle || '').trim();
-    const link = String(s.link || '#products').trim() || '#products';
+    const link = String(s.link || '').trim();
     const alt = title || `عرض ${i+1}`;
 
     const eTitle = escapeHtml(title);
@@ -12992,7 +12483,8 @@ function initSlider(forceReset){
       const data = (viewport.__hsSlidesData && viewport.__hsSlidesData[state.index]) || {};
       const t = String(data.title || '').trim();
       const sub = String(data.subtitle || '').trim();
-      const link = String(data.link || '#products').trim() || '#products';
+      const rawLink = String(data.link || '').trim();
+      const link = rawLink || (defaultLinks[state.index] || '#productsSectionTitle');
       bar.innerHTML = `
         <div class="hs-bar-inner">
           <div class="hs-bar-text">
@@ -13042,26 +12534,55 @@ function initSlider(forceReset){
     viewport.addEventListener('mouseenter', stopAuto);
     viewport.addEventListener('mouseleave', startAuto);
 
-    // Make "عرض التفاصيل" work reliably for all slides (hash + normal links)
+    // Make "عرض التفاصيل" work reliably for all slides (hash + normal links + service modal)
     viewport.addEventListener('click', (e)=>{
       const a = e.target && e.target.closest ? e.target.closest('a.hs-bar-btn, .hs-caption a') : null;
       if(!a) return;
       const href = (a.getAttribute('href') || '').trim();
-      if(!href || href === '#'){ e.preventDefault(); return; }
+      const currentData = (viewport.__hsSlidesData && viewport.__hsSlidesData[state.index]) || {};
+      const slideText = ((currentData.title || '') + ' ' + (currentData.subtitle || '')).toLowerCase();
+      const cleanHref = href.toLowerCase();
 
-      // Hash navigation -> smooth scroll
-      if(href.startsWith('#')){
-        const target = document.querySelector(href);
-        if(target){
-          e.preventDefault();
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          // Close any open overlays if needed
-          stopAuto(); restartAuto();
+      function openServiceRequestFromSlider(){
+        e.preventDefault();
+        try{ stopAuto(); restartAuto(); }catch(_){ }
+        const modal = document.getElementById('serviceRequestModal');
+        if(modal){
+          if(typeof openModal === 'function') openModal(modal);
+          else { modal.style.display = 'block'; document.body.style.overflow = 'hidden'; }
+          return true;
         }
+        const btn = document.getElementById('openServiceRequestBtn') || document.getElementById('mOpenService') || document.getElementById('navServiceBtn');
+        if(btn){ btn.click(); return true; }
+        return false;
+      }
+
+      // Service/maintenance slide: open the customer service request modal directly.
+      if(!href || href === '#' || cleanHref === '#service-request' || cleanHref === '#service' || cleanHref === '#servicehome' || cleanHref.includes('maintenance') || cleanHref.includes('service-request') || slideText.includes('صيانة') || slideText.includes('الصيانة')){
+        if(openServiceRequestFromSlider()) return;
+      }
+
+      if(!href || href === '#'){
+        e.preventDefault();
+        const fallback = document.getElementById('productsSectionTitle') || document.querySelector('.products-section, #productsGrid, #productsContainer');
+        if(fallback) fallback.scrollIntoView({ behavior:'smooth', block:'start' });
         return;
       }
-      // Normal navigation
-      // allow default
+
+      // Hash navigation -> smooth scroll; if a hash is missing, fall back to products instead of doing nothing.
+      if(href.startsWith('#')){
+        const target = document.querySelector(href);
+        e.preventDefault();
+        if(target){
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }else{
+          const fallback = document.getElementById('productsSectionTitle') || document.querySelector('.products-section, #productsGrid, #productsContainer');
+          if(fallback) fallback.scrollIntoView({ behavior:'smooth', block:'start' });
+        }
+        try{ stopAuto(); restartAuto(); }catch(_){ }
+        return;
+      }
+      // Normal navigation: allow default.
     });
 
     // Swipe support (pointer)
@@ -13550,7 +13071,26 @@ function enhanceProductCards() {
 
         const productId = imgDiv.dataset.productId || '';
 
-        // تم إلغاء زر القلب العلوي والشارات العشوائية حتى لا تظهر عناصر غير مفيدة فوق صورة المنتج.
+        // Wishlist button
+        const wishBtn = document.createElement('button');
+        wishBtn.className = 'wishlist-btn' + (wesWishlist.has(productId) ? ' active' : '');
+        wishBtn.innerHTML = '<i class="fas fa-heart"></i>';
+        wishBtn.title = 'أضف للمفضلة';
+        wishBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isNow = wesWishlist.toggle(productId);
+            wishBtn.classList.toggle('active', isNow);
+        });
+        imgDiv.appendChild(wishBtn);
+
+        // "New" badge for recent products (created within last 7 days)
+        const prodCard = card;
+        if (!prodCard.querySelector('.discount-float') && Math.random() < 0.3) {
+            const badge = document.createElement('div');
+            badge.className = 'product-badge-new';
+            badge.textContent = 'جديد';
+            imgDiv.appendChild(badge);
+        }
 
         // Share button in actions
         const actionsDiv = card.querySelector('.product-actions');
@@ -16186,7 +15726,7 @@ body .shop-sidebar .sidebar-title i {
     if (ref) {
       const gap = parseFloat(getComputedStyle(track).gap) || 14;
       const step = ref.getBoundingClientRect().width + gap;
-      track.style.transform = `translateX(${page * step}px)`;
+      track.style.transform = `translateX(${-page * step}px)`;
     }
 
     const pagesCount = Math.max(1, cards.length - vis + 1);
@@ -16279,153 +15819,76 @@ body .shop-sidebar .sidebar-title i {
 })();
 </script>
 
+<style id="wesam-final-category-carousel-fix">
+#fcatCarouselWrap.featured-categories-row.fcat-carousel{position:relative!important;display:block!important;overflow:visible!important;padding:8px 52px 22px!important;margin:0 0 18px!important;background:transparent!important;direction:ltr!important;scroll-snap-type:none!important}
+#fcatCarouselWrap .fcat-car-viewport{overflow:hidden!important;width:100%!important;border-radius:16px!important}
+#fcatCarouselTrack.fcat-car-track{display:flex!important;flex-wrap:nowrap!important;align-items:stretch!important;gap:14px!important;width:100%!important;transform:translateX(0);transition:transform .45s cubic-bezier(.22,.8,.2,1)!important;will-change:transform!important;direction:ltr!important}
+#fcatCarouselTrack .featured-cat-card.fcat-car-card{flex:0 0 calc((100% - 28px)/3)!important;min-width:0!important;min-height:170px!important;display:block!important;visibility:visible!important;opacity:1!important;overflow:hidden!important;border-radius:14px!important;direction:rtl!important}
+#fcatCarouselWrap .fcat-car-nav{display:flex!important;position:absolute!important;top:calc(50% - 10px)!important;transform:translateY(-50%)!important;z-index:30!important}
+#fcatCarouselWrap .fcat-car-prev{right:6px!important;left:auto!important}#fcatCarouselWrap .fcat-car-next{left:6px!important;right:auto!important}
+#fcatCarouselWrap .fcat-car-dots{display:flex!important;justify-content:center!important;align-items:center!important;gap:7px!important;margin-top:12px!important}
+@media(max-width:1024px){#fcatCarouselTrack .featured-cat-card.fcat-car-card{flex-basis:calc((100% - 14px)/2)!important}}
+@media(max-width:640px){#fcatCarouselWrap.featured-categories-row.fcat-carousel{padding:4px 42px 18px!important}#fcatCarouselTrack .featured-cat-card.fcat-car-card{flex-basis:100%!important;min-height:150px!important}}
+</style>
+<script id="wesam-final-category-carousel-js-fix">
+(function(){function f(){var t=document.getElementById('fcatCarouselTrack');if(!t)return;t.style.flexWrap='nowrap';t.style.alignItems='stretch';Array.prototype.slice.call(t.querySelectorAll('.fcat-car-card')).forEach(function(c){if(!c.hidden)c.style.display='block'});if(typeof window.rebuildCarousel==='function')window.rebuildCarousel()}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',f);else f();[300,900,1600,3000].forEach(function(t){setTimeout(f,t)})})();
+</script>
+<style id="wesam-mobile-header-orange-service-final-patch">
+@media (max-width:768px){
+  header{display:none !important;}
+  .m-quickstrip{display:none !important;}
+  .m-topbar,.m-topbar.glass,[data-theme="dark"] .m-topbar,[data-theme="dark"] .m-topbar.glass{display:block !important;background:linear-gradient(135deg,#ff7a00 0%,#ff8c00 55%,#ffab2e 100%) !important;border-bottom:1px solid rgba(255,255,255,.22) !important;box-shadow:0 8px 22px rgba(255,122,0,.28) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;}
+  .m-topbar-inner{display:flex !important;align-items:center !important;justify-content:space-between !important;gap:7px !important;padding:7px 10px !important;min-height:50px !important;}
+  .m-brand{flex:1 1 auto !important;text-align:center !important;min-width:0 !important;}
+  .m-brand-name,[data-theme="dark"] .m-brand-name{color:#fff !important;font-size:.95rem !important;font-weight:900 !important;text-shadow:0 1px 2px rgba(0,0,0,.18) !important;}
+  .m-mobile-actions{display:inline-flex !important;align-items:center !important;justify-content:flex-end !important;gap:6px !important;flex:0 0 auto !important;}
+  .m-topbar .m-icon-btn,.m-topbar.glass .m-icon-btn,[data-theme="dark"] .m-topbar .m-icon-btn{width:38px !important;height:38px !important;min-width:38px !important;border-radius:12px !important;background:rgba(255,255,255,.96) !important;border:1px solid rgba(255,255,255,.75) !important;color:#0d2b64 !important;box-shadow:0 4px 12px rgba(0,0,0,.12) !important;}
+  .m-topbar .m-icon-btn i,[data-theme="dark"] .m-topbar .m-icon-btn i{color:#0d2b64 !important;font-size:16px !important;}
+  .m-topbar .m-service-btn{background:linear-gradient(135deg,#16a34a 0%,#22c55e 100%) !important;border-color:rgba(255,255,255,.85) !important;}
+  .m-topbar .m-service-btn i{color:#fff !important;}
+  .m-topbar .m-account-btn i{color:#ff8c00 !important;}
+  .m-topbar .m-cart-btn i{color:#0d2b64 !important;}
+  .m-badge{background:#d32f2f !important;color:#fff !important;border:2px solid #fff !important;top:-6px !important;right:-6px !important;}
+}
+</style>
 
-
-<script id="wesam-mobile-logo-account-cart-js-final">
-document.addEventListener('DOMContentLoaded', function(){
-  const logoBtn = document.getElementById('mMenuBtn');
-  const drawer = document.getElementById('mDrawer');
-  const backdrop = document.getElementById('mDrawerBackdrop');
-
-  if(logoBtn){
-    logoBtn.setAttribute('aria-label','القائمة');
-    logoBtn.addEventListener('click', function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      if(drawer) drawer.classList.add('open');
-      if(backdrop) backdrop.classList.add('show');
-    }, true);
-  }
-
-  const acc = document.getElementById('mHeaderAccountBtn');
-  if(acc){
-    acc.addEventListener('click', function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      const accountBtn = document.getElementById('userAccountBtn') || document.getElementById('mUserAccountBtn') || document.getElementById('mQSAccountBtn');
-      if(accountBtn){
-        accountBtn.click();
-        return;
-      }
-      const modal = document.getElementById('userAuthModal');
-      if(modal) modal.style.display = 'block';
-    });
-  }
-});
+<script id="wesam-mobile-header-service-button-final-patch">
+(function(){function o(){var m=document.getElementById('serviceRequestModal');try{if(typeof closeMobileDrawer==='function')closeMobileDrawer();}catch(e){}if(m){if(typeof openModal==='function')openModal(m);else{m.style.display='block';document.body.style.overflow='hidden';}return;}var x=document.getElementById('mOpenService')||document.getElementById('navServiceBtn');if(x)x.click();}function b(){var n=document.getElementById('mHeaderServiceBtn');if(!n||n.dataset.boundService==='1')return;n.dataset.boundService='1';n.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();o();});}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',b);else b();[300,900,1600,3000].forEach(function(t){setTimeout(b,t);});})();
 </script>
 
 
 
-
-<script id="wesam-cart-count-master-final">
+<!-- Slider buttons reliability fix - 2026-04-24 -->
+<script>
 (function(){
-  const FLOATING_SELECTORS = [
-    '#floatingCartBtn',
-    '#mobileFloatingCartBtn',
-    '#whatsappCartBtn',
-    '#cartFloatBtn',
-    '#mFloatingCartBtn',
-    '.floating-cart',
-    '.mobile-floating-cart',
-    '.float-cart',
-    '.cart-float',
-    '.m-qs.cart'
-  ];
-
-  const BADGE_SELECTORS = [
-    '#floatingCartCount',
-    '#mobileCartCount',
-    '#mobileFloatingCartCount',
-    '#cartFloatCount',
-    '#mFloatingCartCount',
-    '#mQsCartCount',
-    '#mQSCount',
-    '.floating-cart .cart-count',
-    '.mobile-floating-cart .cart-count',
-    '.float-cart .cart-count',
-    '.cart-float .cart-count',
-    '.m-qs.cart .m-qs-badge',
-    '.m-qs.cart .cart-count',
-    '[data-floating-cart-count]',
-    '[data-mobile-cart-count]'
-  ];
-
-  function num(v){
-    const n = parseInt(String(v || '0').replace(/[^\d]/g,''), 10);
-    return Number.isFinite(n) ? n : 0;
+  function openService(){
+    try{ if(typeof closeMobileDrawer === 'function') closeMobileDrawer(); }catch(_){ }
+    var modal=document.getElementById('serviceRequestModal');
+    if(modal){
+      if(typeof openModal === 'function') openModal(modal);
+      else { modal.style.display='block'; document.body.style.overflow='hidden'; }
+      return true;
+    }
+    var btn=document.getElementById('openServiceRequestBtn')||document.getElementById('mOpenService')||document.getElementById('navServiceBtn');
+    if(btn){ btn.click(); return true; }
+    return false;
   }
-
-  function headerCount(){
-    const m = document.getElementById('mCartCount');
-    const d = document.getElementById('cartCount');
-
-    /* المهم: عداد الهيدر هو الصحيح، لذلك نقرأه فقط */
-    if(m && String(m.textContent || '').trim() !== '') return num(m.textContent);
-    if(d && String(d.textContent || '').trim() !== '') return num(d.textContent);
-    return 0;
-  }
-
-  function ensureBadgeOnFloatingButtons(){
-    FLOATING_SELECTORS.forEach(sel => {
-      document.querySelectorAll(sel).forEach(btn => {
-        if(!btn) return;
-        if(btn.id === 'mCartBtn') return;
-        let badge = btn.querySelector('.cart-count, .m-qs-badge, [data-floating-cart-count], [data-mobile-cart-count]');
-        if(!badge){
-          badge = document.createElement('span');
-          badge.className = 'cart-count wesam-floating-created-count';
-          badge.setAttribute('data-floating-cart-count','1');
-          badge.textContent = '0';
-          btn.appendChild(badge);
-        }
-      });
-    });
-  }
-
-  function write(el, count){
-    if(!el) return;
-    if(el.id === 'mCartCount') return; /* لا نلمس عداد الهيدر الصحيح */
-    el.textContent = String(count);
-    el.style.setProperty('display','flex','important');
-    el.setAttribute('data-count', String(count));
-  }
-
-  function sync(){
-    ensureBadgeOnFloatingButtons();
-    const c = headerCount();
-
-    BADGE_SELECTORS.forEach(sel => {
-      document.querySelectorAll(sel).forEach(el => write(el, c));
-    });
-
-    /* أي عداد سلة عائم مضاف بدون اسم معروف */
-    document.querySelectorAll('[class*="float"] .cart-count, [id*="Float"] .cart-count, [id*="floating"] .cart-count').forEach(el => write(el, c));
-  }
-
-  window.wesamSyncFloatingCartCount = sync;
-
-  function watchBadge(id){
-    const el = document.getElementById(id);
-    if(!el || el.__wesamCartWatch) return;
-    el.__wesamCartWatch = true;
-    new MutationObserver(sync).observe(el, {childList:true, characterData:true, subtree:true});
-  }
-
-  document.addEventListener('DOMContentLoaded', function(){
-    watchBadge('mCartCount');
-    watchBadge('cartCount');
-
-    sync();
-    [50,150,300,700,1200,2000].forEach(t => setTimeout(sync, t));
-
-    document.addEventListener('click', function(e){
-      if(e.target.closest('.buy-btn, .add-to-cart, [data-add-to-cart], .quantity-btn, .remove-item, #cartModal, .cart-modal')){
-        [20,80,180,400,900].forEach(t => setTimeout(sync, t));
-      }
-    }, true);
-
-    setInterval(sync, 300);
-  });
+  document.addEventListener('click', function(e){
+    var a=e.target && e.target.closest ? e.target.closest('#homeSlider a.hs-bar-btn, #homeSlider .hs-caption a') : null;
+    if(!a) return;
+    var slider=document.getElementById('homeSlider');
+    var href=(a.getAttribute('href')||'').trim();
+    var hrefL=href.toLowerCase();
+    var txt=(a.closest('.hs-slide') ? a.closest('.hs-slide').innerText : (slider ? slider.innerText : '')).toLowerCase();
+    if(!href || href==='#' || hrefL==='#service-request' || hrefL==='#service' || hrefL==='#servicehome' || hrefL.indexOf('service-request')>-1 || hrefL.indexOf('maintenance')>-1 || txt.indexOf('صيانة')>-1 || txt.indexOf('الصيانة')>-1){
+      if(openService()){ e.preventDefault(); e.stopPropagation(); return; }
+    }
+    if(href && href.charAt(0)==='#'){
+      var target=document.querySelector(href);
+      if(!target){ target=document.getElementById('productsSectionTitle') || document.querySelector('.products-section, #productsGrid, #productsContainer'); }
+      if(target){ e.preventDefault(); e.stopPropagation(); target.scrollIntoView({behavior:'smooth', block:'start'}); }
+    }
+  }, true);
 })();
 </script>
 
