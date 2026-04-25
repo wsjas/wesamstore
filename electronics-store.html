@@ -224,6 +224,8 @@ input[type=range]{width:100%;accent-color:var(--o);cursor:pointer}
 .low-stock .dot{background:var(--ye)}.low-stock{color:var(--ye)}
 .out-of-stock .dot{background:var(--t3)}.out-of-stock{color:var(--t3)}
 .addbtn{background:var(--o);color:#fff;border:none;font-family:'Cairo',sans-serif;font-size:.76rem;font-weight:700;padding:.36rem .78rem;border-radius:8px;cursor:pointer;transition:all .18s;white-space:nowrap;flex-shrink:0}
+.details-mini{background:var(--b);color:#fff;border:none;font-family:'Cairo',sans-serif;font-size:.74rem;font-weight:700;padding:.36rem .7rem;border-radius:8px;cursor:pointer;transition:all .18s;white-space:nowrap;flex-shrink:0}
+.details-mini:hover{background:var(--bd);transform:scale(1.04)}
 .addbtn:hover{background:var(--od);transform:scale(1.04)}
 .addbtn:disabled{background:var(--bg2);color:var(--t3);cursor:not-allowed;transform:none}
 .no-products{grid-column:1/-1;text-align:center;padding:4rem 1rem;color:var(--t2)}
@@ -1093,24 +1095,38 @@ const PD=[];
 
 /* ══ توحيد بنية المنتج — يقبل حقول add-products ويحولها للشكل المختصر ══ */
 function normalizeProduct(raw){
-  if(raw.n && raw.p !== undefined) return raw;
+  if(raw.n && raw.p !== undefined){
+    raw._docId = raw._docId || raw.docId || raw.id;
+    if(!Array.isArray(raw.imgs) || !raw.imgs.length){
+      raw.imgs = [raw.image, ...(raw.additionalImages || []), ...(raw.images || [])].filter(Boolean);
+    }
+    return raw;
+  }
   const catMap={'Arduino & AVR':'arduino','Raspberry Pi':'raspberry','ESP32/ESP8266':'esp',
     'حساسات':'sensors','شاشات':'displays','موتورات':'motors',
     'طاقة':'power','لاسلكي':'wireless','أدوات':'tools','طباعة 3D':'3dprint'};
   const statusMap={'متوفر':'in-stock','كمية محدودة':'low-stock','غير متوفر':'out-of-stock'};
   const badgeMap={'جديد':'new','خصم':'sale','رائج 🔥':'hot','رائج':'hot'};
+  const price = parseFloat(raw.sell ?? raw.price ?? raw.p ?? 0) || 0;
+  const oldPrice = raw.oldPrice ? parseFloat(raw.oldPrice) : (raw.op || null);
+  const stockNum = Number(raw.stock ?? raw.qty ?? raw.quantity);
+  const st = Number.isFinite(stockNum) ? (stockNum <= 0 ? 'out-of-stock' : (stockNum <= 2 ? 'low-stock' : 'in-stock')) : (statusMap[raw.status] || raw.st || raw.status || 'in-stock');
+  const imgs = [raw.image, raw.imageUrl, ...(raw.additionalImages || []), ...(raw.images || []), ...(raw.imgs || [])].filter(Boolean);
   return {
-    id:raw.id||Date.now(), n:raw.name||raw.n||'بدون اسم', sku:raw.sku||'',
-    p:parseFloat(raw.price)||raw.p||0, op:raw.oldPrice?parseFloat(raw.oldPrice):(raw.op||null),
+    _docId:raw._docId||raw.docId||raw.id,
+    id:raw.id||raw._docId||raw.docId||Date.now(), n:raw.name||raw.n||'بدون اسم', sku:raw.sku||raw.code||'',
+    p:price, op:oldPrice,
     cat:catMap[raw.category]||raw.cat||raw.category||'arduino', ic:raw.ic||'📦',
-    b:badgeMap[raw.badge]||raw.b||raw.badge||'',
-    st:statusMap[raw.status]||raw.st||raw.status||'in-stock',
-    stx:raw.status||raw.stx||'متوفر',
+    b:badgeMap[raw.badge]||raw.b||raw.badge||((oldPrice&&oldPrice>price)?'sale':''),
+    st:st,
+    stx:raw.status||raw.stx||(st==='out-of-stock'?'غير متوفر':st==='low-stock'?'كمية محدودة':'متوفر'),
     rat:parseFloat(raw.rating)||raw.rat||5, rcnt:raw.rcnt||0,
-    imgs:raw.images||raw.imgs||[], desc:raw.description||raw.desc||'',
+    imgs:[...new Set(imgs)], desc:raw.description||raw.desc||'',
     features:raw.features||[], useCases:raw.useCases||[],
-    sp:raw.sp||(Array.isArray(raw.specs)?Object.fromEntries(raw.specs.map(s=>{const[k,...v]=s.split(':');return[k.trim(),(v.join(':')).trim()];})):{}),
-    reviews:raw.reviews||[]
+    sp:raw.sp||(Array.isArray(raw.specs)?Object.fromEntries(raw.specs.map(s=>{const[k,...v]=String(s).split(':');return[k.trim(),(v.join(':')).trim()];})):{}),
+    reviews:raw.reviews||[],
+    videoUrl:raw.videoUrl||'',
+    softwareUrl:raw.softwareUrl||''
   };
 }
 
@@ -1225,7 +1241,7 @@ const _FB_CONFIG = {
           snap => {
             if(snap.empty) return;
             const arr=[];
-            snap.forEach(d => arr.push(d.data()));
+            snap.forEach(d => arr.push({_docId:d.id,...d.data()}));
             if(arr.length){
               PD.length=0;
               arr.forEach(p => PD.push(normalizeProduct(p)));
@@ -1242,7 +1258,7 @@ const _FB_CONFIG = {
               snap2 => {
                 if(snap2.empty) return;
                 const arr=[];
-                snap2.forEach(d => arr.push(d.data()));
+                snap2.forEach(d => arr.push({_docId:d.id,...d.data()}));
                 if(arr.length){
                   arr.sort((a,b) => (a.id||0) - (b.id||0));
                   PD.length=0;
@@ -1424,21 +1440,28 @@ function applyFilters(){
 /* ============================
    RENDER PRODUCTS
 ============================= */
+function getProductPageUrl(p){
+  const raw=(p&&(p._docId||p.docId||p.id||p.sku||p.n))||'';
+  return 'product.html?source=electronics&id='+encodeURIComponent(String(raw));
+}
+
 function renderPage(list,page){
   const start=(page-1)*PER_PAGE,end=start+PER_PAGE,slice=list.slice(start,end);
   const g=document.getElementById('pgrid');
   if(!slice.length){g.innerHTML='<div class="no-products"><div class="ni">🔍</div><p style="font-size:.9rem">لا توجد منتجات تطابق الفلاتر المختارة</p><button onclick="clearFilters()" style="margin-top:1rem;background:var(--o);color:#fff;border:none;padding:.5rem 1.2rem;border-radius:8px;cursor:pointer;font-family:Cairo,sans-serif;font-weight:700;font-size:.82rem">مسح الفلاتر</button></div>';return;}
   g.innerHTML=slice.map(p=>{
+    const pageUrl=getProductPageUrl(p);
+    const pid=JSON.stringify(p.id);
     const spct=p.op?Math.round((1-p.p/p.op)*100):0;
     const wl=wish.includes(p.id),cl=compare.includes(p.id);
     const stars='★'.repeat(Math.round(p.rat))+'☆'.repeat(5-Math.round(p.rat));
-    return`<div class="pc" onclick="openMo(${p.id})">
+    return`<div class="pc" onclick="location.href='${pageUrl}'">
       <div class="pbadges">${p.b==='new'?'<span class="bp bp-new">جديد</span>':''}${p.b==='sale'?`<span class="bp bp-sale">خصم ${spct}%</span>`:''}${p.b==='hot'?'<span class="bp bp-hot">🔥 رائج</span>':''}</div>
       <div class="pc-acts">
-        <button class="act-btn wish ${wl?'on':''}" onclick="event.stopPropagation();togWish(${p.id},this)" title="المفضلة">${wl?'♥':'♡'}</button>
-        <button class="act-btn cmp ${cl?'on':''}" onclick="event.stopPropagation();togCmp(${p.id},this)" title="المقارنة">⚖️</button>
+        <button class="act-btn wish ${wl?'on':''}" onclick="event.stopPropagation();togWish(${pid},this)" title="المفضلة">${wl?'♥':'♡'}</button>
+        <button class="act-btn cmp ${cl?'on':''}" onclick="event.stopPropagation();togCmp(${pid},this)" title="المقارنة">⚖️</button>
       </div>
-      <div class="pimg"><img src="${(p.imgs&&p.imgs[0])||''}" alt="${p.n}" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'" style="width:100%;height:100%;object-fit:contain;padding:8px"><span style="display:none;font-size:2.8rem;align-items:center;justify-content:center;width:100%;height:100%">${p.ic||'📦'}</span><button class="quick-view" onclick="event.stopPropagation();openMo(${p.id})">عرض سريع 👁️</button></div>
+      <div class="pimg"><img src="${(p.imgs&&p.imgs[0])||''}" alt="${p.n}" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'" style="width:100%;height:100%;object-fit:contain;padding:8px"><span style="display:none;font-size:2.8rem;align-items:center;justify-content:center;width:100%;height:100%">${p.ic||'📦'}</span><button class="quick-view" onclick="event.stopPropagation();openMo(${pid})">عرض سريع 👁️</button></div>
       <div class="pbody">
         <div class="pname">${p.n}</div>
         <div class="psku">${p.sku}</div>
@@ -1449,7 +1472,8 @@ function renderPage(list,page){
         </div>
         <div class="pfoot">
           <div class="stk ${p.st}"><div class="dot"></div>${p.stx}</div>
-          <button class="addbtn" onclick="event.stopPropagation();addCart(${p.id})" ${p.st==='out-of-stock'?'disabled':''}>+ أضف</button>
+          <button class="details-mini" onclick="event.stopPropagation();location.href='${pageUrl}'">تفاصيل</button>
+          <button class="addbtn" onclick="event.stopPropagation();addCart(${pid})" ${p.st==='out-of-stock'?'disabled':''}>+ أضف</button>
         </div>
       </div>
     </div>`;
@@ -1493,7 +1517,7 @@ function showSg(){
   const m=PD.filter(p=>p.n.toLowerCase().includes(q)||p.sku.toLowerCase().includes(q)).slice(0,6);
   const el=document.getElementById('suggs');
   if(!m.length){hideSg();return;}
-  el.innerHTML=m.map(p=>`<div class="sg" onclick="quickO(${p.id})"><span class="sg-ico" style="overflow:hidden;background:var(--bg3);border-radius:6px"><img src="${(p.imgs&&p.imgs[0])||''}" alt="" style="width:100%;height:100%;object-fit:contain;padding:2px" onerror="this.style.display='none';this.parentNode.textContent='${p.ic||'📦'}'"></span><span class="sg-name">${p.n}</span><span class="sg-cat">${CAT_NAMES[p.cat]||p.cat}</span><span class="sg-pr">${p.p.toFixed(2)} JD</span></div>`).join('');
+  el.innerHTML=m.map(p=>{const pid=JSON.stringify(p.id);return `<div class="sg" onclick="quickO(${pid})"><span class="sg-ico" style="overflow:hidden;background:var(--bg3);border-radius:6px"><img src="${(p.imgs&&p.imgs[0])||''}" alt="" style="width:100%;height:100%;object-fit:contain;padding:2px" onerror="this.style.display='none';this.parentNode.textContent='${p.ic||'📦'}'"></span><span class="sg-name">${p.n}</span><span class="sg-cat">${CAT_NAMES[p.cat]||p.cat}</span><span class="sg-pr">${p.p.toFixed(2)} JD</span></div>`}).join('');
   el.classList.add('on');
 }
 function hideSg(){document.getElementById('suggs').classList.remove('on');}
@@ -1502,6 +1526,77 @@ function quickO(id){hideSg();document.getElementById('si').value='';openMo(id);}
 /* ============================
    CART
 ============================= */
+const WESAM_CART_KEYS = ['wesam_electronics_cart','wassam_cart'];
+function normalizeElectronicsCartItem(i){
+  if(!i || typeof i !== 'object') return null;
+  const id = String(i.id || i._docId || i.docId || i.sku || '').trim();
+  if(!id) return null;
+  const name = i.n || i.name || 'منتج';
+  const price = Number(i.p ?? i.sell ?? i.price ?? 0) || 0;
+  const qty = Math.max(1, Number(i.qty ?? i.quantity ?? 1) || 1);
+  const image = (Array.isArray(i.imgs) ? i.imgs[0] : '') || i.image || i.imageUrl || '';
+  const imgs = Array.isArray(i.imgs) && i.imgs.length ? i.imgs : [image].filter(Boolean);
+  const stock = Number(i.stock ?? 99) || 99;
+  return {
+    ...i,
+    id,
+    _docId:id,
+    n:name,
+    name,
+    p:price,
+    sell:price,
+    price,
+    op:Number(i.op ?? i.oldPrice ?? i.compareAtPrice ?? 0) || 0,
+    oldPrice:Number(i.oldPrice ?? i.compareAtPrice ?? i.op ?? 0) || 0,
+    compareAtPrice:Number(i.compareAtPrice ?? i.oldPrice ?? i.op ?? 0) || 0,
+    imgs,
+    image,
+    imageUrl:image,
+    qty,
+    quantity:qty,
+    stock,
+    st:i.st || (stock <= 0 ? 'out-of-stock' : 'in-stock'),
+    stx:i.stx || (stock <= 0 ? 'غير متوفر' : 'متوفر'),
+    cat:i.cat || i.category || 'products',
+    category:i.category || i.cat || 'منتجات'
+  };
+}
+function mergeElectronicsCartItems(items){
+  const map = new Map();
+  (items || []).forEach(raw=>{
+    const item = normalizeElectronicsCartItem(raw);
+    if(!item) return;
+    const old = map.get(item.id);
+    if(old){
+      const nextQty = Math.max((Number(old.qty ?? old.quantity ?? 0) || 0), (Number(item.qty ?? item.quantity ?? 0) || 0));
+      map.set(item.id, normalizeElectronicsCartItem({...old, ...item, qty:nextQty, quantity:nextQty}));
+    }else{
+      map.set(item.id, item);
+    }
+  });
+  return Array.from(map.values());
+}
+function readElectronicsCart(){
+  const all=[];
+  WESAM_CART_KEYS.forEach(key=>{
+    try{
+      const raw = localStorage.getItem(key);
+      const parsed = raw ? JSON.parse(raw) : [];
+      if(Array.isArray(parsed)) all.push(...parsed);
+    }catch(e){ console.warn('cart read failed', key, e); }
+  });
+  try{
+    const bridged = sessionStorage.getItem('wassam_cart_bridge');
+    const parsed = bridged ? JSON.parse(bridged) : [];
+    if(Array.isArray(parsed)) all.push(...parsed);
+  }catch(e){}
+  return mergeElectronicsCartItems(all);
+}
+function writeElectronicsCart(){
+  cart = mergeElectronicsCartItems(cart || []);
+  WESAM_CART_KEYS.forEach(key=>{ try{ localStorage.setItem(key, JSON.stringify(cart)); }catch(e){} });
+  try{ localStorage.setItem('wassam_cart_updated_at', String(Date.now())); }catch(e){}
+}
 function addCart(id,qty=1){
   const p=PD.find(x=>x.id===id);
   if(p.st==='out-of-stock'){toast('❌ هذا المنتج غير متوفر حالياً','e');return;}
@@ -1525,6 +1620,7 @@ function updCart(){
   else{dr.style.display='none';}
   document.getElementById('c-ship').textContent=ship===0?'🎉 مجاني':ship.toFixed(2)+' JD';
   document.getElementById('c-tot').textContent=tot.toFixed(2)+' JD';
+  writeElectronicsCart();
   // progress bar
   const pct=Math.min((afterDisc/25)*100,100);
   document.getElementById('prog-fill').style.width=pct+'%';
@@ -1533,7 +1629,7 @@ function updCart(){
   if(!cart.length){body.innerHTML='<div class="c-empty"><div class="ei">🛒</div><p>سلتك فارغة — تصفح منتجاتنا!</p></div>';ft.style.display='none';}
   else{
     ft.style.display='block';
-    body.innerHTML=cart.map(i=>`<div class="ci"><div class="ci-ic" style="overflow:hidden;background:var(--bg3)"><img src="${(i.imgs&&i.imgs[0])||''}" alt="${i.n}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none';this.parentNode.innerHTML='<span style=font-size:1.4rem;display:flex;align-items:center;justify-content:center;width:100%;height:100%>${i.ic||'📦'}</span>'"></div><div class="ci-inf"><div class="ci-nm">${i.n}</div><div class="ci-pr">${(i.p*i.qty).toFixed(2)} JD</div><div class="ci-qty"><button class="cqb" onclick="cq(${i.id},-1)">−</button><span class="cqv">${i.qty}</span><button class="cqb" onclick="cq(${i.id},1)">+</button></div></div><button class="ci-del" onclick="rmCart(${i.id})">✕</button></div>`).join('');
+    body.innerHTML=cart.map(i=>{const iid=JSON.stringify(i.id);return `<div class="ci"><div class="ci-ic" style="overflow:hidden;background:var(--bg3)"><img src="${(i.imgs&&i.imgs[0])||''}" alt="${i.n}" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display='none';this.parentNode.innerHTML='<span style=font-size:1.4rem;display:flex;align-items:center;justify-content:center;width:100%;height:100%>${i.ic||'📦'}</span>'"></div><div class="ci-inf"><div class="ci-nm">${i.n}</div><div class="ci-pr">${(i.p*i.qty).toFixed(2)} JD</div><div class="ci-qty"><button class="cqb" onclick="cq(${iid},-1)">−</button><span class="cqv">${i.qty}</span><button class="cqb" onclick="cq(${iid},1)">+</button></div></div><button class="ci-del" onclick="rmCart(${iid})">✕</button></div>`}).join('');
   }
 }
 function cq(id,d){const i=cart.find(x=>x.id===id);if(!i)return;i.qty+=d;if(i.qty<=0)cart=cart.filter(x=>x.id!==id);updCart();}
@@ -1672,22 +1768,23 @@ function updCmpBar(){
   bar.classList.add('on');
   document.getElementById('cmp-items').innerHTML=compare.map(id=>{
     const p=PD.find(x=>x.id===id);
-    return`<div class="cmp-chip">${p.ic} ${p.n.split(' ').slice(0,2).join(' ')}<button onclick="togCmp(${id})">×</button></div>`;
+    const pid=JSON.stringify(id);
+    return`<div class="cmp-chip">${p.ic} ${p.n.split(' ').slice(0,2).join(' ')}<button onclick="togCmp(${pid})">×</button></div>`;
   }).join('');
 }
 function clearCompare(){compare=[];updCmpBar();applyFilters();}
 function renderCompare(){
   const el=document.getElementById('cmp-content');
   if(!compare.length){el.innerHTML='<div style="text-align:center;padding:3rem;color:var(--t2)"><div style="font-size:3rem;margin-bottom:1rem">⚖️</div><p>لم تختر منتجات للمقارنة بعد.</p><button onclick="showPage(\'shop\')" class="btn-o" style="margin-top:1rem">تصفح المنتجات</button></div>';return;}
-  const ps=compare.map(id=>PD.find(x=>x.id===id));
-  const cols=ps.map(p=>`<th><div class="cmp-ico" style="overflow:hidden;background:var(--bg3);border-radius:8px;width:70px;height:70px;margin:0 auto .4rem"><img src="${(p.imgs&&p.imgs[0])||''}" alt="${p.n}" style="width:100%;height:100%;object-fit:contain;padding:6px" onerror="this.style.display='none';this.parentNode.innerHTML='<span style=font-size:2rem;display:flex;align-items:center;justify-content:center;width:100%;height:100%>${p.ic||'📦'}</span>'"></div><div class="cmp-pname">${p.n}</div><div class="cmp-ppr">${p.p.toFixed(2)} JD</div><button class="cmp-rm" onclick="togCmp(${p.id});renderCompare()">✕ إزالة</button></th>`).join('');
+  const ps=compare.map(id=>PD.find(x=>x.id===id)).filter(Boolean);
+  const cols=ps.map(p=>{const pid=JSON.stringify(p.id);return `<th><div class="cmp-ico" style="overflow:hidden;background:var(--bg3);border-radius:8px;width:70px;height:70px;margin:0 auto .4rem"><img src="${(p.imgs&&p.imgs[0])||''}" alt="${p.n}" style="width:100%;height:100%;object-fit:contain;padding:6px" onerror="this.style.display='none';this.parentNode.innerHTML='<span style=font-size:2rem;display:flex;align-items:center;justify-content:center;width:100%;height:100%>${p.ic||'📦'}</span>'"></div><div class="cmp-pname">${p.n}</div><div class="cmp-ppr">${p.p.toFixed(2)} JD</div><button class="cmp-rm" onclick="togCmp(${pid});renderCompare()">✕ إزالة</button></th>`}).join('');
   const rows=[
     ['السعر',ps.map(p=>`<td>${p.p.toFixed(2)} JD${p.op?` <span class="psave" style="font-size:.65rem">-${Math.round((1-p.p/p.op)*100)}%</span>`:''}</td>`).join('')],
     ['التقييم',ps.map(p=>`<td>${p.rat}★ (${p.rcnt})</td>`).join('')],
     ['التوفر',ps.map(p=>`<td class="${p.st}">${p.stx}</td>`).join('')],
     ['التصنيف',ps.map(p=>`<td>${CAT_NAMES[p.cat]}</td>`).join('')],
     ...Object.keys(ps[0].sp||{}).map(k=>[k,ps.map(p=>`<td>${(p.sp||{})[k]||'—'}</td>`).join('')]),
-    ['إضافة للسلة',ps.map(p=>`<td class="add-row"><button onclick="addCart(${p.id});toast('✓ أُضيف للسلة','s')">🛒 أضف</button></td>`).join('')],
+    ['إضافة للسلة',ps.map(p=>{const pid=JSON.stringify(p.id);return `<td class="add-row"><button onclick="addCart(${pid});toast('✓ أُضيف للسلة','s')">🛒 أضف</button></td>`}).join('')],
   ];
   el.innerHTML=`<table class="cmp-table"><thead><tr><th>الخاصية</th>${cols}</tr></thead><tbody>${rows.map(([label,cells])=>`<tr><td>${label}</td>${cells}</tr>`).join('')}</tbody></table>`;
 }
@@ -1778,7 +1875,8 @@ function renderRevs(p){
   const avC=['#f97316','#1d4ed8','#16a34a','#d97706','#dc2626'];
   let html=`<div class="rev-summary"><div class="rev-big"><div class="score">${p.rat}</div><div class="stars-lg">${'★'.repeat(Math.round(p.rat))+'☆'.repeat(5-Math.round(p.rat))}</div><div class="cnt">${total} تقييم</div></div><div class="rev-bars">${bars.map(b=>`<div class="rev-bar-row"><span class="rev-bar-lbl">${b.s}</span><div class="rev-bar-track"><div class="rev-bar-fill" style="width:${total?Math.round(b.pct/total*100):0}%"></div></div><span class="rev-bar-cnt">${b.pct}</span></div>`).join('')}</div></div>`;
   revs.forEach((r,i)=>{const rs='★'.repeat(r.s)+'☆'.repeat(5-r.s);html+=`<div class="review-item"><div class="rev-user"><div class="rev-avatar" style="background:${avC[i%5]}">${r.u[0]}</div><span class="rev-name">${r.u}</span><span class="rev-date">${r.dt||'منذ أيام'}</span><span class="rev-stars">${rs}</span></div><div class="rev-text">${r.d}</div><div class="rev-helpful">مفيد؟ <button onclick="this.innerHTML='👍 '+(parseInt(this.innerHTML.replace(/\\D/g,''))||${r.h||0}+1)">👍 ${r.h||0}</button></div></div>`;});
-  html+=`<div class="write-rev"><h4>✍️ أضف تقييمك</h4><div class="rev-stars-input">${[1,2,3,4,5].map(i=>`<span class="rev-star" onclick="selStar(${i},${p.id})">☆</span>`).join('')}</div><textarea class="rev-textarea" id="rev-txt-${p.id}" placeholder="شاركنا تجربتك..."></textarea><button class="rev-submit" onclick="submitRev(${p.id})">إرسال التقييم</button></div>`;
+  const pid=JSON.stringify(p.id);
+  html+=`<div class="write-rev"><h4>✍️ أضف تقييمك</h4><div class="rev-stars-input">${[1,2,3,4,5].map(i=>`<span class="rev-star" onclick="selStar(${i},${pid})">☆</span>`).join('')}</div><textarea class="rev-textarea" id="rev-txt-${p.id}" placeholder="شاركنا تجربتك..."></textarea><button class="rev-submit" onclick="submitRev(${pid})">إرسال التقييم</button></div>`;
   document.getElementById('mo-reviews-content').innerHTML=html;revStarSel=0;
 }
 function selStar(s,pid){revStarSel=s;document.querySelectorAll('.rev-star').forEach((el,i)=>{el.textContent=i<s?'★':'☆';el.classList.toggle('on',i<s);});}
@@ -1997,7 +2095,9 @@ function hardenBlankLinks(){
 ══════════════════════════════ */
 hardenBlankLinks();
 buildSidebarCats();
+cart=readElectronicsCart();
 updCart();
+try{ if(new URLSearchParams(location.search).get('cart')==='1') setTimeout(togCart,250); }catch(e){}
 applyFilters();
 renderSlider();
 renderAccountPage();

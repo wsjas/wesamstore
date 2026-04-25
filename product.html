@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>صفحة المنتج | وسام للإلكترونيات</title>
+  <meta name="description" content="صفحة منتج تفصيلية في متجر وسام للإلكترونيات" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <script src="shared-firebase.js"></script>
+  <script src="shared-utils.js"></script>
+  <style>
+    :root{
+      --orange:#f97316;--orange-dark:#ea580c;--blue:#1d4ed8;--blue-dark:#0f2460;
+      --bg:#f6f8fb;--card:#fff;--text:#162033;--muted:#64748b;--line:#e7edf5;
+      --green:#16a34a;--red:#dc2626;--shadow:0 20px 60px rgba(15,35,75,.10);
+    }
+    *{box-sizing:border-box}body{margin:0;font-family:'Cairo',sans-serif;background:linear-gradient(135deg,#fff7ed 0%,#f7fbff 40%,#eef4ff 100%);color:var(--text)}
+    a{text-decoration:none;color:inherit}.wrap{width:min(1180px,calc(100% - 28px));margin:auto}
+    header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(14px);border-bottom:1px solid rgba(231,237,245,.95)}
+    .nav{height:70px;display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{display:flex;align-items:center;gap:10px;font-weight:900;color:var(--blue-dark)}
+    .brand-badge{width:42px;height:42px;border-radius:15px;background:linear-gradient(135deg,var(--orange),#ffb347);display:grid;place-items:center;color:#fff;box-shadow:0 10px 24px rgba(249,115,22,.25)}
+    .nav-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.nav-btn{border:1px solid var(--line);background:#fff;padding:10px 14px;border-radius:13px;font-weight:800;color:var(--blue-dark);box-shadow:0 8px 20px rgba(15,35,75,.06)}
+    .nav-btn.primary{background:linear-gradient(135deg,var(--orange),var(--orange-dark));color:#fff;border-color:transparent}
+    .cart-pill{position:relative;display:inline-flex;align-items:center;gap:8px}
+    .cart-pill .cart-badge{min-width:22px;height:22px;border-radius:999px;background:#ef4444;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:900;padding:0 6px;line-height:1}
+    main{padding:24px 0 45px}.crumb{display:flex;gap:7px;align-items:center;color:var(--muted);font-size:.9rem;margin:8px 0 18px;flex-wrap:wrap}.crumb a{color:var(--blue);font-weight:800}
+    .status{background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:36px;text-align:center;margin-top:34px}.spinner{width:44px;height:44px;border:4px solid #fee7d3;border-top-color:var(--orange);border-radius:50%;margin:0 auto 14px;animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+    .product-layout{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(340px,.95fr);gap:24px;align-items:start}.card{background:var(--card);border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow);overflow:hidden}
+    .gallery{padding:18px}.main-img{height:480px;background:linear-gradient(135deg,#f8fafc,#fff7ed);border-radius:22px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}.main-img img{max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;padding:16px}.main-img .empty{font-size:5rem;color:#cbd5e1}.sale-ribbon{position:absolute;top:16px;right:16px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border-radius:999px;padding:8px 14px;font-weight:900;box-shadow:0 12px 25px rgba(220,38,38,.22)}
+    .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:10px;margin-top:14px}.thumb{height:86px;border:2px solid var(--line);border-radius:16px;background:#fff;display:grid;place-items:center;cursor:pointer;overflow:hidden;transition:.18s}.thumb.active,.thumb:hover{border-color:var(--orange);box-shadow:0 10px 20px rgba(249,115,22,.14)}.thumb img{width:100%;height:100%;object-fit:contain;padding:8px}
+    .info{padding:24px}.tag{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:#eff6ff;color:var(--blue);font-weight:900;font-size:.85rem}.title{font-size:clamp(1.55rem,3vw,2.55rem);line-height:1.25;margin:16px 0 10px;font-weight:900;color:var(--blue-dark)}.desc{color:#475569;line-height:1.9;font-size:1.02rem;white-space:pre-wrap}.price-row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:18px 0}.price{font-size:2.2rem;font-weight:900;color:var(--orange);letter-spacing:-.5px}.old-price{font-size:1.05rem;color:#ef4444;text-decoration:line-through;font-weight:900}.discount{background:#fee2e2;color:#dc2626;border:1px solid #fecaca;border-radius:999px;padding:5px 10px;font-weight:900}.meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0}.meta-item{background:#f8fafc;border:1px solid var(--line);border-radius:16px;padding:12px}.meta-label{color:var(--muted);font-size:.82rem;font-weight:800}.meta-val{font-weight:900;margin-top:3px}.stock-ok{color:var(--green)}.stock-bad{color:var(--red)}
+    .qty-row{display:flex;gap:10px;align-items:center;margin:18px 0;flex-wrap:wrap}.qty{display:inline-flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid var(--line);border-radius:15px;padding:6px}.qty button{width:34px;height:34px;border:0;background:#fff;border-radius:11px;font-size:1.1rem;font-weight:900;cursor:pointer;color:var(--blue);box-shadow:0 4px 12px rgba(15,35,75,.07)}.qty span{min-width:34px;text-align:center;font-weight:900}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.btn{border:0;border-radius:16px;padding:14px 16px;font-family:'Cairo',sans-serif;font-weight:900;cursor:pointer;display:inline-flex;justify-content:center;align-items:center;gap:9px;transition:.18s;font-size:.98rem}.btn:hover{transform:translateY(-2px)}.btn.cart{background:linear-gradient(135deg,var(--orange),var(--orange-dark));color:#fff}.btn.whatsapp{background:#25d366;color:#fff}.btn.secondary{background:#eff6ff;color:var(--blue);border:1px solid #bfdbfe}.btn.dark{background:#111827;color:#fff}.btn:disabled{background:#cbd5e1;color:#64748b;cursor:not-allowed;transform:none}
+    .section{margin-top:22px}.section h3{font-size:1.15rem;margin:0 0 12px;color:var(--blue-dark);display:flex;align-items:center;gap:8px}.features{display:grid;gap:10px}.feature{display:flex;gap:10px;align-items:flex-start;background:#f8fafc;border:1px solid var(--line);border-radius:15px;padding:12px}.feature i{color:var(--orange);margin-top:5px}.specs{display:grid;gap:8px}.spec{display:flex;justify-content:space-between;gap:15px;border-bottom:1px dashed var(--line);padding:10px 0}.spec b{color:#334155}.spec span{color:#64748b;text-align:left}
+    .related-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:13px}.rel{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 10px 28px rgba(15,35,75,.06);transition:.18s}.rel:hover{transform:translateY(-3px);border-color:var(--orange)}.rel-img{height:125px;background:#f8fafc;display:grid;place-items:center}.rel-img img{width:100%;height:100%;object-fit:contain;padding:10px}.rel-body{padding:11px}.rel-name{font-weight:900;font-size:.88rem;line-height:1.5;min-height:42px}.rel-price{color:var(--orange);font-weight:900;margin-top:4px}.toast{position:fixed;bottom:18px;left:18px;background:#111827;color:#fff;border-radius:16px;padding:12px 16px;font-weight:800;box-shadow:0 18px 50px rgba(0,0,0,.25);transform:translateY(120px);opacity:0;transition:.25s;z-index:200}.toast.show{transform:translateY(0);opacity:1}
+    @media(max-width:860px){.nav{height:auto;padding:12px 0;align-items:flex-start}.product-layout{grid-template-columns:1fr}.main-img{height:330px}.actions{grid-template-columns:1fr}.meta{grid-template-columns:1fr}.nav-actions{justify-content:flex-end}.nav-btn{padding:9px 10px;font-size:.86rem}.gallery,.info{padding:14px}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="index.html"><span class="brand-badge"><i class="fas fa-bolt"></i></span><span>وسام للإلكترونيات</span></a>
+      <div class="nav-actions">
+        <a class="nav-btn cart-pill" id="productCartLink" href="index.html?cart=1"><i class="fas fa-shopping-cart"></i> السلة <span class="cart-badge" id="productCartCount">0</span></a>
+        <a class="nav-btn" id="backStore" href="index.html"><i class="fas fa-store"></i> العودة للمتجر</a>
+        <a class="nav-btn primary" href="index.html?open=service"><i class="fas fa-screwdriver-wrench"></i> طلب صيانة</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="crumb"><a href="index.html">الرئيسية</a><span>/</span><span id="crumbCat">المنتج</span><span>/</span><b id="crumbName">...</b></div>
+
+    <div id="loading" class="status"><div class="spinner"></div><h2>جاري تحميل المنتج...</h2><p>يتم جلب تفاصيل المنتج والصور من Firebase</p></div>
+    <div id="errorBox" class="status" style="display:none"><h2>لم يتم العثور على المنتج</h2><p id="errorText">الرابط غير صحيح أو المنتج غير متوفر حالياً.</p><a class="nav-btn primary" href="index.html">العودة للرئيسية</a></div>
+
+    <section id="productView" class="product-layout" style="display:none">
+      <div class="card gallery">
+        <div class="main-img" id="mainImgBox"><span class="empty"><i class="fas fa-box-open"></i></span></div>
+        <div class="thumbs" id="thumbs"></div>
+      </div>
+
+      <div class="card info">
+        <span class="tag" id="productCat"><i class="fas fa-layer-group"></i> منتج</span>
+        <h1 class="title" id="productTitle"></h1>
+        <div class="price-row" id="priceRow"></div>
+        <p class="desc" id="productDesc"></p>
+
+        <div class="meta">
+          <div class="meta-item"><div class="meta-label">التوفر</div><div class="meta-val" id="stockText"></div></div>
+          <div class="meta-item"><div class="meta-label">رسوم التوصيل</div><div class="meta-val" id="deliveryText"></div></div>
+          <div class="meta-item"><div class="meta-label">رقم/كود المنتج</div><div class="meta-val" id="skuText"></div></div>
+          <div class="meta-item"><div class="meta-label">المشاركة</div><div class="meta-val"><button class="btn secondary" style="padding:8px 10px;font-size:.85rem" onclick="copyLink()"><i class="fas fa-link"></i> نسخ الرابط</button></div></div>
+        </div>
+
+        <div class="qty-row">
+          <strong>الكمية:</strong>
+          <div class="qty"><button onclick="changeQty(-1)">−</button><span id="qtyVal">1</span><button onclick="changeQty(1)">+</button></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn cart" id="addCartBtn" onclick="addToCartFromPage()"><i class="fas fa-shopping-cart"></i> إضافة للسلة</button>
+          <a class="btn whatsapp" id="waBtn" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> طلب عبر واتساب</a>
+          <a class="btn secondary" id="videoBtn" target="_blank" rel="noopener" style="display:none"><i class="fas fa-play"></i> فيديو المنتج</a>
+          <a class="btn dark" id="softwareBtn" target="_blank" rel="noopener" style="display:none"><i class="fas fa-download"></i> سوفت وير</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="card info section" id="featuresCard" style="display:none"><h3><i class="fas fa-check-circle"></i> المميزات</h3><div class="features" id="features"></div></section>
+    <section class="card info section" id="specsCard" style="display:none"><h3><i class="fas fa-list-check"></i> المواصفات</h3><div class="specs" id="specs"></div></section>
+    <section class="section" id="relatedSection" style="display:none"><h3><i class="fas fa-boxes-stacked"></i> منتجات مشابهة</h3><div class="related-grid" id="relatedGrid"></div></section>
+  </main>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const ELECTRONICS_CONFIG = {
+      apiKey: "AIzaSyCd5vSGalgRS5Kyip-8W5D0mcUcvcLumYA",
+      authDomain: "wesamarduino.firebaseapp.com",
+      databaseURL: "https://wesamarduino-default-rtdb.firebaseio.com",
+      projectId: "wesamarduino",
+      storageBucket: "wesamarduino.firebasestorage.app",
+      messagingSenderId: "884969345682",
+      appId: "1:884969345682:web:a6192a02ccb1153c600c4b",
+      measurementId: "G-FXP2LVQJGE"
+    };
+
+    const params = new URLSearchParams(location.search);
+    const productId = params.get('id') || params.get('sku') || '';
+    const source = (params.get('source') || 'main').toLowerCase();
+    let currentProduct = null;
+    let currentDb = null;
+    let qty = 1;
+
+    function $(id){ return document.getElementById(id); }
+    function money(v){ const n = Number(v || 0); return n.toFixed(2).replace(/\.00$/,'') + ' دينار'; }
+    function esc(s){ return String(s ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+    function collectImages(raw){
+      const arr=[];
+      ['image','imageUrl','mainImage','img','thumbnail'].forEach(k=>{ if(raw[k]) arr.push(raw[k]); });
+      ['additionalImages','images','imgs','gallery'].forEach(k=>{ const v=raw[k]; if(Array.isArray(v)) v.forEach(x=>{ if(x) arr.push(x); }); });
+      return [...new Set(arr.map(x=>String(x).trim()).filter(Boolean))];
+    }
+    function normalizeProduct(raw){
+      const price = Number(raw.sell ?? raw.price ?? raw.p ?? 0) || 0;
+      const oldPrice = Number(raw.oldPrice ?? raw.compareAtPrice ?? raw.old_price ?? raw.op ?? 0) || 0;
+      let discount = Number(raw.discountPercent ?? raw.discount_percentage ?? raw.discount ?? 0) || 0;
+      if(!discount && oldPrice > price && price > 0) discount = Math.round((1 - price / oldPrice) * 100);
+      const stockRaw = raw.stock ?? raw.qty ?? raw.quantity;
+      const stock = Number.isFinite(Number(stockRaw)) ? Number(stockRaw) : (String(raw.st || raw.status || '').includes('غير') ? 0 : 99);
+      const name = raw.name || raw.n || 'منتج بدون اسم';
+      const cat = raw.category || raw.cat || 'منتجات';
+      const images = collectImages(raw);
+      const specs = raw.sp || raw.specifications || raw.specs || {};
+      return {
+        raw,
+        id: String(raw._docId || raw.docId || raw.id || productId || ''),
+        fieldId: raw.id,
+        name,
+        category: cat,
+        price,
+        oldPrice,
+        discount,
+        stock,
+        sku: raw.sku || raw.code || raw.id || raw._docId || '',
+        deliveryFee: Number(raw.deliveryFee ?? raw.shippingFee ?? 2) || 2,
+        desc: raw.description || raw.desc || '',
+        images,
+        videoUrl: raw.videoUrl || raw.video || '',
+        softwareUrl: raw.softwareUrl || raw.software || '',
+        features: Array.isArray(raw.features) ? raw.features : String(raw.features || '').split('\n').filter(Boolean),
+        specs: Array.isArray(specs) ? Object.fromEntries(specs.map((s,i)=>[i+1,s])) : specs
+      };
+    }
+    function getDb(){
+      if(source === 'electronics'){
+        const name = 'electronicsSource';
+        const app = firebase.apps.find(a => a.name === name) || firebase.initializeApp(ELECTRONICS_CONFIG, name);
+        return app.firestore();
+      }
+      window.WesamFirebase && window.WesamFirebase.init();
+      return (window.WesamFirebase && window.WesamFirebase.db) || firebase.firestore();
+    }
+    async function findProduct(db, id){
+      if(!id) throw new Error('لا يوجد رقم منتج في الرابط');
+      const docSnap = await db.collection('products').doc(String(id)).get().catch(()=>null);
+      if(docSnap && docSnap.exists) return {_docId: docSnap.id, ...docSnap.data()};
+      const attempts = [
+        ['id', id], ['id', Number(id)], ['sku', id], ['slug', id], ['code', id]
+      ].filter((x,i,a)=> x[1] !== '' && x[1] !== null && !(typeof x[1] === 'number' && Number.isNaN(x[1])) && a.findIndex(y=>y[0]===x[0] && y[1]===x[1])===i);
+      for(const [field, value] of attempts){
+        try{
+          const qs = await db.collection('products').where(field,'==',value).limit(1).get();
+          if(!qs.empty){ const d=qs.docs[0]; return {_docId:d.id, ...d.data()}; }
+        }catch(e){ console.warn('product query failed', field, e); }
+      }
+      throw new Error('المنتج غير موجود');
+    }
+    async function loadRelated(db, product){
+      try{
+        const qs = await db.collection('products').limit(80).get();
+        const items=[];
+        qs.forEach(d=>{
+          const raw = {_docId:d.id, ...d.data()};
+          const hidden = raw.hidden === true || raw.hidden === 'true' || raw.hidden === 1 || raw.hidden === '1';
+          if(hidden) return;
+          const p = normalizeProduct(raw);
+          if(p.id === product.id) return;
+          if(String(p.category) === String(product.category)) items.push(p);
+        });
+        renderRelated(items.slice(0,8));
+      }catch(e){ console.warn('related products failed', e); }
+    }
+    function renderProduct(p){
+      document.title = p.name + ' | وسام للإلكترونيات';
+      const descMeta = document.querySelector('meta[name="description"]');
+      if(descMeta) descMeta.content = p.desc ? p.desc.slice(0,155) : p.name;
+      $('crumbCat').textContent = p.category;
+      $('crumbName').textContent = p.name;
+      $('productCat').innerHTML = `<i class="fas fa-layer-group"></i> ${esc(p.category)}`;
+      $('productTitle').textContent = p.name;
+      $('productDesc').textContent = p.desc || 'لا يوجد وصف تفصيلي لهذا المنتج حالياً.';
+      const sale = p.discount > 0 ? `<span class="discount"><i class="fas fa-tag"></i> خصم ${Math.round(p.discount)}%</span>` : '';
+      const old = p.oldPrice > p.price ? `<span class="old-price">${money(p.oldPrice)}</span>` : '';
+      $('priceRow').innerHTML = `<span class="price">${money(p.price)}</span>${old}${sale}`;
+      $('stockText').innerHTML = p.stock > 0 ? `<span class="stock-ok"><i class="fas fa-check-circle"></i> متوفر ${p.stock !== 99 ? '('+p.stock+')' : ''}</span>` : `<span class="stock-bad"><i class="fas fa-times-circle"></i> غير متوفر</span>`;
+      $('deliveryText').textContent = money(p.deliveryFee);
+      $('skuText').textContent = p.sku || p.id || '—';
+      $('addCartBtn').disabled = p.stock <= 0;
+      renderImages(p);
+      renderFeatures(p);
+      renderSpecs(p);
+      const waText = `مرحبا، أريد طلب المنتج: ${p.name}\nالسعر: ${money(p.price)}\nالرابط: ${location.href}`;
+      $('waBtn').href = 'https://wa.me/962790781206?text=' + encodeURIComponent(waText);
+      if(p.videoUrl){ $('videoBtn').href = p.videoUrl; $('videoBtn').style.display='inline-flex'; }
+      if(p.softwareUrl){ $('softwareBtn').href = p.softwareUrl; $('softwareBtn').style.display='inline-flex'; }
+      $('loading').style.display='none'; $('productView').style.display='grid';
+    }
+    function renderImages(p){
+      const box=$('mainImgBox'), thumbs=$('thumbs');
+      const imgs = p.images.length ? p.images : [];
+      if(p.discount > 0 && imgs.length){ box.innerHTML = `<span class="sale-ribbon">خصم ${Math.round(p.discount)}%</span><img src="${esc(imgs[0])}" alt="${esc(p.name)}">`; }
+      else if(imgs.length){ box.innerHTML = `<img src="${esc(imgs[0])}" alt="${esc(p.name)}">`; }
+      else{ box.innerHTML = `<span class="empty"><i class="fas fa-box-open"></i></span>`; }
+      thumbs.innerHTML = imgs.map((src,i)=>`<button class="thumb ${i===0?'active':''}" onclick="setMainImage('${encodeURIComponent(src)}', this)"><img src="${esc(src)}" alt="صورة ${i+1}"></button>`).join('');
+    }
+    function setMainImage(encodedSrc, el){
+      const src = decodeURIComponent(encodedSrc);
+      $('mainImgBox').querySelector('img')?.remove();
+      const ribbon = $('mainImgBox').querySelector('.sale-ribbon')?.outerHTML || '';
+      $('mainImgBox').innerHTML = ribbon + `<img src="${esc(src)}" alt="${esc(currentProduct.name)}">`;
+      document.querySelectorAll('.thumb').forEach(t=>t.classList.remove('active'));
+      if(el) el.classList.add('active');
+    }
+    function renderFeatures(p){
+      const list = p.features.filter(Boolean);
+      if(!list.length) return;
+      $('featuresCard').style.display='block';
+      $('features').innerHTML = list.map(f=>`<div class="feature"><i class="fas fa-check"></i><span>${esc(f)}</span></div>`).join('');
+    }
+    function renderSpecs(p){
+      const entries = Object.entries(p.specs || {}).filter(([k,v])=> String(v || '').trim());
+      if(!entries.length) return;
+      $('specsCard').style.display='block';
+      $('specs').innerHTML = entries.map(([k,v])=>`<div class="spec"><b>${esc(String(k).replace(/_/g,' '))}</b><span>${esc(v)}</span></div>`).join('');
+    }
+    function renderRelated(items){
+      if(!items.length) return;
+      $('relatedSection').style.display='block';
+      $('relatedGrid').innerHTML = items.map(p=>{
+        const url = `product.html?id=${encodeURIComponent(p.id)}${source==='electronics'?'&source=electronics':''}`;
+        const img = p.images[0] || '';
+        return `<a class="rel" href="${url}"><div class="rel-img">${img?`<img src="${esc(img)}" alt="${esc(p.name)}">`:'<i class="fas fa-box-open"></i>'}</div><div class="rel-body"><div class="rel-name">${esc(p.name)}</div><div class="rel-price">${money(p.price)}</div></div></a>`;
+      }).join('');
+    }
+    function changeQty(d){
+      const max = currentProduct && currentProduct.stock && currentProduct.stock !== 99 ? currentProduct.stock : 99;
+      qty = Math.max(1, Math.min(max, qty + d));
+      $('qtyVal').textContent = qty;
+    }
+    const CART_KEYS = ['wassam_cart','wesam_electronics_cart'];
+
+    function normalizeCartItemForAllStores(i){
+      if(!i || typeof i !== 'object') return null;
+      const id = String(i.id || i._docId || i.docId || i.sku || '').trim();
+      if(!id) return null;
+      const name = i.name || i.n || 'منتج';
+      const price = Number(i.sell ?? i.price ?? i.p ?? 0) || 0;
+      const qtyNum = Math.max(1, Number(i.quantity ?? i.qty ?? 1) || 1);
+      const image = i.image || i.imageUrl || (Array.isArray(i.imgs) ? i.imgs[0] : '') || '';
+      const imgs = Array.isArray(i.imgs) && i.imgs.length ? i.imgs : [image].filter(Boolean);
+      const stock = Number(i.stock ?? 99) || 99;
+      return {
+        ...i,
+        id,
+        _docId: id,
+        name,
+        n: name,
+        category: i.category || i.cat || currentProduct?.category || 'منتجات',
+        cat: i.cat || i.category || currentProduct?.category || 'products',
+        sell: price,
+        price,
+        p: price,
+        oldPrice: Number(i.oldPrice ?? i.compareAtPrice ?? i.op ?? 0) || 0,
+        compareAtPrice: Number(i.compareAtPrice ?? i.oldPrice ?? i.op ?? 0) || 0,
+        op: Number(i.op ?? i.oldPrice ?? i.compareAtPrice ?? 0) || 0,
+        stock,
+        st: i.st || (stock <= 0 ? 'out-of-stock' : 'in-stock'),
+        stx: i.stx || (stock <= 0 ? 'غير متوفر' : 'متوفر'),
+        image,
+        imageUrl: image,
+        imgs,
+        additionalImages: Array.isArray(i.additionalImages) ? i.additionalImages : imgs.slice(1),
+        quantity: qtyNum,
+        qty: qtyNum,
+        deliveryFee: Number(i.deliveryFee ?? i.shippingFee ?? 2) || 2
+      };
+    }
+
+    function mergeCartItems(items){
+      const map = new Map();
+      (items || []).forEach(raw=>{
+        const item = normalizeCartItemForAllStores(raw);
+        if(!item) return;
+        const old = map.get(item.id);
+        if(old){
+          const nextQty = Math.max((Number(old.quantity ?? old.qty ?? 0) || 0), (Number(item.quantity ?? item.qty ?? 0) || 0));
+          map.set(item.id, normalizeCartItemForAllStores({...old, ...item, quantity: nextQty, qty: nextQty}));
+        }else{
+          map.set(item.id, item);
+        }
+      });
+      return Array.from(map.values());
+    }
+
+    function readWesamCart(){
+      const all=[];
+      CART_KEYS.forEach(key=>{
+        try{
+          const raw = localStorage.getItem(key);
+          const parsed = raw ? JSON.parse(raw) : [];
+          if(Array.isArray(parsed)) all.push(...parsed);
+        }catch(e){ console.warn('cart read failed for', key, e); }
+      });
+      return mergeCartItems(all);
+    }
+
+    function writeWesamCart(cart){
+      const normalized = mergeCartItems(Array.isArray(cart) ? cart : []);
+      CART_KEYS.forEach(key=>{
+        try{ localStorage.setItem(key, JSON.stringify(normalized)); }catch(e){ console.warn('cart write failed for', key, e); }
+      });
+      try{ localStorage.setItem('wassam_cart_updated_at', String(Date.now())); }catch(e){}
+      try{ sessionStorage.setItem('wassam_cart_bridge', JSON.stringify(normalized)); }catch(e){}
+      try{
+        window.dispatchEvent(new StorageEvent('storage', { key:'wassam_cart', newValue:localStorage.getItem('wassam_cart') }));
+      }catch(e){}
+    }
+    function getCartCount(){
+      return readWesamCart().reduce((sum,item)=> sum + (Number(item.quantity ?? item.qty ?? 0) || 0), 0);
+    }
+    function syncProductCartCount(){
+      const el = $('productCartCount');
+      if(el) el.textContent = getCartCount();
+    }
+    function buildCartItem(p, itemQty){
+      const id = String(p.id || p.fieldId || productId || '').trim();
+      const image = p.images[0] || '';
+      const imgs = p.images || [];
+      const item = {
+        id,
+        _docId: id,
+        docId: id,
+        sku: p.sku || id,
+        name: p.name,
+        n: p.name,
+        category: p.category,
+        cat: p.raw?.cat || p.category || 'products',
+        sell: Number(p.price || 0),
+        price: Number(p.price || 0),
+        p: Number(p.price || 0),
+        oldPrice: Number(p.oldPrice || 0),
+        compareAtPrice: Number(p.oldPrice || 0),
+        op: Number(p.oldPrice || 0),
+        discountPercent: Number(p.discount || 0),
+        stock: Number(p.stock || 99),
+        st: Number(p.stock || 99) <= 0 ? 'out-of-stock' : 'in-stock',
+        stx: Number(p.stock || 99) <= 0 ? 'غير متوفر' : 'متوفر',
+        deliveryFee: Number(p.deliveryFee || 2),
+        image,
+        imageUrl: image,
+        img: image,
+        imgs,
+        additionalImages: imgs.slice(1),
+        quantity: Number(itemQty || 1),
+        qty: Number(itemQty || 1)
+      };
+      return normalizeCartItemForAllStores(item);
+    }
+    function addToCartFromPage(){
+      if(!currentProduct) return;
+      const id = String(currentProduct.id || currentProduct.fieldId || productId || '');
+      const addQty = Math.max(1, Number(qty || 1));
+      const maxStock = Number(currentProduct.stock || 99);
+      const limitedStock = maxStock > 0 && maxStock !== 99 ? maxStock : null;
+      const cart = readWesamCart();
+      let found = cart.find(x => String(x.id || x._docId || '') === id);
+      const oldQty = found ? (Number(found.quantity ?? found.qty ?? 0) || 0) : 0;
+      const nextQty = oldQty + addQty;
+
+      if(limitedStock && nextQty > limitedStock){
+        showToast('لا يمكن إضافة كمية أكبر من المتوفر في المخزون');
+        return;
+      }
+
+      if(found){
+        Object.assign(found, buildCartItem(currentProduct, nextQty));
+      }else{
+        cart.push(buildCartItem(currentProduct, addQty));
+      }
+
+      writeWesamCart(cart);
+      syncProductCartCount();
+      const btn = $('addCartBtn');
+      if(btn){
+        const oldText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> تمت الإضافة للسلة';
+        setTimeout(()=>{ btn.innerHTML = oldText; }, 1600);
+      }
+      showToast('✅ تم إضافة المنتج إلى السلة');
+    }
+    function copyLink(){ navigator.clipboard?.writeText(location.href).then(()=>showToast('تم نسخ رابط المنتج')).catch(()=>showToast('انسخ الرابط من شريط العنوان')); }
+    function showToast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+    async function init(){
+      try{
+        if(source === 'electronics') $('backStore').href = 'electronics-store.html';
+        const cartLink = $('productCartLink');
+        if(cartLink) cartLink.href = source === 'electronics' ? 'electronics-store.html?cart=1' : 'index.html?cart=1';
+        syncProductCartCount();
+        currentDb = getDb();
+        const raw = await findProduct(currentDb, productId);
+        currentProduct = normalizeProduct(raw);
+        const hidden = raw.hidden === true || raw.hidden === 'true' || raw.hidden === 1 || raw.hidden === '1';
+        if(hidden) throw new Error('هذا المنتج مخفي حالياً');
+        renderProduct(currentProduct);
+        loadRelated(currentDb, currentProduct);
+      }catch(e){
+        console.error(e);
+        $('loading').style.display='none';
+        $('errorText').textContent = e.message || 'تعذر تحميل المنتج.';
+        $('errorBox').style.display='block';
+      }
+    }
+    document.addEventListener('DOMContentLoaded', init);
+    window.addEventListener('storage', e => { if(!e.key || e.key === 'wassam_cart' || e.key === 'wassam_cart_updated_at') syncProductCartCount(); });
+    window.addEventListener('pageshow', syncProductCartCount);
+  </script>
+</body>
+</html>

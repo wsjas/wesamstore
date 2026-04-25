@@ -248,6 +248,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
   <div class="stats-row" id="statsRow">
     <div class="stat-mini"><div class="icon blue"><i class="fas fa-shopping-cart"></i></div><div><h3 id="statOrders">-</h3><p>طلبات الشراء</p></div></div>
     <div class="stat-mini"><div class="icon orange"><i class="fas fa-tools"></i></div><div><h3 id="statService">-</h3><p>طلبات الصيانة</p></div></div>
+    <div class="stat-mini"><div class="icon green"><i class="fas fa-bell"></i></div><div><h3 id="statSubscribers">-</h3><p>المشتركون بالجديد</p></div></div>
     <div class="stat-mini"><div class="icon green"><i class="fas fa-check-circle"></i></div><div><h3 id="statDelivered">-</h3><p>تم التسليم</p></div></div>
     <div class="stat-mini"><div class="icon red"><i class="fas fa-clock"></i></div><div><h3 id="statPending">-</h3><p>قيد الانتظار</p></div></div>
   </div>
@@ -256,6 +257,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
   <div class="tabs">
     <button class="tab active" data-tab="orders"><i class="fas fa-shopping-cart"></i> طلبات الشراء <span class="count blue" id="ordersCount">0</span></button>
     <button class="tab" data-tab="service"><i class="fas fa-tools"></i> طلبات الصيانة <span class="count orange" id="serviceCount">0</span></button>
+    <button class="tab" data-tab="subscribers"><i class="fas fa-bell"></i> المشتركون بالجديد <span class="count green" id="subscribersCount">0</span></button>
   </div>
 
   <!-- Orders Tab -->
@@ -301,6 +303,27 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
         </thead>
         <tbody id="serviceBody">
           <tr><td colspan="9"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Subscribers Tab -->
+  <div class="section-card tab-content" id="subscribersTab" style="display:none;">
+    <div class="section-body" style="overflow-x:auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>رقم الاشتراك</th>
+            <th>التاريخ</th>
+            <th>رقم الواتساب</th>
+            <th>المصدر</th>
+            <th>الحالة</th>
+            <th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="subscribersBody">
+          <tr><td colspan="6"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل المشتركين...</p></div></td></tr>
         </tbody>
       </table>
     </div>
@@ -423,8 +446,8 @@ document.querySelectorAll('.tab').forEach(t=>{
     document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
     t.classList.add('active');
     document.querySelectorAll('.tab-content').forEach(x=>x.style.display='none');
-    const target = t.dataset.tab === 'orders' ? 'ordersTab' : 'serviceTab';
-    $(target).style.display = 'block';
+    const target = `${t.dataset.tab}Tab`;
+    if ($(target)) $(target).style.display = 'block';
   });
 });
 
@@ -435,7 +458,7 @@ $('mobileOverlay').addEventListener('click',()=>{$('sidebar').classList.remove('
 // Load
 async function loadAll(){
   await loadStoreSettings();
-  await Promise.all([loadOrders(), loadServiceRequests()]);
+  await Promise.all([loadOrders(), loadServiceRequests(), loadSubscribers()]);
 }
 
 async function loadStoreSettings() {
@@ -545,6 +568,52 @@ async function loadServiceRequests(){
   }catch(e){console.error(e);body.innerHTML='<tr><td colspan="9"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>خطأ في التحميل</p></div></td></tr>';}
 }
 
+
+// ===== SUBSCRIBERS =====
+const SUBSCRIBER_STATUSES=['جديد','تمت المراجعة','تم الإرسال','ملغي'];
+
+async function loadSubscribers(){
+  const body=$('subscribersBody');
+  if(!body) return;
+  try{
+    let docs=[];
+    try{const s=await db.collection('subscribers').orderBy('createdAt','desc').limit(200).get();s.forEach(d=>docs.push({id:d.id,data:d.data()}));}
+    catch(e){const s=await db.collection('subscribers').limit(200).get();s.forEach(d=>docs.push({id:d.id,data:d.data()}));}
+
+    $('statSubscribers').textContent=docs.length;
+    $('subscribersCount').textContent=docs.length;
+
+    if(!docs.length){body.innerHTML='<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا يوجد مشتركون بالجديد حتى الآن</p></div></td></tr>';return;}
+
+    docs=docs.map(x=>{
+      const d=x.data;
+      const c=d.createdAt&&d.createdAt.toDate?d.createdAt.toDate():(d.createdAt?new Date(d.createdAt):null);
+      return{...x,created:c};
+    }).sort((a,b)=>(b.created?b.created.getTime():0)-(a.created?a.created.getTime():0));
+
+    body.innerHTML=docs.map(item=>{
+      const d=item.data;
+      const date=item.created?item.created.toLocaleString('ar-JO'):'-';
+      const phone=d.phone||d.customerPhone||d.whatsapp||'';
+      const status=d.status||'جديد';
+      return `<tr data-id="${escapeHtml(item.id)}">
+        <td style="font-weight:700;font-size:.82rem;direction:ltr;">${escapeHtml(item.id)}</td>
+        <td style="font-size:.82rem;">${date}</td>
+        <td style="font-weight:700;direction:ltr;">${escapeHtml(phone)}</td>
+        <td>${escapeHtml(d.source||'اشتراك العروض')}</td>
+        <td><select class="status-select" data-id="${escapeHtml(item.id)}" data-collection="subscribers">
+          ${SUBSCRIBER_STATUSES.map(s=>`<option value="${s}" ${s===status?'selected':''}>${s}</option>`).join('')}
+        </select></td>
+        <td>
+          <button class="action-btn whatsapp" onclick="whatsappSubscriber('${item.id}')"><i class="fab fa-whatsapp"></i></button>
+          <button class="action-btn delete" onclick="deleteDoc('subscribers','${item.id}')"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>`;
+    }).join('');
+    bindStatusSelects();
+  }catch(e){console.error(e);body.innerHTML='<tr><td colspan="6"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>خطأ في تحميل المشتركين</p></div></td></tr>';}
+}
+
 // Status change
 function bindStatusSelects(){
   document.querySelectorAll('.status-select').forEach(sel=>{
@@ -644,11 +713,25 @@ window.whatsappService=async function(id){
   }catch(e){showToast('❌ خطأ','error');}
 };
 
+
+window.whatsappSubscriber=async function(id){
+  try{
+    const doc=await db.collection('subscribers').doc(id).get();
+    if(!doc.exists)return;
+    const d=doc.data();
+    const phone=(d.phone||d.customerPhone||d.whatsapp||'').replace(/\D/g,'');
+    if(!phone){showToast('❌ لا يوجد رقم واتساب لهذا المشترك','error');return;}
+    const waPhone=phone.startsWith('962')?phone:('962'+phone.replace(/^0/,''));
+    const msg='مرحباً، تم تسجيلك في عروض وسام للإلكترونيات. ستصلك أحدث العروض والخصومات على هذا الرقم.';
+    window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`,'_blank');
+  }catch(e){showToast('❌ خطأ في فتح واتساب','error');}
+};
+
 // Delete
 window.deleteDoc=async function(col,id){
   if(!confirm('هل تريد حذف هذا الطلب؟'))return;
   try{await db.collection(col).doc(id).delete();showToast('✅ تم الحذف','success');
-    if(col==='orders')loadOrders();else loadServiceRequests();
+    if(col==='orders')loadOrders();else if(col==='service_requests')loadServiceRequests();else if(col==='subscribers')loadSubscribers();
   }catch(e){showToast('❌ خطأ في الحذف','error');}
 };
 
@@ -998,8 +1081,9 @@ function sendEmailAlert(type, data) {
 // --- مراقبة الطلبات الجديدة (Real-time) ---
 let knownOrderIds = new Set();
 let knownServiceIds = new Set();
-let firstLoadDone = { orders: false, service: false };
-let pendingAlerts = []; // طلبات لم يتم إغلاقها بعد
+let knownSubscriberIds = new Set();
+let firstLoadDone = { orders: false, service: false, subscribers: false };
+let pendingAlerts = []; // طلبات أو اشتراكات لم يتم إغلاقها بعد
 let repeatInterval = null;
 
 let listenersStarted = false;
@@ -1097,26 +1181,73 @@ function startRealtimeListeners() {
       });
   } catch(e) { console.error('Service listener setup failed:', e); }
 
+
+  // مراقبة المشتركين بالجديد
+  try {
+    db.collection('subscribers').limit(100)
+      .onSnapshot(snapshot => {
+        console.log('🔔 Subscribers snapshot:', snapshot.size, 'docs, firstLoad:', !firstLoadDone.subscribers);
+        if (!firstLoadDone.subscribers) {
+          snapshot.docs.forEach(doc => knownSubscriberIds.add(doc.id));
+          snapshot.docs.forEach(doc => {
+            const d = doc.data();
+            if ((d.status || 'جديد') === 'جديد') {
+              pendingAlerts.push({ id: doc.id, type: 'subscriber', data: d });
+            }
+          });
+          firstLoadDone.subscribers = true;
+          updatePendingCount();
+          return;
+        }
+
+        snapshot.docChanges().forEach(change => {
+          if (change.type === 'added' && !knownSubscriberIds.has(change.doc.id)) {
+            knownSubscriberIds.add(change.doc.id);
+            const d = change.doc.data();
+            triggerNewOrderAlert('subscriber', d, change.doc.id);
+          }
+          if (change.type === 'modified') {
+            const d = change.doc.data();
+            if ((d.status || 'جديد') !== 'جديد') {
+              pendingAlerts = pendingAlerts.filter(a => a.id !== change.doc.id);
+              updatePendingCount();
+            }
+          }
+          if (change.type === 'removed') {
+            pendingAlerts = pendingAlerts.filter(a => a.id !== change.doc.id);
+            updatePendingCount();
+          }
+        });
+        loadSubscribers();
+      }, err => {
+        console.error('❌ Subscribers listener error:', err);
+        listenersStarted = false;
+        setTimeout(() => startRealtimeListeners(), 10000);
+      });
+  } catch(e) { console.error('Subscribers listener setup failed:', e); }
+
   // بدء التنبيه المتكرر كل 30 دقيقة
   startRepeatAlerts();
 }
 
 function triggerNewOrderAlert(type, data, docId) {
-  const label = type === 'order' ? 'طلب شراء' : 'طلب صيانة';
-  const name = data.customerName || 'عميل';
+  const label = type === 'order' ? 'طلب شراء' : (type === 'service' ? 'طلب صيانة' : 'اشتراك جديد');
+  const phone = data.customerPhone || data.phone || data.whatsapp || '';
+  const name = data.customerName || data.name || phone || 'مشترك';
   console.log(`🚨🚨🚨 NEW ALERT: ${label} from ${name}, docId: ${docId}`);
 
   // 1. صوت
   playAlertSound();
 
   // 2. بانر
-  showAlertBanner(`🚨 ${label} جديد من ${name}!`);
+  showAlertBanner(`🚨 ${label} من ${name}!`);
 
   // 3. إشعار المتصفح
-  showBrowserNotification(`${label} جديد!`, `من: ${name}\nالهاتف: ${data.customerPhone || ''}`);
+  showBrowserNotification(`${label}!`, `من: ${name}
+الهاتف: ${phone}`);
 
   // 4. Toast
-  showToast(`🚨 ${label} جديد من ${name}!`, 'success');
+  showToast(`🚨 ${label} من ${name}!`, 'success');
 
   // 5. إضافة للتنبيهات المعلقة
   pendingAlerts.push({ id: docId, type, data, alertedAt: Date.now() });
@@ -1126,7 +1257,7 @@ function triggerNewOrderAlert(type, data, docId) {
 function updatePendingCount() {
   const count = pendingAlerts.length;
   if (count > 0 && !alertDismissed) {
-    showAlertBanner(`🔴 يوجد ${count} طلب/طلبات جديدة بحاجة لمراجعة!`);
+    showAlertBanner(`🔴 يوجد ${count} طلب/اشتراك جديد بحاجة لمراجعة!`);
   } else if (count === 0) {
     dismissAlert();
   }
@@ -1138,12 +1269,12 @@ function startRepeatAlerts() {
   repeatInterval = setInterval(() => {
     if (pendingAlerts.length > 0) {
       playAlertSound();
-      showAlertBanner(`🔴 تذكير: يوجد ${pendingAlerts.length} طلب/طلبات جديدة لم تتم معالجتها!`);
+      showAlertBanner(`🔴 تذكير: يوجد ${pendingAlerts.length} طلب/اشتراك جديد لم تتم معالجته!`);
       showBrowserNotification(
         '⏰ تذكير - طلبات معلّقة!',
-        `يوجد ${pendingAlerts.length} طلب/طلبات جديدة بحاجة لمراجعة`
+        `يوجد ${pendingAlerts.length} طلب/اشتراك جديد بحاجة لمراجعة`
       );
-      document.title = `🔴 (${pendingAlerts.length}) تذكير - طلبات جديدة!`;
+      document.title = `🔴 (${pendingAlerts.length}) تذكير - طلبات/اشتراكات جديدة!`;
     }
   }, 30 * 60 * 1000); // 30 دقيقة
 }

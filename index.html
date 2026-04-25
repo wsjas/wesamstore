@@ -8660,6 +8660,12 @@ function truncateDescription(description, maxLength = 100) {
             return description.substring(0, maxLength) + '...';
         }
 
+
+        function buildProductPageUrl(product) {
+            const rawId = product && (product._docId || product.docId || product.id || product.sku || product.name || '');
+            return `product.html?id=${encodeURIComponent(String(rawId))}`;
+        }
+
         function displayProducts(products) {
             elements.productsGrid.innerHTML = '';
             
@@ -8683,6 +8689,7 @@ function truncateDescription(description, maxLength = 100) {
             orderedProducts.forEach(product => {
                 const productCard = document.createElement('div');
                 productCard.className = 'product-card';
+                const productUrl = buildProductPageUrl(product);
                 
                 let stockClass = 'in-stock';
                 let stockText = `متوفر (${product.stock})`;
@@ -8756,7 +8763,7 @@ function truncateDescription(description, maxLength = 100) {
                             ${stockText}
                         </div>
                         <div class="product-actions">
-                            <button class="details-btn" title="عرض تفاصيل المنتج" onclick="openGallery('${product.id}')">
+                            <button class="details-btn" title="فتح صفحة المنتج" onclick="event.stopPropagation(); window.location.href='${productUrl}'; return false;">
                                 <i class="fas fa-eye"></i>
                             </button>
                             <button class="buy-btn" ${product.stock === 0 ? 'disabled' : ''}>
@@ -8769,11 +8776,11 @@ function truncateDescription(description, maxLength = 100) {
                 
                 const buyBtn = productCard.querySelector('.buy-btn');
                 if (buyBtn && product.stock > 0) {
-                    buyBtn.addEventListener('click', () => addToCart(product));
+                    buyBtn.addEventListener('click', (e) => { e.stopPropagation(); addToCart(product); });
                 }
                 
                 const productImage = productCard.querySelector('.product-image');
-                productImage.addEventListener('click', () => openGallery(product.id));
+                productImage.addEventListener('click', () => { window.location.href = productUrl; });
 
                 const videoBtn = productCard.querySelector('.video-btn-card');
                 if (videoBtn) {
@@ -8793,7 +8800,7 @@ function truncateDescription(description, maxLength = 100) {
 
                 
                 const productName = productCard.querySelector('.product-name');
-                productName.addEventListener('click', () => openGallery(product.id));
+                productName.addEventListener('click', () => { window.location.href = productUrl; });
                 
                 elements.productsGrid.appendChild(productCard);
             });
@@ -8950,13 +8957,91 @@ function truncateDescription(description, maxLength = 100) {
         }
 
         // ========== إدارة السلة ==========
-        // مزامنة السلة من التخزين المحلي (مهم خصوصاً على الموبايل بعد إعادة تحميل الصفحة)
+        // مزامنة السلة من التخزين المحلي بصيغة موحّدة بين صفحة المنتج والصفحة الرئيسية والمتجر الإلكتروني
+        const WESAM_CART_KEYS = ['wassam_cart', 'wesam_electronics_cart'];
+
+        function normalizeCartItem(i) {
+            if (!i || typeof i !== 'object') return null;
+            const id = String(i.id || i._docId || i.docId || i.sku || '').trim();
+            if (!id) return null;
+            const name = i.name || i.n || 'منتج';
+            const price = Number(i.sell ?? i.price ?? i.p ?? 0) || 0;
+            const qty = Math.max(1, Number(i.quantity ?? i.qty ?? 1) || 1);
+            const image = i.image || i.imageUrl || (Array.isArray(i.imgs) ? i.imgs[0] : '') || '';
+            const stock = Number(i.stock ?? 99) || 99;
+            const imgs = Array.isArray(i.imgs) && i.imgs.length ? i.imgs : [image].filter(Boolean);
+            return {
+                ...i,
+                id,
+                _docId: id,
+                name,
+                n: name,
+                category: i.category || i.cat || 'منتجات',
+                sell: price,
+                price,
+                p: price,
+                oldPrice: Number(i.oldPrice ?? i.compareAtPrice ?? i.op ?? 0) || 0,
+                compareAtPrice: Number(i.compareAtPrice ?? i.oldPrice ?? i.op ?? 0) || 0,
+                op: Number(i.op ?? i.oldPrice ?? i.compareAtPrice ?? 0) || 0,
+                stock,
+                image,
+                imageUrl: image,
+                imgs,
+                additionalImages: Array.isArray(i.additionalImages) ? i.additionalImages : imgs.slice(1),
+                quantity: qty,
+                qty: qty,
+                deliveryFee: Number(i.deliveryFee ?? i.shippingFee ?? 2) || 2
+            };
+        }
+
+        function mergeCartItems(items) {
+            const map = new Map();
+            (items || []).forEach(raw => {
+                const item = normalizeCartItem(raw);
+                if (!item) return;
+                const old = map.get(item.id);
+                if (old) {
+                    const nextQty = Math.max((Number(old.quantity ?? old.qty ?? 0) || 0), (Number(item.quantity ?? item.qty ?? 0) || 0));
+                    map.set(item.id, normalizeCartItem({ ...old, ...item, quantity: nextQty, qty: nextQty }));
+                } else {
+                    map.set(item.id, item);
+                }
+            });
+            return Array.from(map.values());
+        }
+
+        function readAllSavedCarts() {
+            const all = [];
+            WESAM_CART_KEYS.forEach(key => {
+                try {
+                    const raw = localStorage.getItem(key);
+                    const parsed = raw ? JSON.parse(raw) : [];
+                    if (Array.isArray(parsed)) all.push(...parsed);
+                } catch (e) { console.warn('⚠️ cart read failed:', key, e); }
+            });
+            try {
+                const bridged = sessionStorage.getItem('wassam_cart_bridge');
+                const parsed = bridged ? JSON.parse(bridged) : [];
+                if (Array.isArray(parsed)) all.push(...parsed);
+            } catch (e) {}
+            return mergeCartItems(all);
+        }
+
+        function saveCartEverywhere(cart) {
+            const normalized = mergeCartItems(cart || []);
+            WESAM_CART_KEYS.forEach(key => {
+                try { localStorage.setItem(key, JSON.stringify(normalized)); } catch (e) { console.warn('⚠️ cart write failed:', key, e); }
+            });
+            try { localStorage.setItem('wassam_cart_updated_at', String(Date.now())); } catch (e) {}
+        }
+
+        // مزامنة السلة من التخزين المحلي (مهم خصوصاً بعد الرجوع من صفحة المنتج)
         function syncCartFromStorage() {
             try {
-                const raw = localStorage.getItem('wassam_cart');
-                const parsed = raw ? JSON.parse(raw) : [];
-                state.cart = Array.isArray(parsed) ? parsed : [];
+                state.cart = readAllSavedCarts();
+                saveCartEverywhere(state.cart);
             } catch (e) {
+                console.warn('⚠️ syncCartFromStorage failed:', e);
                 state.cart = [];
             }
         }
@@ -9075,13 +9160,46 @@ function truncateDescription(description, maxLength = 100) {
         }
 
         function updateCart() {
-            localStorage.setItem('wassam_cart', JSON.stringify(state.cart));
-            const totalItems = state.cart.reduce((sum, item) => sum + item.quantity, 0);
-            elements.cartCount.textContent = totalItems;
+            state.cart = mergeCartItems(state.cart || []);
+            saveCartEverywhere(state.cart);
+            const totalItems = state.cart.reduce((sum, item) => sum + (Number(item.quantity ?? item.qty ?? 0) || 0), 0);
+            if (elements.cartCount) elements.cartCount.textContent = totalItems;
             if (elements.mCartCount) elements.mCartCount.textContent = totalItems;
+            const fabBadge = document.getElementById('mCartFabBadge');
+            if (fabBadge) fabBadge.textContent = totalItems;
             updateCartDisplay();
             updateOrderSummary();
         }
+
+        function refreshCartFromStorageAndUI() {
+            try {
+                syncCartFromStorage();
+                updateCart();
+            } catch (e) {
+                console.warn('⚠️ refreshCartFromStorageAndUI failed:', e);
+            }
+        }
+
+        function openCartFromUrlIfRequested() {
+            try {
+                const p = new URLSearchParams(window.location.search);
+                if (p.get('cart') === '1' || p.get('openCart') === '1') {
+                    setTimeout(() => {
+                        try { openCartModal(); } catch (e) { console.warn(e); }
+                    }, 450);
+                }
+            } catch (e) {}
+        }
+
+        window.addEventListener('pageshow', refreshCartFromStorageAndUI);
+        window.addEventListener('focus', refreshCartFromStorageAndUI);
+        window.addEventListener('storage', (e) => {
+            if (!e.key || e.key === 'wassam_cart' || e.key === 'wassam_cart_updated_at') refreshCartFromStorageAndUI();
+        });
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) refreshCartFromStorageAndUI();
+        });
+        document.addEventListener('DOMContentLoaded', openCartFromUrlIfRequested);
 
         function updateCartDisplay() {
             elements.cartItems.innerHTML = '';
@@ -9092,7 +9210,9 @@ function truncateDescription(description, maxLength = 100) {
             }
             
             state.cart.forEach(item => {
-                const itemTotal = item.sell * item.quantity;
+                const itemQty = Number(item.quantity ?? item.qty ?? 1) || 1;
+                const itemPrice = Number(item.sell ?? item.price ?? item.p ?? 0) || 0;
+                const itemTotal = itemPrice * itemQty;
                 
                 const cartItem = document.createElement('div');
                 cartItem.className = 'cart-item';
@@ -9104,10 +9224,10 @@ function truncateDescription(description, maxLength = 100) {
                     </div>
                     <div class="cart-item-details">
                         <div class="cart-item-name">${item.name}</div>
-                        <div class="cart-item-price">${item.sell} دينار</div>
+                        <div class="cart-item-price">${itemPrice} دينار</div>
                         <div class="cart-item-quantity">
                             <button class="quantity-btn decrease-btn" data-id="${item.id}">-</button>
-                            <span>${item.quantity}</span>
+                            <span>${itemQty}</span>
                             <button class="quantity-btn increase-btn" data-id="${item.id}">+</button>
                         </div>
                     </div>
@@ -9146,17 +9266,19 @@ function truncateDescription(description, maxLength = 100) {
             const item = state.cart.find(item => item.id === id);
             if (!item) return;
             
-            const product = state.products.find(p => p.id === id);
-            if (!product) return;
+            const product = state.products.find(p => p.id === id) || item;
+            const availableStock = Number(product.stock ?? item.stock ?? 99) || 99;
             
-            const newQuantity = item.quantity + change;
+            const currentQty = Number(item.quantity ?? item.qty ?? 1) || 1;
+            const newQuantity = currentQty + change;
             
             if (newQuantity < 1) {
                 removeFromCart(id);
-            } else if (newQuantity > product.stock) {
-                alert(`عفواً، لا يمكن إضافة المزيد من هذا المنتج. الكمية المتاحة: ${product.stock}`);
+            } else if (availableStock !== 99 && newQuantity > availableStock) {
+                alert(`عفواً، لا يمكن إضافة المزيد من هذا المنتج. الكمية المتاحة: ${availableStock}`);
             } else {
                 item.quantity = newQuantity;
+                item.qty = newQuantity;
                 updateCart();
             }
         }
@@ -9168,7 +9290,7 @@ function truncateDescription(description, maxLength = 100) {
         }
 
         function updateOrderSummary() {
-            const subtotal = state.cart.reduce((sum, item) => sum + (item.sell * item.quantity), 0);
+            const subtotal = state.cart.reduce((sum, item) => sum + ((Number(item.sell ?? item.price ?? item.p ?? 0) || 0) * (Number(item.quantity ?? item.qty ?? 1) || 1)), 0);
             const shipping = state.shippingMethod === 'delivery' ? 2 : 0;
             const total = subtotal + shipping;
             
@@ -12979,9 +13101,9 @@ function initSlider(forceReset){
     }
   }
 
-  function getServerTimestamp(){ return window.WesamFirebase.getServerTimestamp(); } catch(e){
-      return new Date();
-    }
+  function getServerTimestamp(){
+    try { return window.WesamFirebase.getServerTimestamp(); }
+    catch(e){ return new Date(); }
   }
 
   function resetJsonUpload(){
