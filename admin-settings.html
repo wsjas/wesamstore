@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الإعدادات - وسام للإلكترونيات</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin-styles.css">
+<style>
+.settings-grid { display: grid; grid-template-columns: 240px 1fr; gap: 20px; }
+.settings-nav { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 8px; height: fit-content; }
+.settings-nav button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--navy-2); text-align: right; transition: all .15s; }
+body.ltr .settings-nav button { text-align: left; }
+.settings-nav button:hover { background: var(--bg); }
+.settings-nav button.active { background: var(--orange-light); color: var(--orange-dark); }
+.toggle { position: relative; width: 38px; height: 22px; background: var(--border); border-radius: 999px; cursor: pointer; transition: all .2s; flex-shrink: 0; }
+.toggle.on { background: var(--green); }
+.toggle::after { content: ""; position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; background: #fff; border-radius: 50%; transition: all .2s; }
+.toggle.on::after { right: auto; left: 2px; }
+.setting-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border-light); }
+.setting-row:last-child { border-bottom: none; }
+.setting-row .info .title { font-weight: 600; color: var(--navy); margin-bottom: 2px; }
+.setting-row .info .desc { font-size: 12px; color: var(--slate); }
+@media (max-width: 880px) { .settings-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="admin-components.jsx"></script>
+<script type="text/babel" src="admin-shell.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+function SettingsPage() {
+  const [lang, setLang] = useState('ar');
+  const [section, setSection] = useState('store');
+  const [toggles, setToggles] = useState({ orders: true, repairs: true, stock: true, reviews: false, marketing: true, sms: true, email: false });
+  const isAr = lang === 'ar';
+  const t = T[lang];
+
+  const sections = [
+    { key: 'store', icon: <AICON.Settings />, label: isAr ? 'بيانات المتجر' : 'Store Info' },
+    { key: 'notifications', icon: <AICON.Bell />, label: isAr ? 'الإشعارات' : 'Notifications' },
+    { key: 'payment', icon: <AICON.Tag />, label: isAr ? 'الدفع والشحن' : 'Payment & Shipping' },
+    { key: 'users', icon: <AICON.Users />, label: isAr ? 'المستخدمون' : 'Users & Roles' },
+  ];
+
+  const tg = (k) => setToggles(t => ({...t, [k]: !t[k]}));
+
+  return (
+    <AdminShell active="settings" lang={lang} setLang={setLang}>
+      <div className="page-head">
+        <div>
+          <h1>{t.settings}</h1>
+          <div className="sub">{isAr ? 'إدارة إعدادات النظام والمتجر' : 'Manage system and store settings'}</div>
+        </div>
+      </div>
+
+      <div className="settings-grid">
+        <div className="settings-nav">
+          {sections.map(s => (
+            <button key={s.key} className={section === s.key ? 'active' : ''} onClick={() => setSection(s.key)}>
+              {s.icon}<span>{s.label}</span>
+            </button>
+          ))}
+        </div>
+
+        <div>
+          {section === 'store' && (
+            <div className="card">
+              <div className="card-head"><h3>{isAr ? 'بيانات المتجر' : 'Store Information'}</h3></div>
+              <div className="card-body">
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>{isAr ? 'اسم المتجر' : 'Store Name'}</label>
+                    <input className="form-control" defaultValue="وسام للإلكترونيات" />
+                  </div>
+                  <div className="form-group">
+                    <label>{isAr ? 'الوصف' : 'Tagline'}</label>
+                    <input className="form-control" defaultValue="صيانة وبيع ومتجر إلكتروني" />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>{isAr ? 'رقم الهاتف' : 'Phone'}</label>
+                    <input className="form-control" defaultValue="0790781206" />
+                  </div>
+                  <div className="form-group">
+                    <label>{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
+                    <input className="form-control" defaultValue="info@wesam.store" />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>{isAr ? 'العنوان' : 'Address'}</label>
+                  <input className="form-control" defaultValue="عمّان - الأردن" />
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>{isAr ? 'العملة' : 'Currency'}</label>
+                    <select className="form-control"><option>دينار أردني (د.أ)</option><option>USD</option></select>
+                  </div>
+                  <div className="form-group">
+                    <label>{isAr ? 'المنطقة الزمنية' : 'Timezone'}</label>
+                    <select className="form-control"><option>(GMT+3) عمّان</option></select>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>{isAr ? 'ساعات العمل' : 'Business Hours'}</label>
+                  <textarea className="form-control" defaultValue="السبت - الخميس: 9 ص - 9 م&#10;الجمعة: 2 ع - 9 م"></textarea>
+                </div>
+                <div style={{display: 'flex', gap: 8, marginTop: 14}}>
+                  <button className="btn btn-primary"><AICON.Check /> {isAr ? 'حفظ التغييرات' : 'Save Changes'}</button>
+                  <button className="btn btn-outline">{isAr ? 'إلغاء' : 'Cancel'}</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {section === 'notifications' && (
+            <div className="card">
+              <div className="card-head"><h3>{isAr ? 'الإشعارات' : 'Notifications'}</h3></div>
+              <div className="card-body">
+                {[
+                  ['orders', isAr ? 'طلبات المتجر الجديدة' : 'New shop orders', isAr ? 'إشعار عند كل طلب جديد' : 'Get notified for new orders'],
+                  ['repairs', isAr ? 'طلبات الصيانة الجديدة' : 'New repair tickets', isAr ? 'إشعار عند تسجيل طلب صيانة جديد' : 'Get notified for new repair tickets'],
+                  ['stock', isAr ? 'تنبيهات المخزون' : 'Stock alerts', isAr ? 'تنبيه عند انخفاض كمية المنتج' : 'Alert when product stock is low'],
+                  ['reviews', isAr ? 'تقييمات العملاء' : 'Customer reviews', isAr ? 'إشعار عند ترك تقييم جديد' : 'Notify on new review'],
+                  ['sms', isAr ? 'إشعارات SMS' : 'SMS notifications', isAr ? 'استلام إشعارات على الجوال' : 'Receive SMS notifications'],
+                  ['email', isAr ? 'إشعارات البريد' : 'Email notifications', isAr ? 'استلام ملخص يومي بالبريد' : 'Daily email digest'],
+                  ['marketing', isAr ? 'حملات تسويقية' : 'Marketing campaigns', isAr ? 'تنبيهات حملات العروض' : 'Promo campaign alerts'],
+                ].map(([k, t1, t2]) => (
+                  <div key={k} className="setting-row">
+                    <div className="info"><div className="title">{t1}</div><div className="desc">{t2}</div></div>
+                    <div className={`toggle ${toggles[k] ? 'on' : ''}`} onClick={() => tg(k)}></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {section === 'payment' && (
+            <div className="card">
+              <div className="card-head"><h3>{isAr ? 'الدفع والشحن' : 'Payment & Shipping'}</h3></div>
+              <div className="card-body">
+                <h4 style={{fontSize: 14, marginBottom: 8, color: 'var(--slate)', fontWeight: 700}}>{isAr ? 'طرق الدفع' : 'Payment Methods'}</h4>
+                {[['cash', isAr ? 'الدفع كاش' : 'Cash on Delivery', true], ['card', isAr ? 'بطاقة ائتمان' : 'Credit Card', true], ['transfer', isAr ? 'تحويل بنكي' : 'Bank Transfer', false]].map(([k, l, on]) => (
+                  <div key={k} className="setting-row">
+                    <div className="info"><div className="title">{l}</div></div>
+                    <div className={`toggle ${on ? 'on' : ''}`}></div>
+                  </div>
+                ))}
+                <h4 style={{fontSize: 14, marginTop: 20, marginBottom: 8, color: 'var(--slate)', fontWeight: 700}}>{isAr ? 'رسوم الشحن' : 'Shipping Rates'}</h4>
+                <div className="form-row">
+                  <div className="form-group"><label>{isAr ? 'داخل عمّان' : 'Inside Amman'}</label><input className="form-control" defaultValue="2 د.أ" /></div>
+                  <div className="form-group"><label>{isAr ? 'خارج عمّان' : 'Outside Amman'}</label><input className="form-control" defaultValue="5 د.أ" /></div>
+                </div>
+                <div className="form-group"><label>{isAr ? 'حد الشحن المجاني' : 'Free shipping above'}</label><input className="form-control" defaultValue="50 د.أ" /></div>
+              </div>
+            </div>
+          )}
+
+          {section === 'users' && (
+            <div className="card">
+              <div className="card-head">
+                <h3>{isAr ? 'المستخدمون والصلاحيات' : 'Users & Roles'}</h3>
+                <button className="btn btn-primary btn-sm"><AICON.Plus /> {isAr ? 'مستخدم جديد' : 'Add User'}</button>
+              </div>
+              <div className="table-wrap">
+                <table className="tbl">
+                  <thead><tr><th>{isAr ? 'المستخدم' : 'User'}</th><th>{isAr ? 'الدور' : 'Role'}</th><th>{isAr ? 'آخر دخول' : 'Last Login'}</th><th></th></tr></thead>
+                  <tbody>
+                    {[
+                      ['أحمد وسام', 'أ', isAr ? 'مدير' : 'Admin', 'الآن'],
+                      ['ندى علي', 'ن', isAr ? 'مشرف متجر' : 'Shop Manager', isAr ? 'منذ ساعتين' : '2h ago'],
+                      ['يوسف خالد', 'ي', isAr ? 'فني' : 'Technician', isAr ? 'منذ يوم' : '1d ago'],
+                    ].map(([n, in_, r, lo], i) => (
+                      <tr key={i}>
+                        <td><div className="av-row"><div className="av">{in_}</div><div className="name">{n}</div></div></td>
+                        <td><span className="pill new">{r}</span></td>
+                        <td style={{fontSize: 12, color: 'var(--slate)'}}>{lo}</td>
+                        <td><div className="row-actions"><button className="action-btn"><AICON.Edit /></button></div></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </AdminShell>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<SettingsPage />);
+</script>
+</body>
+</html>

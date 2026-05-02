@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>طلبات المتجر - وسام للإلكترونيات</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin-styles.css">
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="admin-components.jsx"></script>
+<script type="text/babel" src="admin-shell.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+const ORDERS = [
+  { id: '#5821', customer: 'أحمد القاسم', initial: 'أ', items: 3, products: 'ريموت Samsung، كابل HDMI ×2', total: 24, status: 'shipped', date: '2026-04-30', payment: 'كاش' },
+  { id: '#5820', customer: 'مريم الخطيب', initial: 'م', items: 1, products: 'حامل شاشة متحرك', total: 28, status: 'pending', date: '2026-04-30', payment: 'بطاقة' },
+  { id: '#5819', customer: 'سامي الهلالي', initial: 'س', items: 2, products: 'كابل HDMI، موزّع HDMI', total: 16, status: 'done', date: '2026-04-29', payment: 'كاش' },
+  { id: '#5818', customer: 'رنا أبو نصر', initial: 'ر', items: 1, products: 'رسيفر HD مع IPTV', total: 35, status: 'shipped', date: '2026-04-29', payment: 'بطاقة' },
+  { id: '#5817', customer: 'باسم العتيبي', initial: 'ب', items: 4, products: 'ريموتات بديلة ×4', total: 24, status: 'done', date: '2026-04-28', payment: 'كاش' },
+  { id: '#5816', customer: 'نور المهدي', initial: 'ن', items: 1, products: 'رسيفر 4K Ultra HD', total: 65, status: 'pending', date: '2026-04-28', payment: 'تحويل' },
+  { id: '#5815', customer: 'طارق صلاح', initial: 'ط', items: 2, products: 'حامل ثابت، كابل HDMI', total: 19, status: 'cancelled', date: '2026-04-27', payment: 'كاش' },
+];
+
+function OrdersPage() {
+  const [lang, setLang] = useState('ar');
+  const [filter, setFilter] = useState('all');
+  const isAr = lang === 'ar';
+  const t = T[lang];
+
+  const filtered = ORDERS.filter(o => filter === 'all' || o.status === filter);
+  const counts = { all: ORDERS.length };
+  ['pending','shipped','done','cancelled'].forEach(s => counts[s] = ORDERS.filter(o => o.status === s).length);
+
+  const totalRev = ORDERS.filter(o => o.status !== 'cancelled').reduce((s,o) => s+o.total, 0);
+
+  return (
+    <AdminShell active="orders" lang={lang} setLang={setLang}>
+      <div className="page-head">
+        <div>
+          <h1>{t.orders}</h1>
+          <div className="sub">{isAr ? `إجمالي ${ORDERS.length} طلب • ${totalRev} د.أ` : `${ORDERS.length} orders • ${totalRev} JOD`}</div>
+        </div>
+        <div className="page-head-actions">
+          <button className="btn btn-outline"><AICON.Download /> {t.export}</button>
+          <button className="btn btn-primary"><AICON.Plus /> {isAr ? 'طلب جديد' : 'New Order'}</button>
+        </div>
+      </div>
+
+      <div className="filter-bar">
+        <div className="tab-pills">
+          {[['all', isAr ? 'الكل' : 'All'], ['pending', isAr ? 'بانتظار' : 'Pending'], ['shipped', isAr ? 'مُرسلة' : 'Shipped'], ['done', isAr ? 'مكتملة' : 'Done'], ['cancelled', isAr ? 'ملغاة' : 'Cancelled']].map(([k, l]) => (
+            <button key={k} className={`tab-pill ${filter === k ? 'active' : ''}`} onClick={() => setFilter(k)}>{l} ({counts[k]})</button>
+          ))}
+        </div>
+        <input type="text" placeholder={isAr ? 'بحث برقم الطلب أو العميل...' : 'Search...'} style={{flex: 1, minWidth: 180}} />
+      </div>
+
+      <div className="card">
+        <div className="table-wrap">
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>{isAr ? 'رقم الطلب' : 'Order #'}</th>
+                <th>{isAr ? 'العميل' : 'Customer'}</th>
+                <th>{isAr ? 'المنتجات' : 'Products'}</th>
+                <th>{isAr ? 'القطع' : 'Items'}</th>
+                <th>{isAr ? 'الدفع' : 'Payment'}</th>
+                <th>{isAr ? 'الحالة' : 'Status'}</th>
+                <th>{isAr ? 'التاريخ' : 'Date'}</th>
+                <th>{isAr ? 'المجموع' : 'Total'}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(o => (
+                <tr key={o.id}>
+                  <td style={{fontWeight: 700, color: 'var(--orange-dark)'}}>{o.id}</td>
+                  <td>
+                    <div className="av-row">
+                      <div className="av">{o.initial}</div>
+                      <div className="name">{o.customer}</div>
+                    </div>
+                  </td>
+                  <td style={{color: 'var(--slate)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{o.products}</td>
+                  <td>{o.items}</td>
+                  <td style={{fontSize: 12, color: 'var(--slate)'}}>{o.payment}</td>
+                  <td><span className={`pill ${o.status}`}>{isAr ? ({pending:'بانتظار',shipped:'مُرسل',done:'مكتمل',cancelled:'ملغي'})[o.status] : o.status}</span></td>
+                  <td style={{color: 'var(--slate)', fontSize: 12}}>{o.date}</td>
+                  <td style={{fontWeight: 700}}>{o.total} د.أ</td>
+                  <td>
+                    <div className="row-actions">
+                      <button className="action-btn"><AICON.Eye /></button>
+                      <button className="action-btn"><AICON.Print /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </AdminShell>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<OrdersPage />);
+</script>
+</body>
+</html>

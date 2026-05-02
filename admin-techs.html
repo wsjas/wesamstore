@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الفنيون - وسام للإلكترونيات</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin-styles.css">
+<style>
+.tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.tech-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+.tech-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.tech-avatar { width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, var(--orange-light), var(--orange)); display: grid; place-items: center; color: var(--orange-dark); font-weight: 800; font-size: 20px; }
+.tech-card h3 { font-size: 16px; font-weight: 800; margin-bottom: 2px; }
+.tech-card .role { font-size: 13px; color: var(--slate); }
+.tech-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px; background: var(--bg); border-radius: 10px; margin-bottom: 12px; }
+.tech-stats .item { text-align: center; }
+.tech-stats .num { font-size: 18px; font-weight: 800; color: var(--navy); }
+.tech-stats .lbl { font-size: 11px; color: var(--slate); margin-top: 2px; }
+.tech-skills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.skill { padding: 3px 10px; background: var(--orange-light); color: var(--orange-dark); font-size: 11px; font-weight: 700; border-radius: 999px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="admin-components.jsx"></script>
+<script type="text/babel" src="admin-shell.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+const TECHS = [
+  { name: 'يوسف خالد', initial: 'ي', role: 'فني شاشات أول', phone: '0790111222', active: 12, done: 187, rating: 4.9, skills: ['شاشات LED', 'Smart TV', 'لوحات'] },
+  { name: 'كريم نبيل', initial: 'ك', role: 'فني أجهزة منزلية', phone: '0791222333', active: 8, done: 145, rating: 4.8, skills: ['ميكروويف', 'مكانس', 'كهرباء'] },
+  { name: 'سامر العبدالله', initial: 'س', role: 'فني رسيفر وريموتات', phone: '0792333444', active: 5, done: 98, rating: 4.7, skills: ['رسيفر', 'IPTV', 'برمجة ريموت'] },
+  { name: 'أنس الزغول', initial: 'أ', role: 'فني متعدد التخصص', phone: '0793444555', active: 9, done: 156, rating: 4.9, skills: ['شاشات LED', 'ميكروويف', 'كابلات'] },
+];
+
+const SCHEDULE = [
+  { time: '09:00', tech: 'يوسف', task: 'صيانة Samsung 55" - WS-48201', status: 'progress' },
+  { time: '10:30', tech: 'كريم', task: 'صيانة LG MS2540 - WS-48200', status: 'new' },
+  { time: '11:00', tech: 'يوسف', task: 'صيانة TCL 43" - WS-48193', status: 'progress' },
+  { time: '13:00', tech: 'سامر', task: 'برمجة ريموت - WS-48198', status: 'done' },
+  { time: '14:30', tech: 'كريم', task: 'صيانة Bosch BGL35 - WS-48199', status: 'done' },
+  { time: '16:00', tech: 'أنس', task: 'صيانة LG 50" - WS-48196', status: 'new' },
+];
+
+function TechsPage() {
+  const [lang, setLang] = useState('ar');
+  const isAr = lang === 'ar';
+  const t = T[lang];
+
+  return (
+    <AdminShell active="techs" lang={lang} setLang={setLang}>
+      <div className="page-head">
+        <div>
+          <h1>{t.techs}</h1>
+          <div className="sub">{isAr ? `فريق العمل ومواعيد اليوم • ${TECHS.length} فني` : `Team and today's schedule • ${TECHS.length} technicians`}</div>
+        </div>
+        <div className="page-head-actions">
+          <button className="btn btn-primary"><AICON.Plus /> {isAr ? 'إضافة فني' : 'Add Technician'}</button>
+        </div>
+      </div>
+
+      <h3 style={{fontSize: 16, fontWeight: 800, marginBottom: 14}}>{isAr ? 'فريق العمل' : 'The Team'}</h3>
+      <div className="tech-grid" style={{marginBottom: 28}}>
+        {TECHS.map((tech, i) => (
+          <div key={i} className="tech-card">
+            <div className="tech-head">
+              <div className="tech-avatar">{tech.initial}</div>
+              <div style={{flex: 1}}>
+                <h3>{tech.name}</h3>
+                <div className="role">{tech.role}</div>
+              </div>
+              <div style={{display: 'flex', alignItems: 'center', gap: 4, color: '#FBBF24', fontWeight: 700, fontSize: 14}}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                {tech.rating}
+              </div>
+            </div>
+            <div className="tech-stats">
+              <div className="item"><div className="num">{tech.active}</div><div className="lbl">{isAr ? 'نشط' : 'Active'}</div></div>
+              <div className="item"><div className="num">{tech.done}</div><div className="lbl">{isAr ? 'مكتمل' : 'Done'}</div></div>
+              <div className="item"><div className="num">{Math.round(tech.done/30)}</div><div className="lbl">{isAr ? '/شهر' : '/month'}</div></div>
+            </div>
+            <div className="tech-skills">
+              {tech.skills.map(s => <span key={s} className="skill">{s}</span>)}
+            </div>
+            <div style={{display: 'flex', gap: 6}}>
+              <button className="btn btn-outline btn-sm" style={{flex: 1, justifyContent: 'center'}}><AICON.Eye /> {isAr ? 'الملف' : 'Profile'}</button>
+              <button className="btn btn-outline btn-sm" style={{flex: 1, justifyContent: 'center'}}><AICON.Edit /> {isAr ? 'تعديل' : 'Edit'}</button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="card">
+        <div className="card-head">
+          <div>
+            <h3>{isAr ? 'مواعيد اليوم' : "Today's Schedule"}</h3>
+            <div className="sub">{isAr ? '٣٠ أبريل، ٢٠٢٦' : 'April 30, 2026'}</div>
+          </div>
+          <button className="btn btn-outline btn-sm">{isAr ? 'تقويم كامل' : 'Full Calendar'}</button>
+        </div>
+        <div style={{padding: '4px 20px 16px'}}>
+          {SCHEDULE.map((s, i) => (
+            <div key={i} className="list-item">
+              <div style={{minWidth: 60, fontWeight: 800, color: 'var(--orange-dark)', fontFamily: 'monospace'}}>{s.time}</div>
+              <div className="av">{s.tech.charAt(0)}</div>
+              <div className="body">
+                <div className="title">{s.task}</div>
+                <div className="desc">{isAr ? 'الفني' : 'Tech'}: {s.tech}</div>
+              </div>
+              <span className={`pill ${s.status}`}>{isAr ? ({new:'جديد',progress:'قيد العمل',done:'مكتمل'})[s.status] : s.status}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </AdminShell>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<TechsPage />);
+</script>
+</body>
+</html>

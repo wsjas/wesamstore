@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم - وسام للإلكترونيات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin-styles.css">
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="admin-components.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+function AdminShell({ active, lang, setLang, children }) {
+  const t = T[lang];
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.body.classList.toggle('ltr', lang !== 'ar');
+  }, [lang]);
+
+  const links = [
+    { section: 'main', items: [
+      { key: 'dashboard', href: 'admin.html', icon: <AICON.Dashboard /> },
+      { key: 'repairs', href: 'admin-repairs.html', icon: <AICON.Wrench />, badge: 12 },
+      { key: 'orders', href: 'admin-orders.html', icon: <AICON.Cart />, badge: 8 },
+    ]},
+    { section: 'management', items: [
+      { key: 'products', href: 'admin-products.html', icon: <AICON.Box /> },
+      { key: 'customers', href: 'admin-customers.html', icon: <AICON.Users /> },
+      { key: 'offers', href: 'admin-offers.html', icon: <AICON.Tag /> },
+      { key: 'techs', href: 'admin-techs.html', icon: <AICON.HardHat /> },
+    ]},
+    { section: 'system', items: [
+      { key: 'reports', href: 'admin-reports.html', icon: <AICON.Chart /> },
+      { key: 'settings', href: 'admin-settings.html', icon: <AICON.Settings /> },
+    ]},
+  ];
+
+  return (
+    <div className="admin-layout">
+      <aside className="sidebar">
+        <div className="sidebar-brand">
+          <div className="mark">و</div>
+          <div>
+            <div className="name">{lang === 'ar' ? 'وسام للإلكترونيات' : 'Wesam Electronics'}</div>
+            <div className="sub">{lang === 'ar' ? 'لوحة الإدارة' : 'Admin Panel'}</div>
+          </div>
+        </div>
+        {links.map(group => (
+          <div key={group.section}>
+            <div className="sidebar-section">
+              <div className="label">{group.section === 'main' ? t.nav_main : group.section === 'management' ? t.nav_management : t.nav_system}</div>
+            </div>
+            {group.items.map(item => (
+              <a key={item.key} href={item.href} className={`nav-link ${active === item.key ? 'active' : ''}`}>
+                {item.icon}
+                <span>{t[item.key]}</span>
+                {item.badge && <span className="badge">{item.badge}</span>}
+              </a>
+            ))}
+          </div>
+        ))}
+        <div className="sidebar-foot">
+          <div className="user-card">
+            <div className="user-avatar">أ</div>
+            <div style={{flex: 1, minWidth: 0}}>
+              <div className="name">{lang === 'ar' ? 'أحمد وسام' : 'Ahmed Wesam'}</div>
+              <div className="role">{t.admin_role}</div>
+            </div>
+            <a href="index.html" className="action-btn" title={t.logout}><AICON.Logout /></a>
+          </div>
+        </div>
+      </aside>
+
+      <main className="main">
+        <div className="topbar">
+          <div className="search-input">
+            <AICON.Search />
+            <input type="text" placeholder={t.search} />
+          </div>
+          <div className="topbar-actions">
+            <button className="lang-toggle" onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}>
+              {lang === 'ar' ? 'EN' : 'العربية'}
+            </button>
+            <button className="icon-btn"><AICON.Mail /><span className="dot"></span></button>
+            <button className="icon-btn"><AICON.Bell /><span className="dot"></span></button>
+          </div>
+        </div>
+        <div className="content">{children}</div>
+      </main>
+    </div>
+  );
+}
+
+function Dashboard() {
+  const [lang, setLang] = useState('ar');
+  const t = T[lang];
+  const isAr = lang === 'ar';
+
+  const kpis = [
+    { color: 'orange', icon: <AICON.Wrench />, num: '47', label: isAr ? 'طلبات صيانة نشطة' : 'Active Repairs', trend: '+12%', dir: 'up', compare: isAr ? 'مقارنة بالأسبوع الماضي' : 'vs last week' },
+    { color: 'blue', icon: <AICON.Cart />, num: '128', label: isAr ? 'طلبات المتجر' : 'Shop Orders', trend: '+8%', dir: 'up', compare: isAr ? 'هذا الشهر' : 'this month' },
+    { color: 'green', icon: <AICON.Chart />, num: '4,820 د.أ', label: isAr ? 'الإيرادات (الشهر)' : 'Revenue (Month)', trend: '+24%', dir: 'up', compare: isAr ? 'مقارنة بالشهر الماضي' : 'vs last month' },
+    { color: 'purple', icon: <AICON.Users />, num: '892', label: isAr ? 'إجمالي العملاء' : 'Total Customers', trend: '+5%', dir: 'up', compare: isAr ? '+38 عميل جديد' : '+38 new' },
+  ];
+
+  const recentRepairs = [
+    { id: 'WS-48201', customer: isAr ? 'محمد العمري' : 'Mohammed Al-Omari', initial: isAr ? 'م' : 'M', service: isAr ? 'صيانة شاشة LED' : 'LED TV Repair', status: 'progress', statusLbl: isAr ? 'قيد الإصلاح' : 'In Progress', date: '2026-04-30', amount: '45 د.أ' },
+    { id: 'WS-48200', customer: isAr ? 'سارة الحسن' : 'Sara Al-Hassan', initial: isAr ? 'س' : 'S', service: isAr ? 'صيانة ميكروويف' : 'Microwave Repair', status: 'new', statusLbl: isAr ? 'جديد' : 'New', date: '2026-04-30', amount: '25 د.أ' },
+    { id: 'WS-48199', customer: isAr ? 'خالد أبو زيد' : 'Khalid Abu Zaid', initial: isAr ? 'خ' : 'K', service: isAr ? 'صيانة مكنسة' : 'Vacuum Repair', status: 'done', statusLbl: isAr ? 'مكتمل' : 'Done', date: '2026-04-29', amount: '18 د.أ' },
+    { id: 'WS-48198', customer: isAr ? 'لينا قاسم' : 'Lina Qasem', initial: isAr ? 'ل' : 'L', service: isAr ? 'برمجة ريموت' : 'Remote Setup', status: 'done', statusLbl: isAr ? 'مكتمل' : 'Done', date: '2026-04-29', amount: '12 د.أ' },
+    { id: 'WS-48197', customer: isAr ? 'يوسف الشريف' : 'Yousef Al-Sharif', initial: isAr ? 'ي' : 'Y', service: isAr ? 'صيانة رسيفر' : 'Receiver Repair', status: 'progress', statusLbl: isAr ? 'قيد الإصلاح' : 'In Progress', date: '2026-04-29', amount: '32 د.أ' },
+  ];
+
+  const recentOrders = [
+    { product: isAr ? 'ريموت Samsung Smart TV' : 'Samsung Smart Remote', qty: 2, amount: '24 د.أ', status: 'shipped' },
+    { product: isAr ? 'حامل شاشة متحرك' : 'Articulating TV Mount', qty: 1, amount: '28 د.أ', status: 'pending' },
+    { product: isAr ? 'كابل HDMI 4K' : 'HDMI 4K Cable', qty: 3, amount: '12 د.أ', status: 'done' },
+    { product: isAr ? 'رسيفر HD' : 'HD Receiver', qty: 1, amount: '35 د.أ', status: 'shipped' },
+  ];
+
+  const months = isAr ? ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو'] : ['Jan','Feb','Mar','Apr','May','Jun','Jul'];
+  const chartData = [62, 45, 78, 53, 89, 71, 95];
+
+  return (
+    <AdminShell active="dashboard" lang={lang} setLang={setLang}>
+      <div className="page-head">
+        <div>
+          <h1>{t.welcome} 👋</h1>
+          <div className="sub">{t.welcome_sub}</div>
+        </div>
+        <div className="page-head-actions">
+          <button className="btn btn-outline"><AICON.Download /> {t.export}</button>
+          <a href="admin-repairs.html" className="btn btn-primary"><AICON.Plus /> {isAr ? 'طلب صيانة جديد' : 'New Repair'}</a>
+        </div>
+      </div>
+
+      <div className="kpi-grid">
+        {kpis.map((k, i) => (
+          <div key={i} className={`kpi ${k.color}`}>
+            <div className="kpi-head">
+              <div className="ico">{k.icon}</div>
+              <span className={`trend ${k.dir}`}><AICON.ArrowUp /> {k.trend}</span>
+            </div>
+            <div className="num">{k.num}</div>
+            <div className="label">{k.label}</div>
+            <div className="compare">{k.compare}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid-2" style={{marginBottom: 20}}>
+        <div className="card chart-card">
+          <div className="card-head" style={{padding: 0, border: 'none', marginBottom: 8}}>
+            <div>
+              <h3>{isAr ? 'الإيرادات والطلبات' : 'Revenue & Orders'}</h3>
+              <div className="sub">{isAr ? 'آخر ٧ أشهر' : 'Last 7 months'}</div>
+            </div>
+            <div className="tab-pills">
+              <button className="tab-pill active">{isAr ? 'شهرياً' : 'Monthly'}</button>
+              <button className="tab-pill">{isAr ? 'أسبوعياً' : 'Weekly'}</button>
+            </div>
+          </div>
+          <div className="bars">
+            {chartData.map((v, i) => (
+              <div key={i} className="bar-col">
+                <div className="bar-stack">
+                  <div className="bar-fill" style={{height: `${v}%`}}></div>
+                </div>
+                <div className="bar-label">{months[i]}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-head">
+            <h3>{isAr ? 'أحدث الطلبات' : 'Recent Orders'}</h3>
+            <a href="admin-orders.html" style={{fontSize: 13, color: 'var(--orange-dark)', fontWeight: 600}}>{isAr ? 'عرض الكل' : 'View all'}</a>
+          </div>
+          <div style={{padding: '4px 20px 16px'}}>
+            {recentOrders.map((o, i) => (
+              <div key={i} className="list-item">
+                <div className="av" style={{background: 'var(--blue-bg)', color: 'var(--blue)'}}><AICON.Box /></div>
+                <div className="body">
+                  <div className="title">{o.product}</div>
+                  <div className="desc">{isAr ? 'الكمية' : 'Qty'}: {o.qty}</div>
+                </div>
+                <div className="meta">
+                  <div style={{fontWeight: 700, color: 'var(--navy)'}}>{o.amount}</div>
+                  <span className={`pill ${o.status}`} style={{marginTop: 4}}>{o.status === 'shipped' ? (isAr ? 'مُرسل' : 'Shipped') : o.status === 'pending' ? (isAr ? 'بانتظار' : 'Pending') : (isAr ? 'مكتمل' : 'Done')}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-head">
+          <div>
+            <h3>{isAr ? 'أحدث طلبات الصيانة' : 'Latest Repair Tickets'}</h3>
+            <div className="sub">{isAr ? 'آخر ٥ طلبات' : 'Latest 5 tickets'}</div>
+          </div>
+          <a href="admin-repairs.html" className="btn btn-outline btn-sm">{isAr ? 'عرض الكل' : 'View all'}</a>
+        </div>
+        <div className="table-wrap">
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>{isAr ? 'رقم الطلب' : 'Ticket'}</th>
+                <th>{isAr ? 'العميل' : 'Customer'}</th>
+                <th>{isAr ? 'الخدمة' : 'Service'}</th>
+                <th>{isAr ? 'الحالة' : 'Status'}</th>
+                <th>{isAr ? 'التاريخ' : 'Date'}</th>
+                <th>{isAr ? 'المبلغ' : 'Amount'}</th>
+                <th>{isAr ? 'إجراءات' : 'Actions'}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentRepairs.map(r => (
+                <tr key={r.id}>
+                  <td style={{fontWeight: 700, color: 'var(--orange-dark)'}}>{r.id}</td>
+                  <td>
+                    <div className="av-row">
+                      <div className="av">{r.initial}</div>
+                      <div className="name">{r.customer}</div>
+                    </div>
+                  </td>
+                  <td>{r.service}</td>
+                  <td><span className={`pill ${r.status}`}>{r.statusLbl}</span></td>
+                  <td style={{color: 'var(--slate)'}}>{r.date}</td>
+                  <td style={{fontWeight: 700}}>{r.amount}</td>
+                  <td>
+                    <div className="row-actions">
+                      <button className="action-btn"><AICON.Eye /></button>
+                      <button className="action-btn"><AICON.Edit /></button>
+                      <button className="action-btn"><AICON.Print /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </AdminShell>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Dashboard />);
+</script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>العملاء - وسام للإلكترونيات</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin-styles.css">
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="admin-components.jsx"></script>
+<script type="text/babel" src="admin-shell.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+const CUSTOMERS = [
+  { name: 'محمد العمري', initial: 'م', phone: '0790123456', email: 'm.omari@mail.com', city: 'عمّان - تلاع العلي', orders: 8, repairs: 3, total: 245, joined: '2024-08' },
+  { name: 'سارة الحسن', initial: 'س', phone: '0795554321', email: 'sara.h@mail.com', city: 'عمّان - الجبيهة', orders: 5, repairs: 2, total: 178, joined: '2024-09' },
+  { name: 'خالد أبو زيد', initial: 'خ', phone: '0791234567', email: 'k.abuzaid@mail.com', city: 'عمّان - الصويفية', orders: 12, repairs: 4, total: 412, joined: '2024-05' },
+  { name: 'لينا قاسم', initial: 'ل', phone: '0792345678', email: 'lina@mail.com', city: 'الزرقاء', orders: 3, repairs: 1, total: 89, joined: '2025-01' },
+  { name: 'يوسف الشريف', initial: 'ي', phone: '0793456789', email: 'y.sharif@mail.com', city: 'عمّان - عبدون', orders: 7, repairs: 5, total: 298, joined: '2024-07' },
+  { name: 'فاطمة العلي', initial: 'ف', phone: '0794567890', email: 'fatma.ali@mail.com', city: 'عمّان - مرج الحمام', orders: 4, repairs: 2, total: 156, joined: '2024-11' },
+];
+
+function CustomersPage() {
+  const [lang, setLang] = useState('ar');
+  const isAr = lang === 'ar';
+  const t = T[lang];
+
+  return (
+    <AdminShell active="customers" lang={lang} setLang={setLang}>
+      <div className="page-head">
+        <div>
+          <h1>{t.customers}</h1>
+          <div className="sub">{isAr ? `قاعدة بيانات العملاء • ${CUSTOMERS.length} عميل` : `Customer database • ${CUSTOMERS.length} customers`}</div>
+        </div>
+        <div className="page-head-actions">
+          <button className="btn btn-outline"><AICON.Download /> {t.export}</button>
+          <button className="btn btn-primary"><AICON.Plus /> {isAr ? 'عميل جديد' : 'New Customer'}</button>
+        </div>
+      </div>
+
+      <div className="filter-bar">
+        <input type="text" placeholder={isAr ? 'بحث بالاسم أو الهاتف...' : 'Search by name or phone...'} style={{flex: 1, minWidth: 220}} />
+        <select><option>{isAr ? 'كل المدن' : 'All Cities'}</option><option>عمّان</option><option>الزرقاء</option><option>إربد</option></select>
+        <select><option>{isAr ? 'الترتيب: الأحدث' : 'Sort: Newest'}</option><option>{isAr ? 'الأكثر إنفاقاً' : 'Top Spenders'}</option></select>
+      </div>
+
+      <div className="card">
+        <div className="table-wrap">
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>{isAr ? 'العميل' : 'Customer'}</th>
+                <th>{isAr ? 'التواصل' : 'Contact'}</th>
+                <th>{isAr ? 'المدينة' : 'City'}</th>
+                <th>{isAr ? 'الطلبات' : 'Orders'}</th>
+                <th>{isAr ? 'الصيانات' : 'Repairs'}</th>
+                <th>{isAr ? 'إجمالي الإنفاق' : 'Total Spent'}</th>
+                <th>{isAr ? 'تاريخ التسجيل' : 'Joined'}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {CUSTOMERS.map((c, i) => (
+                <tr key={i}>
+                  <td>
+                    <div className="av-row">
+                      <div className="av">{c.initial}</div>
+                      <div>
+                        <div className="name">{c.name}</div>
+                        <div className="meta">{c.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td style={{fontFamily: 'monospace', fontSize: 12}}>{c.phone}</td>
+                  <td style={{color: 'var(--slate)'}}>{c.city}</td>
+                  <td><span className="pill new">{c.orders}</span></td>
+                  <td><span className="pill progress">{c.repairs}</span></td>
+                  <td style={{fontWeight: 700, color: 'var(--orange-dark)'}}>{c.total} د.أ</td>
+                  <td style={{color: 'var(--slate)', fontSize: 12}}>{c.joined}</td>
+                  <td>
+                    <div className="row-actions">
+                      <button className="action-btn"><AICON.Eye /></button>
+                      <button className="action-btn"><AICON.Edit /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </AdminShell>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<CustomersPage />);
+</script>
+</body>
+</html>
