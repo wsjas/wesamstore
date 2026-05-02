@@ -23,6 +23,7 @@ function AdminShell({ active, lang, setLang, children }) {
       { key: 'techs', href: 'admin-techs.html', icon: <AICON.HardHat /> },
     ]},
     { section: 'system', items: [
+      { key: 'accounting', href: 'admin-accounting.html', icon: <AICON.Wallet /> },
       { key: 'reports', href: 'admin-reports.html', icon: <AICON.Chart /> },
       { key: 'settings', href: 'admin-settings.html', icon: <AICON.Settings /> },
     ]},
