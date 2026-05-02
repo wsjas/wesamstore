@@ -32,6 +32,7 @@
 <script type="text/babel" src="admin-shell.jsx"></script>
 
 <script type="text/babel">
+
 const { useState } = React;
 
 function AccountingPage() {
@@ -40,43 +41,43 @@ function AccountingPage() {
   const isAr = lang === 'ar';
 
   const summary = [
-    { color: 'green', icon: <AICON.TrendingUp />, num: '12,450 د.أ', label: isAr ? 'إجمالي الإيرادات' : 'Total Revenue', trend: '+12.5%' },
-    { color: 'orange', icon: <AICON.TrendingDown />, num: '4,820 د.أ', label: isAr ? 'إجمالي المصروفات' : 'Total Expenses', trend: '+3.2%' },
-    { color: 'blue', icon: <AICON.Wallet />, num: '7,630 د.أ', label: isAr ? 'صافي الربح' : 'Net Profit', trend: '+18.4%' },
-    { color: 'purple', icon: <AICON.Cart />, num: '985 د.أ', label: isAr ? 'مستحقات معلّقة' : 'Outstanding', trend: '-5.1%' },
-  ];
+  { color: 'green', icon: <AICON.TrendingUp />, num: '12,450 د.أ', label: isAr ? 'إجمالي الإيرادات' : 'Total Revenue', trend: '+12.5%' },
+  { color: 'orange', icon: <AICON.TrendingDown />, num: '4,820 د.أ', label: isAr ? 'إجمالي المصروفات' : 'Total Expenses', trend: '+3.2%' },
+  { color: 'blue', icon: <AICON.Wallet />, num: '7,630 د.أ', label: isAr ? 'صافي الربح' : 'Net Profit', trend: '+18.4%' },
+  { color: 'purple', icon: <AICON.Cart />, num: '985 د.أ', label: isAr ? 'مستحقات معلّقة' : 'Outstanding', trend: '-5.1%' }];
+
 
   const transactions = [
-    { id: 'TX-2041', date: '2026-05-02', type: 'income', desc: isAr ? 'صيانة شاشة LED - WS-48291' : 'LED Repair - WS-48291', method: isAr ? 'كاش' : 'Cash', amount: 45 },
-    { id: 'TX-2040', date: '2026-05-02', type: 'income', desc: isAr ? 'طلب متجر - OR-1042' : 'Shop Order - OR-1042', method: isAr ? 'بطاقة' : 'Card', amount: 32 },
-    { id: 'TX-2039', date: '2026-05-02', type: 'expense', desc: isAr ? 'شراء قطع غيار - شاشات' : 'Parts purchase - LED', method: isAr ? 'تحويل' : 'Transfer', amount: -180 },
-    { id: 'TX-2038', date: '2026-05-01', type: 'income', desc: isAr ? 'صيانة ميكروويف - WS-48290' : 'Microwave - WS-48290', method: isAr ? 'كاش' : 'Cash', amount: 28 },
-    { id: 'TX-2037', date: '2026-05-01', type: 'expense', desc: isAr ? 'إيجار المحل (شهر مايو)' : 'Shop rent (May)', method: isAr ? 'تحويل' : 'Transfer', amount: -350 },
-    { id: 'TX-2036', date: '2026-05-01', type: 'income', desc: isAr ? 'بيع ريموتات (5 قطع)' : 'Remote sale (5 units)', method: isAr ? 'كاش' : 'Cash', amount: 60 },
-    { id: 'TX-2035', date: '2026-04-30', type: 'expense', desc: isAr ? 'فاتورة كهرباء' : 'Electricity bill', method: isAr ? 'تحويل' : 'Transfer', amount: -85 },
-    { id: 'TX-2034', date: '2026-04-30', type: 'income', desc: isAr ? 'صيانة رسيفر - WS-48287' : 'Receiver - WS-48287', method: isAr ? 'كاش' : 'Cash', amount: 18 },
-    { id: 'TX-2033', date: '2026-04-30', type: 'expense', desc: isAr ? 'راتب فني (يوسف)' : 'Tech salary (Yousef)', method: isAr ? 'تحويل' : 'Transfer', amount: -450 },
-    { id: 'TX-2032', date: '2026-04-29', type: 'income', desc: isAr ? 'بيع كابلات HDMI' : 'HDMI cables sale', method: isAr ? 'بطاقة' : 'Card', amount: 24 },
-  ];
+  { id: 'TX-2041', date: '2026-05-02', type: 'income', desc: isAr ? 'صيانة شاشة LED - WS-48291' : 'LED Repair - WS-48291', method: isAr ? 'كاش' : 'Cash', amount: 45 },
+  { id: 'TX-2040', date: '2026-05-02', type: 'income', desc: isAr ? 'طلب متجر - OR-1042' : 'Shop Order - OR-1042', method: isAr ? 'بطاقة' : 'Card', amount: 32 },
+  { id: 'TX-2039', date: '2026-05-02', type: 'expense', desc: isAr ? 'شراء قطع غيار - شاشات' : 'Parts purchase - LED', method: isAr ? 'تحويل' : 'Transfer', amount: -180 },
+  { id: 'TX-2038', date: '2026-05-01', type: 'income', desc: isAr ? 'صيانة ميكروويف - WS-48290' : 'Microwave - WS-48290', method: isAr ? 'كاش' : 'Cash', amount: 28 },
+  { id: 'TX-2037', date: '2026-05-01', type: 'expense', desc: isAr ? 'إيجار المحل (شهر مايو)' : 'Shop rent (May)', method: isAr ? 'تحويل' : 'Transfer', amount: -350 },
+  { id: 'TX-2036', date: '2026-05-01', type: 'income', desc: isAr ? 'بيع ريموتات (5 قطع)' : 'Remote sale (5 units)', method: isAr ? 'كاش' : 'Cash', amount: 60 },
+  { id: 'TX-2035', date: '2026-04-30', type: 'expense', desc: isAr ? 'فاتورة كهرباء' : 'Electricity bill', method: isAr ? 'تحويل' : 'Transfer', amount: -85 },
+  { id: 'TX-2034', date: '2026-04-30', type: 'income', desc: isAr ? 'صيانة رسيفر - WS-48287' : 'Receiver - WS-48287', method: isAr ? 'كاش' : 'Cash', amount: 18 },
+  { id: 'TX-2033', date: '2026-04-30', type: 'expense', desc: isAr ? 'راتب فني (يوسف)' : 'Tech salary (Yousef)', method: isAr ? 'تحويل' : 'Transfer', amount: -450 },
+  { id: 'TX-2032', date: '2026-04-29', type: 'income', desc: isAr ? 'بيع كابلات HDMI' : 'HDMI cables sale', method: isAr ? 'بطاقة' : 'Card', amount: 24 }];
 
-  const filtered = tab === 'overview' ? transactions : transactions.filter(t => t.type === tab.replace('s', ''));
+
+  const filtered = tab === 'overview' ? transactions : transactions.filter((t) => t.type === tab.replace('s', ''));
 
   const expenseCats = [
-    { lbl: isAr ? 'قطع غيار' : 'Parts', val: 1820, color: '#F97316' },
-    { lbl: isAr ? 'رواتب' : 'Salaries', val: 1500, color: '#3B82F6' },
-    { lbl: isAr ? 'إيجار' : 'Rent', val: 700, color: '#8B5CF6' },
-    { lbl: isAr ? 'فواتير' : 'Bills', val: 380, color: '#10B981' },
-    { lbl: isAr ? 'أخرى' : 'Other', val: 420, color: '#94A3B8' },
-  ];
+  { lbl: isAr ? 'قطع غيار' : 'Parts', val: 1820, color: '#F97316' },
+  { lbl: isAr ? 'رواتب' : 'Salaries', val: 1500, color: '#3B82F6' },
+  { lbl: isAr ? 'إيجار' : 'Rent', val: 700, color: '#8B5CF6' },
+  { lbl: isAr ? 'فواتير' : 'Bills', val: 380, color: '#10B981' },
+  { lbl: isAr ? 'أخرى' : 'Other', val: 420, color: '#94A3B8' }];
+
   const totalExp = expenseCats.reduce((s, c) => s + c.val, 0);
 
   const paymentMethods = [
-    { lbl: isAr ? 'كاش' : 'Cash', pct: 58, val: '7,221', color: '#10B981' },
-    { lbl: isAr ? 'بطاقة' : 'Card', pct: 32, val: '3,984', color: '#3B82F6' },
-    { lbl: isAr ? 'تحويل' : 'Transfer', pct: 10, val: '1,245', color: '#8B5CF6' },
-  ];
+  { lbl: isAr ? 'كاش' : 'Cash', pct: 58, val: '7,221', color: '#10B981' },
+  { lbl: isAr ? 'بطاقة' : 'Card', pct: 32, val: '3,984', color: '#3B82F6' },
+  { lbl: isAr ? 'تحويل' : 'Transfer', pct: 10, val: '1,245', color: '#8B5CF6' }];
 
-  const months = isAr ? ['يناير','فبراير','مارس','أبريل','مايو'] : ['Jan','Feb','Mar','Apr','May'];
+
+  const months = isAr ? ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو'] : ['Jan', 'Feb', 'Mar', 'Apr', 'May'];
   const incomeChart = [82, 68, 91, 76, 95];
   const expenseChart = [45, 38, 52, 41, 48];
 
@@ -94,8 +95,8 @@ function AccountingPage() {
       </div>
 
       <div className="summary-grid">
-        {summary.map((k, i) => (
-          <div key={i} className={`kpi ${k.color}`}>
+        {summary.map((k, i) =>
+        <div key={i} className={`kpi ${k.color}`}>
             <div className="kpi-head">
               <div className="ico">{k.icon}</div>
               <span className="trend up"><AICON.ArrowUp /> {k.trend}</span>
@@ -103,31 +104,31 @@ function AccountingPage() {
             <div className="num">{k.num}</div>
             <div className="label">{k.label}</div>
           </div>
-        ))}
+        )}
       </div>
 
-      <div className="grid-2" style={{marginBottom: 20}}>
+      <div className="grid-2" style={{ marginBottom: 20 }}>
         <div className="card chart-card">
-          <div className="card-head" style={{padding: 0, border: 'none', marginBottom: 8}}>
+          <div className="card-head" style={{ padding: 0, border: 'none', marginBottom: 8 }}>
             <div>
               <h3>{isAr ? 'الإيرادات مقابل المصروفات' : 'Revenue vs Expenses'}</h3>
               <div className="sub">{isAr ? 'آخر ٥ أشهر (آلاف الدنانير)' : 'Last 5 months (thousands JOD)'}</div>
             </div>
-            <div style={{display: 'flex', gap: 14, fontSize: 12, color: 'var(--slate)'}}>
-              <span style={{display: 'flex', alignItems: 'center', gap: 6}}><span style={{width: 10, height: 10, background: '#10B981', borderRadius: 2}}></span>{isAr ? 'إيرادات' : 'Income'}</span>
-              <span style={{display: 'flex', alignItems: 'center', gap: 6}}><span style={{width: 10, height: 10, background: '#F97316', borderRadius: 2}}></span>{isAr ? 'مصروفات' : 'Expenses'}</span>
+            <div style={{ display: 'flex', gap: 14, fontSize: 12, color: 'var(--slate)' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 10, height: 10, background: '#10B981', borderRadius: 2 }}></span>{isAr ? 'إيرادات' : 'Income'}</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 10, height: 10, background: '#F97316', borderRadius: 2 }}></span>{isAr ? 'مصروفات' : 'Expenses'}</span>
             </div>
           </div>
-          <div className="bars" style={{gap: 18}}>
-            {months.map((m, i) => (
-              <div key={i} className="bar-col">
-                <div style={{display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 4, height: '100%', width: '100%'}}>
-                  <div style={{width: '40%', background: '#10B981', borderRadius: '6px 6px 0 0', height: `${incomeChart[i]}%`}}></div>
-                  <div style={{width: '40%', background: '#F97316', borderRadius: '6px 6px 0 0', height: `${expenseChart[i]}%`}}></div>
+          <div className="bars" style={{ gap: 18 }}>
+            {months.map((m, i) =>
+            <div key={i} className="bar-col">
+                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 4, height: '100%', width: '100%' }}>
+                  <div style={{ width: '40%', background: '#10B981', borderRadius: '6px 6px 0 0', height: `${incomeChart[i]}%` }}></div>
+                  <div style={{ width: '40%', background: '#F97316', borderRadius: '6px 6px 0 0', height: `${expenseChart[i]}%` }}></div>
                 </div>
                 <div className="bar-label">{m}</div>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -138,44 +139,44 @@ function AccountingPage() {
               <div className="sub">{isAr ? 'الشهر الحالي' : 'Current month'}</div>
             </div>
           </div>
-          <div style={{padding: 20}}>
-            {expenseCats.map(c => {
-              const pct = ((c.val / totalExp) * 100).toFixed(0);
+          <div style={{ padding: 20 }}>
+            {expenseCats.map((c) => {
+              const pct = (c.val / totalExp * 100).toFixed(0);
               return (
-                <div key={c.lbl} style={{marginBottom: 14}}>
-                  <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13}}>
-                    <span style={{display: 'flex', alignItems: 'center', gap: 8}}><span style={{width: 10, height: 10, background: c.color, borderRadius: 2}}></span>{c.lbl}</span>
-                    <span style={{fontWeight: 700}}>{c.val} د.أ <span style={{color: 'var(--slate)', fontWeight: 400}}>({pct}٪)</span></span>
+                <div key={c.lbl} style={{ marginBottom: 14 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ width: 10, height: 10, background: c.color, borderRadius: 2 }}></span>{c.lbl}</span>
+                    <span style={{ fontWeight: 700 }}>{c.val} د.أ <span style={{ color: 'var(--slate)', fontWeight: 400 }}>({pct}٪)</span></span>
                   </div>
-                  <div className="payment-method-bar" style={{margin: 0}}>
-                    <div className="bar-track"><div className="bar-fill" style={{width: pct + '%', background: c.color}}></div></div>
+                  <div className="payment-method-bar" style={{ margin: 0 }}>
+                    <div className="bar-track"><div className="bar-fill" style={{ ...{ width: pct + '%', background: c.color }, height: "5px", width: "5px" }}></div></div>
                   </div>
-                </div>
-              );
+                </div>);
+
             })}
-            <div style={{marginTop: 18, paddingTop: 16, borderTop: '1px dashed var(--border)', display: 'flex', justifyContent: 'space-between'}}>
-              <span style={{fontWeight: 700}}>{isAr ? 'الإجمالي' : 'Total'}</span>
-              <span style={{fontWeight: 800, color: '#DC2626'}}>{totalExp.toLocaleString()} د.أ</span>
+            <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px dashed var(--border)', display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontWeight: 700 }}>{isAr ? 'الإجمالي' : 'Total'}</span>
+              <span style={{ fontWeight: 800, color: '#DC2626' }}>{totalExp.toLocaleString()} د.أ</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="card" style={{marginBottom: 20}}>
+      <div className="card" style={{ marginBottom: 20 }}>
         <div className="card-head">
           <div>
             <h3>{isAr ? 'طرق الدفع' : 'Payment Methods'}</h3>
             <div className="sub">{isAr ? 'توزيع الإيرادات حسب طريقة الدفع' : 'Revenue by payment method'}</div>
           </div>
         </div>
-        <div style={{padding: 20}}>
-          {paymentMethods.map(p => (
-            <div key={p.lbl} className="payment-method-bar">
+        <div style={{ padding: 20 }}>
+          {paymentMethods.map((p) =>
+          <div key={p.lbl} className="payment-method-bar">
               <span className="lbl">{p.lbl}</span>
-              <div className="bar-track"><div className="bar-fill" style={{width: p.pct + '%', background: p.color}}></div></div>
+              <div className="bar-track"><div className="bar-fill" style={{ ...{ width: p.pct + '%', background: p.color, borderRadius: "0px" }, height: "0px", width: "0px" }}></div></div>
               <span className="val">{p.val} د.أ ({p.pct}٪)</span>
             </div>
-          ))}
+          )}
         </div>
       </div>
 
@@ -187,8 +188,8 @@ function AccountingPage() {
           </div>
           <div className="acc-tabs">
             <button className={tab === 'overview' ? 'active' : ''} onClick={() => setTab('overview')}>{isAr ? 'الكل' : 'All'}</button>
-            <button className={tab === 'incomes' ? 'active' : ''} onClick={() => setTab('incomes')} style={{color: tab === 'incomes' ? '#fff' : '#16A34A'}}>{isAr ? 'الإيرادات' : 'Income'}</button>
-            <button className={tab === 'expenses' ? 'active' : ''} onClick={() => setTab('expenses')} style={{color: tab === 'expenses' ? '#fff' : '#DC2626'}}>{isAr ? 'المصروفات' : 'Expenses'}</button>
+            <button className={tab === 'incomes' ? 'active' : ''} onClick={() => setTab('incomes')} style={{ color: tab === 'incomes' ? '#fff' : '#16A34A' }}>{isAr ? 'الإيرادات' : 'Income'}</button>
+            <button className={tab === 'expenses' ? 'active' : ''} onClick={() => setTab('expenses')} style={{ color: tab === 'expenses' ? '#fff' : '#DC2626' }}>{isAr ? 'المصروفات' : 'Expenses'}</button>
           </div>
         </div>
         <div className="table-wrap">
@@ -205,14 +206,14 @@ function AccountingPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(tx => (
-                <tr key={tx.id}>
-                  <td style={{fontWeight: 700, color: 'var(--orange-dark)'}}>{tx.id}</td>
-                  <td style={{color: 'var(--slate)'}}>{tx.date}</td>
+              {filtered.map((tx) =>
+              <tr key={tx.id}>
+                  <td style={{ fontWeight: 700, color: 'var(--orange-dark)' }}>{tx.id}</td>
+                  <td style={{ color: 'var(--slate)' }}>{tx.date}</td>
                   <td>{tx.desc}</td>
                   <td>
                     <span className={`pill ${tx.type === 'income' ? 'done' : 'canceled'}`}>
-                      {tx.type === 'income' ? (isAr ? 'إيراد' : 'Income') : (isAr ? 'مصروف' : 'Expense')}
+                      {tx.type === 'income' ? isAr ? 'إيراد' : 'Income' : isAr ? 'مصروف' : 'Expense'}
                     </span>
                   </td>
                   <td>{tx.method}</td>
@@ -227,16 +228,16 @@ function AccountingPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
-        {filtered.length === 0 && (
-          <div style={{padding: 40, textAlign: 'center', color: 'var(--slate)'}}>{isAr ? 'لا توجد حركات' : 'No transactions'}</div>
-        )}
+        {filtered.length === 0 &&
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--slate)' }}>{isAr ? 'لا توجد حركات' : 'No transactions'}</div>
+        }
       </div>
-    </AdminShell>
-  );
+    </AdminShell>);
+
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<AccountingPage />);
