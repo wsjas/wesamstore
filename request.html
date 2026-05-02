@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>طلب صيانة - وسام للإلكترونيات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+.req-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 32px;
+  margin-top: -32px;
+  position: relative;
+  z-index: 5;
+  padding-bottom: 60px;
+}
+.aside-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  height: fit-content;
+}
+.aside-card h4 {
+  font-size: 16px;
+  font-weight: 800;
+  margin-bottom: 14px;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.aside-card h4 .dot { width: 8px; height: 8px; background: var(--orange); border-radius: 50%; }
+.aside-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.aside-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--navy-2);
+  line-height: 1.5;
+}
+.aside-list li svg {
+  color: var(--green);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.aside-help {
+  background: var(--orange-light);
+  border-radius: 14px;
+  padding: 18px;
+  margin-top: 18px;
+}
+.aside-help h5 { font-weight: 800; color: var(--orange-dark); margin-bottom: 6px; font-size: 15px; }
+.aside-help p { font-size: 13px; color: var(--navy-2); margin-bottom: 12px; line-height: 1.6; }
+.aside-help .btn { width: 100%; justify-content: center; }
+
+.steps-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 28px;
+  padding: 6px;
+  background: var(--bg);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+.step-pill {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--slate);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.step-pill.active { background: var(--navy); color: #fff; }
+.step-pill.done { background: var(--green); color: #fff; }
+.step-pill .num {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  display: grid; place-items: center;
+  font-size: 11px;
+}
+.step-pill:not(.active):not(.done) .num { background: var(--border); color: var(--slate); }
+
+.section-title {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  color: var(--navy);
+}
+.section-desc {
+  font-size: 14px;
+  color: var(--slate);
+  margin-bottom: 20px;
+}
+
+.action-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.success-card {
+  text-align: center;
+  padding: 48px 32px;
+}
+.success-icon {
+  width: 80px; height: 80px;
+  background: #ECFDF5;
+  color: var(--green);
+  border-radius: 50%;
+  display: grid; place-items: center;
+  margin: 0 auto 20px;
+}
+.success-card h2 { font-size: 28px; margin-bottom: 10px; }
+.success-card p { font-size: 16px; color: var(--slate); margin-bottom: 24px; }
+.ticket-box {
+  display: inline-block;
+  background: var(--bg);
+  border: 1.5px dashed var(--border);
+  padding: 14px 28px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+.ticket-box .lbl { font-size: 12px; color: var(--slate); margin-bottom: 4px; }
+.ticket-box .num { font-size: 22px; font-weight: 800; color: var(--orange-dark); letter-spacing: 0.05em; }
+
+@media (max-width: 880px) {
+  .req-layout { grid-template-columns: 1fr; }
+  .step-pill { font-size: 11px; padding: 8px 4px; }
+  .step-pill .num { width: 18px; height: 18px; font-size: 10px; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="components.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+
+const SERVICE_TYPES = {
+  led: { label: 'صيانة شاشة LED', icon: <Icon.Tv />, brands: ['Samsung', 'LG', 'Sony', 'TCL', 'Hisense', 'Toshiba', 'أخرى'], issues: ['الشاشة لا تعمل', 'لا يوجد صورة', 'لا يوجد صوت', 'بقع/خطوط على الشاشة', 'مشاكل في الريموت', 'انقطاع متكرر', 'مشكلة أخرى'] },
+  microwave: { label: 'صيانة ميكروويف', icon: <Icon.Microwave />, brands: ['Samsung', 'LG', 'Panasonic', 'Sharp', 'Toshiba', 'أخرى'], issues: ['لا يعمل نهائياً', 'لا يسخّن الطعام', 'صوت غريب', 'مشكلة في الباب', 'لوحة التحكم لا تعمل', 'مشكلة أخرى'] },
+  vacuum: { label: 'صيانة مكنسة كهربائية', icon: <Icon.Vacuum />, brands: ['Samsung', 'LG', 'Bosch', 'Philips', 'Black+Decker', 'أخرى'], issues: ['لا تعمل', 'ضعف الشفط', 'صوت عالي/غريب', 'انسداد', 'مشكلة في السلك', 'مشكلة أخرى'] },
+  remote: { label: 'برمجة/إصلاح ريموت', icon: <Icon.Remote />, brands: ['ريموت أصلي', 'ريموت بديل', 'لا أعرف'], issues: ['لا يستجيب', 'يحتاج برمجة', 'بعض الأزرار لا تعمل', 'مشكلة أخرى'] },
+  receiver: { label: 'صيانة رسيفر', icon: <Icon.Receiver />, brands: ['HD', '4K', 'IPTV', 'لا أعرف'], issues: ['لا يلتقط القنوات', 'مشكلة في الريموت', 'لا يعمل', 'مشكلة أخرى'] },
+  other: { label: 'صيانة أخرى', icon: <Icon.Settings />, brands: ['غير محدد'], issues: ['وصف الحالة في الملاحظات'] },
+};
+
+function getQuery(key) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(key);
+}
+
+function RequestPage() {
+  const initialType = getQuery('type') || 'led';
+  const [step, setStep] = useState(1);
+  const [form, setForm] = useState({
+    type: SERVICE_TYPES[initialType] ? initialType : 'led',
+    brand: '',
+    model: '',
+    issues: [],
+    purchaseYear: '',
+    underWarranty: 'no',
+    name: '',
+    phone: '',
+    altPhone: '',
+    city: 'عمّان',
+    area: '',
+    address: '',
+    serviceMode: 'home', // home or workshop
+    preferredDate: '',
+    preferredTime: 'morning',
+    notes: '',
+    agree: false,
+  });
+  const [errors, setErrors] = useState({});
+  const [ticket, setTicket] = useState(null);
+
+  const cur = SERVICE_TYPES[form.type];
+
+  const update = (k, v) => { setForm(f => ({...f, [k]: v})); setErrors(e => ({...e, [k]: null})); };
+  const toggleIssue = (issue) => {
+    setForm(f => ({ ...f, issues: f.issues.includes(issue) ? f.issues.filter(i => i !== issue) : [...f.issues, issue] }));
+  };
+
+  const validateStep = () => {
+    const e = {};
+    if (step === 1) {
+      if (!form.type) e.type = 'اختر نوع الخدمة';
+      if (!form.brand) e.brand = 'اختر الماركة';
+      if (form.issues.length === 0) e.issues = 'حدد المشكلة على الأقل';
+    }
+    if (step === 2) {
+      if (!form.name.trim()) e.name = 'الاسم مطلوب';
+      if (!form.phone.trim()) e.phone = 'رقم الهاتف مطلوب';
+      else if (!/^0?[789]\d{8}$/.test(form.phone.replace(/\s/g,''))) e.phone = 'رقم هاتف غير صحيح';
+      if (!form.area.trim()) e.area = 'المنطقة مطلوبة';
+    }
+    if (step === 3) {
+      if (!form.preferredDate) e.preferredDate = 'اختر التاريخ';
+      if (!form.agree) e.agree = 'يرجى الموافقة على الشروط';
+    }
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const next = () => { if (validateStep()) setStep(s => s + 1); };
+  const back = () => setStep(s => s - 1);
+  const submit = () => {
+    if (!validateStep()) return;
+    const id = 'WS-' + Math.floor(Math.random() * 90000 + 10000);
+    setTicket(id);
+    setStep(4);
+  };
+
+  const today = new Date().toISOString().split('T')[0];
+
+  return (
+    <>
+      <TopBar />
+      <Nav active="maintenance" />
+
+      <header className="page-header">
+        <div className="container">
+          <Breadcrumb items={[{label: 'الرئيسية', href: 'index.html'}, {label: 'الصيانة', href: 'maintenance.html'}, {label: 'طلب صيانة'}]} />
+          <h1>طلب صيانة جديد</h1>
+          <p>املأ النموذج خلال دقيقتين، وسنتواصل معك لتأكيد الموعد ومعاينة الجهاز.</p>
+        </div>
+      </header>
+
+      <div className="container">
+        <div className="req-layout">
+          <div className="form-card">
+            {/* STEPS BAR */}
+            <div className="steps-bar">
+              <div className={`step-pill ${step >= 1 ? (step > 1 ? 'done' : 'active') : ''}`}>
+                <span className="num">{step > 1 ? <Icon.Check /> : '١'}</span> الجهاز والمشكلة
+              </div>
+              <div className={`step-pill ${step >= 2 ? (step > 2 ? 'done' : 'active') : ''}`}>
+                <span className="num">{step > 2 ? <Icon.Check /> : '٢'}</span> بياناتك
+              </div>
+              <div className={`step-pill ${step >= 3 ? (step > 3 ? 'done' : 'active') : ''}`}>
+                <span className="num">{step > 3 ? <Icon.Check /> : '٣'}</span> الموعد والتأكيد
+              </div>
+            </div>
+
+            {/* STEP 1 */}
+            {step === 1 && (
+              <div>
+                <div className="section-title">١. ما الجهاز الذي تحتاج صيانته؟</div>
+                <div className="section-desc">اختر نوع الخدمة لتظهر لك المشاكل الشائعة المرتبطة بها.</div>
+                <div className="form-group">
+                  <label>نوع الخدمة <span className="req">*</span></label>
+                  <div className="radio-grid">
+                    {Object.entries(SERVICE_TYPES).map(([k, v]) => (
+                      <label key={k} className={`radio-card ${form.type === k ? 'checked' : ''}`}>
+                        <input type="radio" checked={form.type === k} onChange={() => update('type', k)} />
+                        <div className="ico-box">{v.icon}</div>
+                        <div className="lbl">{v.label}</div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>الماركة <span className="req">*</span></label>
+                    <select className="form-control" value={form.brand} onChange={e => update('brand', e.target.value)}>
+                      <option value="">اختر الماركة</option>
+                      {cur.brands.map(b => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                    {errors.brand && <div style={{color: '#DC2626', fontSize: 12, marginTop: 6}}>{errors.brand}</div>}
+                  </div>
+                  <div className="form-group">
+                    <label>الموديل (إن وُجد)</label>
+                    <input type="text" className="form-control" placeholder="مثال: UE43AU7000" value={form.model} onChange={e => update('model', e.target.value)} />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>المشكلة (يمكن اختيار أكثر من واحدة) <span className="req">*</span></label>
+                  <div className="radio-grid" style={{gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))'}}>
+                    {cur.issues.map(issue => (
+                      <label key={issue} className={`radio-card ${form.issues.includes(issue) ? 'checked' : ''}`}>
+                        <input type="checkbox" checked={form.issues.includes(issue)} onChange={() => toggleIssue(issue)} />
+                        <div className="ico-box" style={{width: 24, height: 24}}>
+                          {form.issues.includes(issue) ? <Icon.Check /> : <Icon.Plus />}
+                        </div>
+                        <div className="lbl">{issue}</div>
+                      </label>
+                    ))}
+                  </div>
+                  {errors.issues && <div style={{color: '#DC2626', fontSize: 12, marginTop: 6}}>{errors.issues}</div>}
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>سنة الشراء (تقريباً)</label>
+                    <input type="text" className="form-control" placeholder="مثال: 2022" value={form.purchaseYear} onChange={e => update('purchaseYear', e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label>هل الجهاز ضمن الكفالة؟</label>
+                    <div style={{display: 'flex', gap: 10}}>
+                      <label className={`radio-card ${form.underWarranty === 'yes' ? 'checked' : ''}`} style={{flex: 1, justifyContent: 'center'}}>
+                        <input type="radio" checked={form.underWarranty === 'yes'} onChange={() => update('underWarranty', 'yes')} />
+                        <div className="lbl">نعم</div>
+                      </label>
+                      <label className={`radio-card ${form.underWarranty === 'no' ? 'checked' : ''}`} style={{flex: 1, justifyContent: 'center'}}>
+                        <input type="radio" checked={form.underWarranty === 'no'} onChange={() => update('underWarranty', 'no')} />
+                        <div className="lbl">لا</div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="action-row">
+                  <a href="maintenance.html" className="btn btn-outline">إلغاء</a>
+                  <button onClick={next} className="btn btn-primary">التالي <Icon.ArrowLeft /></button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2 */}
+            {step === 2 && (
+              <div>
+                <div className="section-title">٢. بياناتك للتواصل</div>
+                <div className="section-desc">سنستخدم هذه البيانات للتواصل معك وتنسيق موعد الصيانة فقط.</div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>الاسم الكامل <span className="req">*</span></label>
+                    <input type="text" className="form-control" value={form.name} onChange={e => update('name', e.target.value)} placeholder="مثال: محمد أحمد" />
+                    {errors.name && <div style={{color: '#DC2626', fontSize: 12, marginTop: 6}}>{errors.name}</div>}
+                  </div>
+                  <div className="form-group">
+                    <label>رقم الهاتف <span className="req">*</span></label>
+                    <input type="tel" className="form-control" value={form.phone} onChange={e => update('phone', e.target.value)} placeholder="07xxxxxxxx" />
+                    {errors.phone && <div style={{color: '#DC2626', fontSize: 12, marginTop: 6}}>{errors.phone}</div>}
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>رقم بديل (اختياري)</label>
+                    <input type="tel" className="form-control" value={form.altPhone} onChange={e => update('altPhone', e.target.value)} placeholder="07xxxxxxxx" />
+                  </div>
+                  <div className="form-group">
+                    <label>المدينة</label>
+                    <select className="form-control" value={form.city} onChange={e => update('city', e.target.value)}>
+                      <option>عمّان</option>
+                      <option>الزرقاء</option>
+                      <option>إربد</option>
+                      <option>السلط</option>
+                      <option>مادبا</option>
+                      <option>أخرى</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>المنطقة <span className="req">*</span></label>
+                    <input type="text" className="form-control" value={form.area} onChange={e => update('area', e.target.value)} placeholder="مثال: تلاع العلي" />
+                    {errors.area && <div style={{color: '#DC2626', fontSize: 12, marginTop: 6}}>{errors.area}</div>}
+                  </div>
+                  <div className="form-group">
+                    <label>أقرب معلم (اختياري)</label>
+                    <input type="text" className="form-control" value={form.address} onChange={e => update('address', e.target.value)} placeholder="مثال: قرب صيدلية النور" />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>طريقة الصيانة المفضلة</label>
+                  <div className="radio-grid">
+                    <label className={`radio-card ${form.serviceMode === 'home' ? 'checked' : ''}`}>
+                      <input type="radio" checked={form.serviceMode === 'home'} onChange={() => update('serviceMode', 'home')} />
+                      <div className="ico-box"><Icon.Truck /></div>
+                      <div>
+                        <div className="lbl">صيانة في المنزل</div>
+                        <div style={{fontSize: 12, color: 'var(--slate)'}}>الفني يأتي إليك</div>
+                      </div>
+                    </label>
+                    <label className={`radio-card ${form.serviceMode === 'workshop' ? 'checked' : ''}`}>
+                      <input type="radio" checked={form.serviceMode === 'workshop'} onChange={() => update('serviceMode', 'workshop')} />
+                      <div className="ico-box"><Icon.Wrench /></div>
+                      <div>
+                        <div className="lbl">في الورشة</div>
+                        <div style={{fontSize: 12, color: 'var(--slate)'}}>تحضر الجهاز للمتجر</div>
+                      </div>
+                    </label>
+                    <label className={`radio-card ${form.serviceMode === 'pickup' ? 'checked' : ''}`}>
+                      <input type="radio" checked={form.serviceMode === 'pickup'} onChange={() => update('serviceMode', 'pickup')} />
+                      <div className="ico-box"><Icon.Truck /></div>
+                      <div>
+                        <div className="lbl">خدمة استلام</div>
+                        <div style={{fontSize: 12, color: 'var(--slate)'}}>نستلم ونعيد الجهاز</div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="action-row">
+                  <button onClick={back} className="btn btn-outline"><Icon.ArrowRight /> السابق</button>
+                  <button onClick={next} className="btn btn-primary">التالي <Icon.ArrowLeft /></button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3 */}
+            {step === 3 && (
+              <div>
+                <div className="section-title">٣. الموعد المفضل والتأكيد</div>
+                <div className="section-desc">سنحاول الالتزام بالموعد. سيتواصل الفني للتأكيد قبل الزيارة.</div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>التاريخ <span className="req">*</span></label>
+                    <input type="date" className="form-control" min={today} value={form.preferredDate} onChange={e => update('preferredDate', e.target.value)} />
+                    {errors.preferredDate && <div style={{color: '#DC2626', fontSize: 12, marginTop: 6}}>{errors.preferredDate}</div>}
+                  </div>
+                  <div className="form-group">
+                    <label>الوقت المفضل</label>
+                    <select className="form-control" value={form.preferredTime} onChange={e => update('preferredTime', e.target.value)}>
+                      <option value="morning">صباحاً (9 ص - 12 ظ)</option>
+                      <option value="noon">ظهراً (12 ظ - 3 ع)</option>
+                      <option value="evening">عصراً (3 ع - 6 م)</option>
+                      <option value="night">مساءً (6 م - 9 م)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>ملاحظات إضافية (اختياري)</label>
+                  <textarea className="form-control" value={form.notes} onChange={e => update('notes', e.target.value)} placeholder="أي تفاصيل تساعد الفني — مثلاً: متى يبدأ العطل، ما الذي جربته، إلخ"></textarea>
+                </div>
+
+                {/* SUMMARY */}
+                <div style={{background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12, padding: 18, marginBottom: 18}}>
+                  <div style={{fontWeight: 800, marginBottom: 12, color: 'var(--navy)'}}>ملخص طلبك</div>
+                  <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 14}}>
+                    <div><span style={{color: 'var(--slate)'}}>الخدمة: </span><b>{cur.label}</b></div>
+                    <div><span style={{color: 'var(--slate)'}}>الماركة: </span><b>{form.brand}</b></div>
+                    <div style={{gridColumn: 'span 2'}}><span style={{color: 'var(--slate)'}}>المشكلة: </span><b>{form.issues.join('، ')}</b></div>
+                    <div><span style={{color: 'var(--slate)'}}>الاسم: </span><b>{form.name}</b></div>
+                    <div><span style={{color: 'var(--slate)'}}>الهاتف: </span><b>{form.phone}</b></div>
+                    <div style={{gridColumn: 'span 2'}}><span style={{color: 'var(--slate)'}}>العنوان: </span><b>{form.city} - {form.area}{form.address && ` (${form.address})`}</b></div>
+                  </div>
+                </div>
+
+                <label style={{display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: 12, background: form.agree ? 'var(--orange-light)' : 'transparent', border: '1.5px solid', borderColor: form.agree ? 'var(--orange)' : 'var(--border)', borderRadius: 10}}>
+                  <input type="checkbox" checked={form.agree} onChange={e => update('agree', e.target.checked)} style={{marginTop: 4}} />
+                  <span style={{fontSize: 14, color: 'var(--navy-2)'}}>أوافق على الشروط: الكشف مجاني عند طلب الإصلاح، أما إذا رفضت الإصلاح بعد الكشف فيُحتسب أجر زيارة فقط. جميع الإصلاحات مغطاة بضمان مكتوب.</span>
+                </label>
+                {errors.agree && <div style={{color: '#DC2626', fontSize: 12, marginTop: 6}}>{errors.agree}</div>}
+
+                <div className="action-row">
+                  <button onClick={back} className="btn btn-outline"><Icon.ArrowRight /> السابق</button>
+                  <button onClick={submit} className="btn btn-primary"><Icon.Check /> أرسل الطلب</button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: SUCCESS */}
+            {step === 4 && (
+              <div className="success-card">
+                <div className="success-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <h2>تم استلام طلبك بنجاح!</h2>
+                <p>سنتواصل معك خلال ساعات قليلة لتأكيد الموعد وتفاصيل الفحص.</p>
+                <div className="ticket-box">
+                  <div className="lbl">رقم الطلب</div>
+                  <div className="num">{ticket}</div>
+                </div>
+                <div style={{display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap'}}>
+                  <a href="https://wa.me/962790781206" className="btn btn-primary"><Icon.Whatsapp /> تواصل واتساب</a>
+                  <a href="index.html" className="btn btn-outline">العودة للرئيسية</a>
+                </div>
+                <div style={{marginTop: 30, padding: 18, background: 'var(--orange-light)', borderRadius: 12, textAlign: 'right'}}>
+                  <div style={{fontWeight: 800, color: 'var(--orange-dark)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8}}><Icon.Percent /> تذكير بالعرض الدائم</div>
+                  <div style={{fontSize: 14, color: 'var(--navy-2)'}}>طلبك من الموقع يؤهلك للعرض الدائم — خصم إضافي على أجرة الإصلاح أو القطعة. سيُطبَق تلقائياً عند الفوترة.</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ASIDE */}
+          <div>
+            <div className="aside-card">
+              <h4><span className="dot"></span> ضمان وسام</h4>
+              <ul className="aside-list">
+                <li><Icon.Check /> كشف مجاني عند طلب الإصلاح</li>
+                <li><Icon.Check /> ضمان مكتوب على كل إصلاح</li>
+                <li><Icon.Check /> قطع غيار أصلية فقط</li>
+                <li><Icon.Check /> فنيون متخصصون بخبرة عالية</li>
+                <li><Icon.Check /> أسعار شفافة ومعروفة مسبقاً</li>
+              </ul>
+              <div className="aside-help">
+                <h5>تحتاج مساعدة فورية؟</h5>
+                <p>تواصل معنا مباشرة عبر الهاتف أو الواتساب وسنرتب لك موعداً اليوم.</p>
+                <a href="https://wa.me/962790781206" className="btn btn-primary"><Icon.Whatsapp /> راسلنا الآن</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Footer />
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<RequestPage />);
+</script>
+</body>
+</html>

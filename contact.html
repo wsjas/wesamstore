@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>اتصل بنا - وسام للإلكترونيات</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 28px;
+  padding: 40px 0 60px;
+}
+.contact-channels { display: flex; flex-direction: column; gap: 14px; }
+.channel {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all .2s;
+}
+.channel:hover { border-color: var(--orange); transform: translateX(-4px); }
+.channel .ico {
+  width: 52px; height: 52px;
+  background: var(--orange-light);
+  color: var(--orange-dark);
+  border-radius: 14px;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.channel.wa .ico { background: #DCFCE7; color: #16A34A; }
+.channel h4 { font-size: 14px; color: var(--slate); margin-bottom: 4px; }
+.channel .val { font-size: 18px; font-weight: 800; color: var(--navy); }
+.map-card {
+  background: linear-gradient(135deg, #FAFAF9, #E2E8F0);
+  border-radius: 14px;
+  height: 200px;
+  margin-top: 14px;
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+}
+.map-card::before {
+  content: "";
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(15,23,42,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15,23,42,0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.map-pin {
+  position: relative;
+  background: var(--orange);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-orange);
+}
+.success-msg {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  border-radius: 12px;
+  padding: 16px;
+  color: #065F46;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 880px) {
+  .contact-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="components.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+function ContactPage() {
+  const [form, setForm] = useState({ name: '', phone: '', subject: '', message: '' });
+  const [sent, setSent] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const submit = (e) => {
+    e.preventDefault();
+    const errs = {};
+    if (!form.name.trim()) errs.name = 'الاسم مطلوب';
+    if (!form.phone.trim()) errs.phone = 'الهاتف مطلوب';
+    if (!form.message.trim()) errs.message = 'الرسالة مطلوبة';
+    setErrors(errs);
+    if (Object.keys(errs).length === 0) {
+      setSent(true);
+      setForm({ name: '', phone: '', subject: '', message: '' });
+      setTimeout(() => setSent(false), 4000);
+    }
+  };
+
+  return (
+    <>
+      <TopBar />
+      <Nav active="contact" />
+
+      <header className="page-header">
+        <div className="container">
+          <Breadcrumb items={[{label: 'الرئيسية', href: 'index.html'}, {label: 'اتصل بنا'}]} />
+          <h1>تواصل معنا</h1>
+          <p>نحن هنا للإجابة على استفساراتك. اختر الطريقة الأنسب لك للتواصل.</p>
+        </div>
+      </header>
+
+      <div className="container">
+        <div className="contact-grid">
+          <div className="contact-channels">
+            <a href="tel:0790781206" className="channel">
+              <div className="ico"><Icon.Phone /></div>
+              <div>
+                <h4>اتصل بنا مباشرة</h4>
+                <div className="val" style={{direction: 'ltr', textAlign: 'right'}}>0790 781 206</div>
+              </div>
+            </a>
+            <a href="https://wa.me/962790781206" className="channel wa">
+              <div className="ico"><Icon.Whatsapp /></div>
+              <div>
+                <h4>راسلنا واتساب</h4>
+                <div className="val" style={{direction: 'ltr', textAlign: 'right'}}>+962 79 078 1206</div>
+              </div>
+            </a>
+            <a href="mailto:info@wesam.store" className="channel">
+              <div className="ico"><Icon.Mail /></div>
+              <div>
+                <h4>البريد الإلكتروني</h4>
+                <div className="val">info@wesam.store</div>
+              </div>
+            </a>
+            <div className="channel">
+              <div className="ico"><Icon.MapPin /></div>
+              <div style={{flex: 1}}>
+                <h4>العنوان</h4>
+                <div className="val">عمّان - الأردن</div>
+                <div className="map-card">
+                  <div className="map-pin"><Icon.MapPin /> وسام للإلكترونيات</div>
+                </div>
+              </div>
+            </div>
+            <div className="channel">
+              <div className="ico"><Icon.Clock /></div>
+              <div>
+                <h4>أوقات العمل</h4>
+                <div className="val" style={{fontSize: 14, fontWeight: 600}}>السبت - الخميس: 9 ص - 9 م</div>
+                <div style={{fontSize: 13, color: 'var(--slate)', marginTop: 2}}>الجمعة: 2 ع - 9 م</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="form-card">
+            <h2 style={{fontSize: 24, marginBottom: 6}}>أرسل لنا رسالة</h2>
+            <p style={{color: 'var(--slate)', marginBottom: 24}}>سنتواصل معك خلال ساعات قليلة.</p>
+
+            {sent && (
+              <div className="success-msg">
+                <Icon.Check /> تم إرسال رسالتك بنجاح. سنتواصل معك قريباً.
+              </div>
+            )}
+
+            <form onSubmit={submit}>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>الاسم <span className="req">*</span></label>
+                  <input type="text" className="form-control" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
+                  {errors.name && <div style={{color: '#DC2626', fontSize: 12, marginTop: 6}}>{errors.name}</div>}
+                </div>
+                <div className="form-group">
+                  <label>رقم الهاتف <span className="req">*</span></label>
+                  <input type="tel" className="form-control" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="07xxxxxxxx" />
+                  {errors.phone && <div style={{color: '#DC2626', fontSize: 12, marginTop: 6}}>{errors.phone}</div>}
+                </div>
+              </div>
+              <div className="form-group">
+                <label>الموضوع</label>
+                <select className="form-control" value={form.subject} onChange={e => setForm({...form, subject: e.target.value})}>
+                  <option value="">اختر الموضوع</option>
+                  <option>استفسار عن صيانة</option>
+                  <option>استفسار عن منتج</option>
+                  <option>طلب عرض سعر</option>
+                  <option>شكوى أو ملاحظة</option>
+                  <option>أخرى</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>الرسالة <span className="req">*</span></label>
+                <textarea className="form-control" value={form.message} onChange={e => setForm({...form, message: e.target.value})} placeholder="اكتب رسالتك هنا..."></textarea>
+                {errors.message && <div style={{color: '#DC2626', fontSize: 12, marginTop: 6}}>{errors.message}</div>}
+              </div>
+              <button type="submit" className="btn btn-primary" style={{width: '100%', justifyContent: 'center'}}>
+                <Icon.Mail /> أرسل الرسالة
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <Footer />
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<ContactPage />);
+</script>
+</body>
+</html>

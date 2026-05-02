@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المتجر الإلكتروني - وسام للإلكترونيات</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+.shop-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 28px;
+  padding: 40px 0 60px;
+}
+.filter-panel {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  height: fit-content;
+  position: sticky;
+  top: 80px;
+}
+.filter-panel h4 { font-size: 15px; font-weight: 800; margin-bottom: 12px; }
+.filter-panel .filter-group { margin-bottom: 22px; }
+.cat-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--navy-2);
+  font-weight: 600;
+  transition: all .15s;
+  margin-bottom: 4px;
+  background: transparent;
+  text-align: right;
+}
+.cat-btn:hover { background: var(--bg); }
+.cat-btn.active { background: var(--orange-light); color: var(--orange-dark); }
+.cat-btn .badge { background: var(--border); color: var(--slate); padding: 2px 8px; border-radius: 999px; font-size: 11px; }
+.cat-btn.active .badge { background: var(--orange); color: #fff; }
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  flex: 1;
+  min-width: 220px;
+  color: var(--slate);
+}
+.search-box input { border: none; background: none; outline: none; flex: 1; font-family: inherit; font-size: 14px; }
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.product-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all .2s;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.product-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--orange); }
+.product-card .img-wrap { padding: 14px; }
+.product-card .body { padding: 0 16px 16px; flex: 1; display: flex; flex-direction: column; }
+.product-card .badge-top {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--orange);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.product-card .cat-tag { font-size: 12px; color: var(--slate); margin-bottom: 4px; }
+.product-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
+.product-card .stars { display: flex; gap: 2px; color: #FBBF24; margin-bottom: 8px; }
+.product-card .price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+  margin-top: auto;
+}
+.product-card .price { font-size: 18px; font-weight: 800; color: var(--orange-dark); }
+.product-card .old { font-size: 13px; color: var(--slate); text-decoration: line-through; }
+.product-card .add-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--navy);
+  color: #fff;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all .15s;
+}
+.product-card .add-btn:hover { background: var(--orange); }
+.product-card .add-btn.added { background: var(--green); }
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--slate);
+}
+
+/* Cart drawer */
+.cart-toggle {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  background: var(--orange);
+  color: #fff;
+  border-radius: 999px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  box-shadow: var(--shadow-orange);
+  z-index: 40;
+}
+.cart-toggle .count {
+  background: #fff;
+  color: var(--orange-dark);
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 12px;
+}
+.drawer-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15,23,42,0.5);
+  z-index: 100;
+  display: grid; place-items: center;
+}
+.drawer {
+  background: #fff;
+  width: 460px;
+  max-width: 95vw;
+  max-height: 90vh;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.drawer-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px; border-bottom: 1px solid var(--border);
+}
+.drawer-head h3 { font-size: 18px; font-weight: 800; }
+.drawer-body { padding: 20px; overflow-y: auto; flex: 1; }
+.drawer-foot { padding: 20px; border-top: 1px solid var(--border); background: var(--bg); }
+.cart-item {
+  display: grid;
+  grid-template-columns: 60px 1fr auto;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+.cart-item:last-child { border-bottom: none; }
+.qty-control { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.qty-btn {
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  display: grid; place-items: center;
+  cursor: pointer;
+}
+.qty-btn:hover { border-color: var(--orange); }
+
+@media (max-width: 880px) {
+  .shop-layout { grid-template-columns: 1fr; }
+  .filter-panel { position: static; }
+  .products-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 520px) {
+  .products-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="components.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+
+const PRODUCTS = [
+  // REMOTES
+  { id: 'r1', cat: 'remotes', kind: 'remote', name: 'ريموت Samsung Smart TV أصلي', price: 12, old: 18, rating: 5, badge: 'الأكثر مبيعاً' },
+  { id: 'r2', cat: 'remotes', kind: 'remote', name: 'ريموت LG Smart TV', price: 11, old: 15, rating: 5 },
+  { id: 'r3', cat: 'remotes', kind: 'remote', name: 'ريموت Sony BRAVIA', price: 14, rating: 4 },
+  { id: 'r4', cat: 'remotes', kind: 'remote', name: 'ريموت TCL / Hisense', price: 9, old: 12, rating: 4 },
+  { id: 'r5', cat: 'remotes', kind: 'remote', name: 'ريموت ميكروويف Samsung', price: 8, rating: 5 },
+  { id: 'r6', cat: 'remotes', kind: 'remote', name: 'ريموت بديل عام (يبرمج لأي شاشة)', price: 6, old: 10, rating: 4, badge: 'عرض' },
+  // MOUNTS
+  { id: 'm1', cat: 'mounts', kind: 'mount', name: 'حامل شاشة ثابت 32"-55"', price: 15, rating: 5 },
+  { id: 'm2', cat: 'mounts', kind: 'mount', name: 'حامل شاشة متحرك 40"-70"', price: 28, old: 35, rating: 5, badge: 'الأكثر مبيعاً' },
+  { id: 'm3', cat: 'mounts', kind: 'mount', name: 'حامل سقفي للشاشات', price: 22, rating: 4 },
+  { id: 'm4', cat: 'mounts', kind: 'mount', name: 'قاعدة طاولة بديلة', price: 12, rating: 4 },
+  // RECEIVERS
+  { id: 's1', cat: 'receivers', kind: 'receiver', name: 'رسيفر HD مع IPTV', price: 35, old: 45, rating: 5, badge: 'عرض' },
+  { id: 's2', cat: 'receivers', kind: 'receiver', name: 'رسيفر 4K Ultra HD', price: 65, rating: 5 },
+  { id: 's3', cat: 'receivers', kind: 'receiver', name: 'رسيفر هوائي عادي', price: 18, rating: 4 },
+  { id: 's4', cat: 'receivers', kind: 'receiver', name: 'بطاقة اشتراك IPTV (سنة)', price: 25, rating: 4 },
+  // CABLES
+  { id: 'c1', cat: 'cables', kind: 'cable', name: 'كابل HDMI 4K 1.5 متر', price: 4, rating: 5 },
+  { id: 'c2', cat: 'cables', kind: 'cable', name: 'كابل HDMI 4K 3 متر', price: 6, old: 8, rating: 5 },
+  { id: 'c3', cat: 'cables', kind: 'cable', name: 'محوّل HDMI ↔ AV', price: 7, rating: 4 },
+  { id: 'c4', cat: 'cables', kind: 'cable', name: 'كابل تمديد طاقة', price: 5, rating: 4 },
+  { id: 'c5', cat: 'cables', kind: 'cable', name: 'موزّع HDMI 1×4', price: 12, old: 16, rating: 5, badge: 'عرض' },
+  { id: 'c6', cat: 'cables', kind: 'cable', name: 'كابل USB-C عالي السرعة', price: 4, rating: 5 },
+];
+
+const CATEGORIES = [
+  { key: 'all', label: 'كل المنتجات' },
+  { key: 'remotes', label: 'الريموتات' },
+  { key: 'mounts', label: 'ملحقات الشاشات' },
+  { key: 'receivers', label: 'الرسيفر' },
+  { key: 'cables', label: 'كابلات ومستلزمات' },
+];
+
+function getQuery(key) {
+  return new URLSearchParams(window.location.search).get(key);
+}
+
+function ShopPage() {
+  const [cat, setCat] = useState(getQuery('cat') || 'all');
+  const [sort, setSort] = useState('popular');
+  const [search, setSearch] = useState('');
+  const [cart, setCart] = useState({});
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const counts = useMemo(() => {
+    const c = { all: PRODUCTS.length };
+    PRODUCTS.forEach(p => { c[p.cat] = (c[p.cat] || 0) + 1; });
+    return c;
+  }, []);
+
+  const filtered = useMemo(() => {
+    let list = PRODUCTS.filter(p => cat === 'all' || p.cat === cat);
+    if (search.trim()) list = list.filter(p => p.name.includes(search.trim()));
+    if (sort === 'price-asc') list = [...list].sort((a,b) => a.price - b.price);
+    else if (sort === 'price-desc') list = [...list].sort((a,b) => b.price - a.price);
+    else if (sort === 'rating') list = [...list].sort((a,b) => b.rating - a.rating);
+    return list;
+  }, [cat, sort, search]);
+
+  const addToCart = (id) => {
+    setCart(c => ({ ...c, [id]: (c[id] || 0) + 1 }));
+    setToast('أُضيف إلى السلة');
+    setTimeout(() => setToast(null), 1500);
+  };
+  const updateQty = (id, delta) => {
+    setCart(c => {
+      const next = (c[id] || 0) + delta;
+      const out = {...c};
+      if (next <= 0) delete out[id];
+      else out[id] = next;
+      return out;
+    });
+  };
+  const cartItems = Object.entries(cart).map(([id, qty]) => ({...PRODUCTS.find(p => p.id === id), qty}));
+  const cartTotal = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
+  const cartCount = Object.values(cart).reduce((a,b) => a + b, 0);
+
+  return (
+    <>
+      <TopBar />
+      <Nav active="shop" />
+
+      <header className="page-header">
+        <div className="container">
+          <Breadcrumb items={[{label: 'الرئيسية', href: 'index.html'}, {label: 'المتجر الإلكتروني'}]} />
+          <h1>المتجر الإلكتروني</h1>
+          <p>ريموتات، ملحقات شاشات، رسيفر، كابلات وكافة المستلزمات بأسعار منافسة وضمان حقيقي.</p>
+        </div>
+      </header>
+
+      <div className="container">
+        <div className="shop-layout">
+          {/* FILTER */}
+          <aside className="filter-panel">
+            <div className="filter-group">
+              <h4>الأقسام</h4>
+              {CATEGORIES.map(c => (
+                <button key={c.key} className={`cat-btn ${cat === c.key ? 'active' : ''}`} onClick={() => setCat(c.key)}>
+                  <span>{c.label}</span>
+                  <span className="badge">{counts[c.key] || 0}</span>
+                </button>
+              ))}
+            </div>
+            <div className="filter-group">
+              <h4>السعر</h4>
+              <div style={{fontSize: 13, color: 'var(--slate)', marginBottom: 8}}>0 - 100 د.أ</div>
+              <input type="range" min="0" max="100" defaultValue="100" style={{width: '100%', accentColor: 'var(--orange)'}} />
+            </div>
+            <div className="aside-help" style={{background: 'var(--orange-light)', borderRadius: 12, padding: 16}}>
+              <div style={{fontWeight: 800, color: 'var(--orange-dark)', marginBottom: 6, fontSize: 14}}>تحتاج صيانة؟</div>
+              <div style={{fontSize: 13, color: 'var(--navy-2)', marginBottom: 12, lineHeight: 1.6}}>سجّل طلب صيانة من الموقع واحصل على عرض دائم.</div>
+              <a href="request.html" className="btn btn-primary" style={{width: '100%', justifyContent: 'center', fontSize: 13, padding: '10px'}}>اطلب صيانة</a>
+            </div>
+          </aside>
+
+          {/* MAIN */}
+          <main>
+            <div className="toolbar">
+              <div className="search-box">
+                <Icon.Search />
+                <input type="text" placeholder="ابحث عن منتج..." value={search} onChange={e => setSearch(e.target.value)} />
+              </div>
+              <div style={{display: 'flex', gap: 10, alignItems: 'center'}}>
+                <span style={{fontSize: 13, color: 'var(--slate)'}}>{filtered.length} منتج</span>
+                <select className="form-control" style={{width: 'auto', padding: '8px 12px'}} value={sort} onChange={e => setSort(e.target.value)}>
+                  <option value="popular">الأكثر مبيعاً</option>
+                  <option value="price-asc">السعر: من الأقل</option>
+                  <option value="price-desc">السعر: من الأعلى</option>
+                  <option value="rating">الأعلى تقييماً</option>
+                </select>
+              </div>
+            </div>
+
+            {filtered.length === 0 ? (
+              <div className="empty-state">
+                <div style={{fontSize: 18, marginBottom: 8, fontWeight: 700}}>لا توجد منتجات مطابقة</div>
+                <div>جرّب تغيير الفلتر أو كلمة البحث</div>
+              </div>
+            ) : (
+              <div className="products-grid">
+                {filtered.map(p => (
+                  <div key={p.id} className="product-card">
+                    {p.badge && <div className="badge-top">{p.badge}</div>}
+                    <div className="img-wrap"><ProductImage kind={p.kind} height={140} /></div>
+                    <div className="body">
+                      <div className="cat-tag">{CATEGORIES.find(c => c.key === p.cat)?.label}</div>
+                      <h4>{p.name}</h4>
+                      <div className="stars">
+                        {[...Array(5)].map((_, i) => <Icon.Star key={i} style={{color: i < p.rating ? '#FBBF24' : '#E2E8F0'}} />)}
+                      </div>
+                      <div className="price-row">
+                        <span className="price">{p.price} د.أ</span>
+                        {p.old && <span className="old">{p.old} د.أ</span>}
+                      </div>
+                      <button className={`add-btn ${cart[p.id] ? 'added' : ''}`} onClick={() => addToCart(p.id)}>
+                        {cart[p.id] ? <><Icon.Check /> في السلة ({cart[p.id]})</> : <><Icon.Cart /> أضف للسلة</>}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
+
+      {/* CART FAB */}
+      {cartCount > 0 && (
+        <button className="cart-toggle" onClick={() => setDrawerOpen(true)}>
+          <Icon.Cart /> السلة
+          <span className="count">{cartCount}</span>
+        </button>
+      )}
+
+      {/* TOAST */}
+      {toast && (
+        <div style={{position: 'fixed', bottom: 80, right: 24, background: 'var(--green)', color: '#fff', padding: '12px 20px', borderRadius: 12, fontWeight: 600, zIndex: 50, boxShadow: 'var(--shadow-lg)'}}>
+          <Icon.Check style={{display: 'inline', marginLeft: 8, verticalAlign: 'middle'}} /> {toast}
+        </div>
+      )}
+
+      {/* DRAWER */}
+      {drawerOpen && (
+        <div className="drawer-overlay" onClick={() => setDrawerOpen(false)}>
+          <div className="drawer" onClick={e => e.stopPropagation()}>
+            <div className="drawer-head">
+              <h3>سلة التسوّق ({cartCount})</h3>
+              <button onClick={() => setDrawerOpen(false)} style={{padding: 6}}><Icon.X /></button>
+            </div>
+            <div className="drawer-body">
+              {cartItems.length === 0 ? (
+                <div className="empty-state">السلة فارغة</div>
+              ) : cartItems.map(it => (
+                <div key={it.id} className="cart-item">
+                  <ProductImage kind={it.kind} height={60} />
+                  <div>
+                    <div style={{fontWeight: 700, fontSize: 14}}>{it.name}</div>
+                    <div style={{color: 'var(--orange-dark)', fontWeight: 800, fontSize: 14}}>{it.price} د.أ</div>
+                    <div className="qty-control">
+                      <button className="qty-btn" onClick={() => updateQty(it.id, -1)}><Icon.Minus /></button>
+                      <span style={{fontWeight: 700, minWidth: 20, textAlign: 'center'}}>{it.qty}</span>
+                      <button className="qty-btn" onClick={() => updateQty(it.id, 1)}><Icon.Plus /></button>
+                    </div>
+                  </div>
+                  <div style={{fontWeight: 800}}>{(it.price * it.qty).toFixed(2)} د.أ</div>
+                </div>
+              ))}
+            </div>
+            {cartItems.length > 0 && (
+              <div className="drawer-foot">
+                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: 14, fontSize: 16}}>
+                  <span>المجموع:</span>
+                  <span style={{fontWeight: 800, color: 'var(--orange-dark)'}}>{cartTotal.toFixed(2)} د.أ</span>
+                </div>
+                <a href="checkout.html" className="btn btn-primary" style={{width: '100%', justifyContent: 'center'}}>
+                  متابعة الشراء <Icon.ArrowLeft />
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <Footer />
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<ShopPage />);
+</script>
+</body>
+</html>

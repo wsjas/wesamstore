@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>العروض الدائمة - وسام للإلكترونيات</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+.offers-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 22px;
+  margin-bottom: 60px;
+}
+.offer-card {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 110px;
+  gap: 16px;
+  align-items: center;
+  transition: all .2s;
+}
+.offer-card:hover { border-color: var(--orange); transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.offer-card.featured { background: linear-gradient(135deg, var(--navy), var(--navy-2)); color: #fff; border-color: transparent; grid-column: span 2; padding: 36px; }
+.offer-card .tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--orange-light); color: var(--orange-dark);
+  padding: 4px 12px; border-radius: 999px;
+  font-size: 12px; font-weight: 700; margin-bottom: 12px;
+}
+.offer-card.featured .tag { background: rgba(249,115,22,0.2); color: #FED7AA; }
+.offer-card h3 { font-size: 22px; font-weight: 800; margin-bottom: 8px; line-height: 1.3; }
+.offer-card.featured h3 { font-size: 32px; }
+.offer-card p { font-size: 14px; color: var(--slate); line-height: 1.6; margin-bottom: 16px; }
+.offer-card.featured p { color: #CBD5E1; font-size: 16px; }
+.offer-card .terms { font-size: 12px; color: var(--slate); margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
+.offer-card.featured .terms { color: #94A3B8; border-color: rgba(255,255,255,0.1); }
+.offer-card .badge {
+  background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+  color: #fff;
+  border-radius: 16px;
+  padding: 16px 8px;
+  text-align: center;
+  font-weight: 800;
+  box-shadow: var(--shadow-orange);
+}
+.offer-card .badge .num { font-size: 32px; line-height: 1; }
+.offer-card .badge .lbl { font-size: 11px; margin-top: 4px; opacity: 0.9; }
+
+@media (max-width: 880px) {
+  .offers-grid { grid-template-columns: 1fr; }
+  .offer-card.featured { grid-column: span 1; padding: 28px; }
+  .offer-card.featured h3 { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="components.jsx"></script>
+
+<script type="text/babel">
+function OffersPage() {
+  const offers = [
+    { featured: true, tag: 'العرض الرئيسي', title: 'عرض دائم على الصيانة', desc: 'احصل على خصم أكبر تلقائياً عند تسجيل طلب الصيانة من الموقع. ينطبق على كل أنواع الإصلاح وقطع الغيار.', badge: '٪', badgeLbl: 'دائم', cta: 'سجّل طلب صيانة', href: 'request.html' },
+    { tag: 'صيانة الشاشات', title: 'كشف مجاني عند طلب الإصلاح', desc: 'لا تدفع رسوم كشف عند طلبك للإصلاح. الفحص مشمول مع كل صيانة شاشة LED أو Smart TV.', badge: 'مجاناً', badgeLbl: 'الكشف', cta: 'اطلب الآن', href: 'request.html?type=led', terms: 'يطبّق عند الموافقة على الإصلاح بعد الكشف.' },
+    { tag: 'متجر إلكتروني', title: 'خصم على الريموتات الأصلية', desc: 'خصم يصل إلى ٣٠٪ على الريموتات الأصلية لجميع الماركات الرئيسية.', badge: '٣٠٪', badgeLbl: 'خصم', cta: 'تسوّق الريموتات', href: 'shop.html?cat=remotes' },
+    { tag: 'ميكروويف', title: 'صيانة + تنظيف داخلي', desc: 'احصل على تنظيف داخلي شامل مجاناً مع كل صيانة ميكروويف، ولفترة محدودة.', badge: 'مجاناً', badgeLbl: 'التنظيف', cta: 'احجز الصيانة', href: 'request.html?type=microwave' },
+    { tag: 'حاملات شاشات', title: 'تركيب مجاني عند الشراء', desc: 'اشترِ أي حامل شاشة من المتجر واحصل على التركيب مجاناً داخل عمّان.', badge: 'مجاناً', badgeLbl: 'التركيب', cta: 'تسوّق الحاملات', href: 'shop.html?cat=mounts', terms: 'داخل أمانة عمّان فقط.' },
+    { tag: 'كابلات', title: 'اشترِ ٢ واحصل على ١ مجاناً', desc: 'على كابلات HDMI و USB المختارة. الأقل سعراً مجاناً.', badge: '+١', badgeLbl: 'مجاناً', cta: 'تسوّق الكابلات', href: 'shop.html?cat=cables' },
+    { tag: 'IPTV', title: 'اشتراك IPTV سنوي بسعر خاص', desc: 'اشتراك سنوي كامل يشمل آلاف القنوات العربية والعالمية.', badge: '٢٥', badgeLbl: 'د.أ', cta: 'اطلب الاشتراك', href: 'shop.html?cat=receivers' },
+  ];
+
+  return (
+    <>
+      <TopBar />
+      <Nav active="offers" />
+
+      <header className="page-header">
+        <div className="container">
+          <Breadcrumb items={[{label: 'الرئيسية', href: 'index.html'}, {label: 'العروض الدائمة'}]} />
+          <h1>العروض الدائمة</h1>
+          <p>عروض حقيقية على الصيانة والمتجر الإلكتروني، تستفيد منها كلما طلبت خدمة أو منتج من الموقع.</p>
+        </div>
+      </header>
+
+      <section className="section">
+        <div className="container">
+          <div className="offers-grid">
+            {offers.map((o, i) => (
+              <div key={i} className={`offer-card ${o.featured ? 'featured' : ''}`}>
+                <div>
+                  <div className="tag"><Icon.Percent style={{width: 14, height: 14}}/> {o.tag}</div>
+                  <h3>{o.title}</h3>
+                  <p>{o.desc}</p>
+                  <a href={o.href} className="btn btn-primary">{o.cta} <Icon.ArrowLeft /></a>
+                  {o.terms && <div className="terms">{o.terms}</div>}
+                </div>
+                <div className="badge">
+                  <div className="num">{o.badge}</div>
+                  <div className="lbl">{o.badgeLbl}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<OffersPage />);
+</script>
+</body>
+</html>

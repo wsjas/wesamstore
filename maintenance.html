@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مركز الصيانة - وسام للإلكترونيات</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+.maint-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  margin-bottom: 60px;
+}
+.maint-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all .2s;
+  display: flex;
+  flex-direction: column;
+}
+.maint-card:hover { border-color: var(--orange); transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.maint-card .img-wrap { padding: 20px; background: linear-gradient(135deg, #FAFAF9, #F1F5F9); }
+.maint-card .body { padding: 24px; flex: 1; display: flex; flex-direction: column; }
+.maint-card .head-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.maint-card .ico-sm {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: var(--orange-light); color: var(--orange-dark);
+  display: grid; place-items: center;
+}
+.maint-card h3 { font-size: 19px; font-weight: 800; color: var(--navy); }
+.maint-card p { font-size: 14px; color: var(--slate); margin-bottom: 16px; line-height: 1.7; }
+.maint-card ul { list-style: none; margin-bottom: 18px; display: flex; flex-direction: column; gap: 6px; }
+.maint-card ul li { font-size: 13px; color: var(--navy-2); display: flex; gap: 8px; }
+.maint-card ul li::before { content: "✓"; color: var(--green); font-weight: 800; }
+.maint-card .price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px dashed var(--border);
+  margin-bottom: 12px;
+}
+.maint-card .price-row .lbl { font-size: 12px; color: var(--slate); }
+.maint-card .price-row .val { font-size: 22px; font-weight: 800; color: var(--orange-dark); }
+.maint-card .actions { display: flex; gap: 8px; margin-top: auto; }
+.maint-card .actions a { flex: 1; justify-content: center; }
+
+.guarantees {
+  background: var(--navy);
+  color: #fff;
+  border-radius: 24px;
+  padding: 48px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 32px;
+  margin-bottom: 60px;
+}
+.guarantee-item h4 { font-size: 18px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; color: #fff; }
+.guarantee-item h4 .ico { width: 32px; height: 32px; background: var(--orange); border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; }
+.guarantee-item p { color: #CBD5E1; font-size: 14px; line-height: 1.7; }
+
+@media (max-width: 880px) {
+  .maint-grid { grid-template-columns: 1fr 1fr; }
+  .guarantees { grid-template-columns: 1fr; padding: 28px; }
+}
+@media (max-width: 600px) {
+  .maint-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="components.jsx"></script>
+
+<script type="text/babel">
+function MaintenancePage() {
+  const services = [
+    { kind: 'led', icon: <Icon.Tv />, title: 'صيانة شاشات LED & Smart TV', desc: 'إصلاح جميع أعطال شاشات LED و LCD وSmart TV من جميع الماركات.', perks: ['فحص دقيق للوحة والكهرباء', 'استبدال أجزاء أصلية', 'برمجة وإعدادات', 'ضمان حقيقي'], price: '15 د.أ', href: 'request.html?type=led' },
+    { kind: 'microwave', icon: <Icon.Microwave />, title: 'صيانة الميكروويف', desc: 'إصلاح الميكروويف من جميع الماركات وحل مشاكل التسخين والصوت.', perks: ['فحص الماغنترون', 'تنظيف داخلي', 'إصلاح لوحة التحكم', 'ضمان مكتوب'], price: '12 د.أ', href: 'request.html?type=microwave' },
+    { kind: 'vacuum', icon: <Icon.Vacuum />, title: 'صيانة المكانس الكهربائية', desc: 'حلول لجميع مشاكل المكانس: ضعف شفط، انسداد، صوت غريب، أو توقف.', perks: ['تنظيف كامل', 'استبدال الفلاتر', 'إصلاح المحرّك', 'صيانة دورية'], price: '10 د.أ', href: 'request.html?type=vacuum' },
+    { kind: 'remote', icon: <Icon.Remote />, title: 'برمجة وإصلاح الريموتات', desc: 'برمجة الريموتات الأصلية والبديلة وإصلاحها لجميع الأجهزة.', perks: ['برمجة فورية', 'استبدال البطاريات', 'إصلاح الأزرار', 'ضمان الموديلات'], price: '5 د.أ', href: 'request.html?type=remote' },
+    { kind: 'receiver', icon: <Icon.Receiver />, title: 'صيانة الرسيفر', desc: 'إصلاح أجهزة الرسيفر وحل مشاكل الاستقبال والقنوات.', perks: ['تحديث القنوات', 'برمجة كاملة', 'إصلاح اللوحة', 'تركيب IPTV'], price: '8 د.أ', href: 'request.html?type=receiver' },
+    { kind: 'default', icon: <Icon.Settings />, title: 'صيانة أجهزة أخرى', desc: 'فنيون لجميع الأجهزة المنزلية الأخرى — تواصل معنا أولاً للتأكد.', perks: ['استشارة مجانية', 'تقييم سريع', 'حلول مخصصة'], price: 'حسب الجهاز', href: 'request.html?type=other' },
+  ];
+
+  return (
+    <>
+      <TopBar />
+      <Nav active="maintenance" />
+
+      <header className="page-header">
+        <div className="container">
+          <Breadcrumb items={[{label: 'الرئيسية', href: 'index.html'}, {label: 'الصيانة'}]} />
+          <h1>مركز صيانة وسام</h1>
+          <p>صيانة موثوقة لجميع الأجهزة الإلكترونية والمنزلية، بأيدي فنيين متخصصين وقطع أصلية وضمان مكتوب على كل إصلاح.</p>
+        </div>
+      </header>
+
+      <section className="section">
+        <div className="container">
+          <div className="maint-grid">
+            {services.map(s => (
+              <div key={s.kind} className="maint-card">
+                <div className="img-wrap"><ProductImage kind={s.kind} height={140} /></div>
+                <div className="body">
+                  <div className="head-row">
+                    <div className="ico-sm">{s.icon}</div>
+                    <h3>{s.title}</h3>
+                  </div>
+                  <p>{s.desc}</p>
+                  <ul>{s.perks.map(p => <li key={p}>{p}</li>)}</ul>
+                  <div className="price-row">
+                    <span className="lbl">السعر يبدأ من</span>
+                    <span className="val">{s.price}</span>
+                  </div>
+                  <div className="actions">
+                    <a href={s.href} className="btn btn-primary">اطلب الآن</a>
+                    <a href="https://wa.me/962790781206" className="btn btn-outline"><Icon.Whatsapp /></a>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="guarantees">
+            <div className="guarantee-item">
+              <h4><span className="ico"><Icon.Shield /></span> ضمان مكتوب</h4>
+              <p>كل إصلاح يأتي مع شهادة ضمان مكتوبة. إذا تكرر العطل خلال فترة الضمان، نُصلحه مجاناً.</p>
+            </div>
+            <div className="guarantee-item">
+              <h4><span className="ico"><Icon.Award /></span> قطع أصلية</h4>
+              <p>نستخدم قطع غيار أصلية فقط. لا نُركّب قطعاً مقلّدة، ونعرض لك القطعة قبل التركيب.</p>
+            </div>
+            <div className="guarantee-item">
+              <h4><span className="ico"><Icon.Clock /></span> سرعة الإنجاز</h4>
+              <p>أغلب الصيانات تُنجز في نفس اليوم. الحالات المعقّدة لا تتجاوز 48 ساعة في معظم الحالات.</p>
+            </div>
+          </div>
+
+          <div style={{textAlign: 'center', maxWidth: 720, margin: '0 auto'}}>
+            <h2 style={{fontSize: 32, marginBottom: 12}}>لم تجد جهازك؟</h2>
+            <p style={{color: 'var(--slate)', marginBottom: 20, fontSize: 16}}>تواصل معنا مباشرة عبر الواتساب لمعرفة إن كنا نُصلح نوع جهازك، وسنرد عليك فوراً.</p>
+            <a href="https://wa.me/962790781206" className="btn btn-primary"><Icon.Whatsapp /> راسلنا واتساب</a>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<MaintenancePage />);
+</script>
+</body>
+</html>
