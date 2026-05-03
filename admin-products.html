@@ -9,41 +9,42 @@
 </head>
 <body>
 <div id="root"></div>
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script type="text/babel" src="admin-components.jsx"></script>
 <script type="text/babel" src="admin-shell.jsx"></script>
 
 <script type="text/babel">
-const { useState } = React;
+const { useState, useEffect } = React;
 
-const PRODUCTS = [
-  { sku: 'RM-001', name: 'ريموت Samsung Smart TV أصلي', cat: 'الريموتات', price: 12, stock: 45, sold: 234, status: 'in' },
-  { sku: 'RM-002', name: 'ريموت LG Smart TV', cat: 'الريموتات', price: 11, stock: 32, sold: 189, status: 'in' },
-  { sku: 'RM-003', name: 'ريموت Sony BRAVIA', cat: 'الريموتات', price: 14, stock: 8, sold: 67, status: 'low' },
-  { sku: 'MT-001', name: 'حامل شاشة ثابت 32"-55"', cat: 'ملحقات الشاشات', price: 15, stock: 22, sold: 156, status: 'in' },
-  { sku: 'MT-002', name: 'حامل شاشة متحرك 40"-70"', cat: 'ملحقات الشاشات', price: 28, stock: 14, sold: 98, status: 'in' },
-  { sku: 'RV-001', name: 'رسيفر HD مع IPTV', cat: 'الرسيفر', price: 35, stock: 0, sold: 145, status: 'out' },
-  { sku: 'RV-002', name: 'رسيفر 4K Ultra HD', cat: 'الرسيفر', price: 65, stock: 6, sold: 42, status: 'low' },
-  { sku: 'CB-001', name: 'كابل HDMI 4K 1.5 متر', cat: 'كابلات', price: 4, stock: 120, sold: 412, status: 'in' },
-  { sku: 'CB-002', name: 'كابل HDMI 4K 3 متر', cat: 'كابلات', price: 6, stock: 85, sold: 287, status: 'in' },
-  { sku: 'CB-003', name: 'موزّع HDMI 1×4', cat: 'كابلات', price: 12, stock: 18, sold: 76, status: 'in' },
-];
+const INITIAL_PRODUCTS = [];
 
 function ProductsPage() {
   const [lang, setLang] = useState('ar');
   const [cat, setCat] = useState('all');
+  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+  const [loadError, setLoadError] = useState('');
+  useEffect(() => {
+    window.WesamFirebase.loadProducts().then(list => {
+      setProducts(list.map(p => ({ sku: p.id, name: p.name, cat: p.cat, price: p.price, stock: p.stock, sold: 0, status: p.stock <= 0 ? 'out' : p.stock <= 5 ? 'low' : 'in' })));
+    }).catch(err => { console.error(err); setLoadError('تعذر تحميل المنتجات من Firebase'); });
+  }, []);
   const isAr = lang === 'ar';
   const t = T[lang];
 
-  const cats = ['all', ...new Set(PRODUCTS.map(p => p.cat))];
-  const filtered = PRODUCTS.filter(p => cat === 'all' || p.cat === cat);
+  const cats = ['all', ...new Set(products.map(p => p.cat))];
+  const filtered = products.filter(p => cat === 'all' || p.cat === cat);
 
-  const totalStock = PRODUCTS.reduce((s,p) => s+p.stock, 0);
-  const totalValue = PRODUCTS.reduce((s,p) => s+p.stock*p.price, 0);
-  const lowCount = PRODUCTS.filter(p => p.status === 'low').length;
-  const outCount = PRODUCTS.filter(p => p.status === 'out').length;
+  const totalStock = products.reduce((s,p) => s+p.stock, 0);
+  const totalValue = products.reduce((s,p) => s+p.stock*p.price, 0);
+  const lowCount = products.filter(p => p.status === 'low').length;
+  const outCount = products.filter(p => p.status === 'out').length;
 
   return (
     <AdminShell active="products" lang={lang} setLang={setLang}>
@@ -53,18 +54,19 @@ function ProductsPage() {
           <div className="sub">{isAr ? 'إدارة المنتجات والمخزون والأسعار' : 'Manage products, stock, and prices'}</div>
         </div>
         <div className="page-head-actions">
-          <button className="btn btn-outline"><AICON.Download /> {t.export}</button>
-          <button className="btn btn-primary"><AICON.Plus /> {isAr ? 'منتج جديد' : 'New Product'}</button>
+          <button className="btn btn-outline" onClick={() => window.print()}><AICON.Download /> {t.export}</button>
+          <a className="btn btn-primary" href="#product-form"><AICON.Plus /> {isAr ? 'منتج جديد' : 'New Product'}</a>
         </div>
       </div>
 
       <div className="kpi-grid">
-        <div className="kpi blue"><div className="kpi-head"><div className="ico"><AICON.Box /></div></div><div className="num">{PRODUCTS.length}</div><div className="label">{isAr ? 'إجمالي المنتجات' : 'Total Products'}</div></div>
+        <div className="kpi blue"><div className="kpi-head"><div className="ico"><AICON.Box /></div></div><div className="num">{products.length}</div><div className="label">{isAr ? 'إجمالي المنتجات' : 'Total Products'}</div></div>
         <div className="kpi green"><div className="kpi-head"><div className="ico"><AICON.Box /></div></div><div className="num">{totalStock}</div><div className="label">{isAr ? 'القطع في المخزن' : 'Items in Stock'}</div></div>
         <div className="kpi orange"><div className="kpi-head"><div className="ico"><AICON.Tag /></div></div><div className="num">{totalValue} د.أ</div><div className="label">{isAr ? 'قيمة المخزون' : 'Stock Value'}</div></div>
         <div className="kpi purple"><div className="kpi-head"><div className="ico" style={{background: 'var(--red-bg)', color: 'var(--red)'}}><AICON.Bell /></div></div><div className="num">{lowCount + outCount}</div><div className="label">{isAr ? 'تنبيهات المخزون' : 'Stock Alerts'}</div></div>
       </div>
 
+      {loadError && <div className="card" style={{color: 'var(--red)', marginBottom: 16}}>{loadError}</div>}
       <div className="filter-bar">
         <div className="tab-pills" style={{flexWrap: 'wrap'}}>
           {cats.map(c => (

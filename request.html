@@ -148,10 +148,15 @@
 <body>
 <div id="root"></div>
 
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script type="text/babel" src="components.jsx"></script>
 
 <script type="text/babel">
@@ -195,6 +200,8 @@ function RequestPage() {
   });
   const [errors, setErrors] = useState({});
   const [ticket, setTicket] = useState(null);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState('');
 
   const cur = SERVICE_TYPES[form.type];
 
@@ -226,11 +233,44 @@ function RequestPage() {
 
   const next = () => { if (validateStep()) setStep(s => s + 1); };
   const back = () => setStep(s => s - 1);
-  const submit = () => {
-    if (!validateStep()) return;
-    const id = 'WS-' + Math.floor(Math.random() * 90000 + 10000);
-    setTicket(id);
-    setStep(4);
+  const submit = async () => {
+    if (!validateStep() || sending) return;
+    setSending(true);
+    setSendError('');
+    const id = 'SR-' + Date.now().toString().slice(-8);
+    const payload = {
+      requestId: id,
+      status: 'new',
+      serviceType: form.type,
+      serviceLabel: SERVICE_TYPES[form.type]?.label || form.type,
+      brand: form.brand,
+      model: form.model,
+      issues: form.issues,
+      purchaseYear: form.purchaseYear,
+      underWarranty: form.underWarranty,
+      customerName: form.name,
+      name: form.name,
+      phone: form.phone,
+      altPhone: form.altPhone,
+      city: form.city,
+      area: form.area,
+      addressText: form.address,
+      serviceMode: form.serviceMode,
+      preferredDate: form.preferredDate,
+      preferredTime: form.preferredTime,
+      notes: form.notes,
+      sourcePage: 'request.html'
+    };
+    try {
+      await window.WesamFirebase.addDoc('service_requests', payload);
+      setTicket(id);
+      setStep(4);
+    } catch (err) {
+      console.error(err);
+      setSendError('تعذر إرسال الطلب إلى Firebase. تحقق من قواعد Firestore والاتصال ثم حاول مرة أخرى.');
+    } finally {
+      setSending(false);
+    }
   };
 
   const today = new Date().toISOString().split('T')[0];
@@ -416,6 +456,7 @@ function RequestPage() {
                   </div>
                 </div>
 
+                {sendError && <div style={{color: '#DC2626', fontSize: 13, marginBottom: 12}}>{sendError}</div>}
                 <div className="action-row">
                   <button onClick={back} className="btn btn-outline"><Icon.ArrowRight /> السابق</button>
                   <button onClick={next} className="btn btn-primary">التالي <Icon.ArrowLeft /></button>
@@ -469,9 +510,10 @@ function RequestPage() {
                 </label>
                 {errors.agree && <div style={{color: '#DC2626', fontSize: 12, marginTop: 6}}>{errors.agree}</div>}
 
+                {sendError && <div style={{color: '#DC2626', fontSize: 13, marginBottom: 12}}>{sendError}</div>}
                 <div className="action-row">
                   <button onClick={back} className="btn btn-outline"><Icon.ArrowRight /> السابق</button>
-                  <button onClick={submit} className="btn btn-primary"><Icon.Check /> أرسل الطلب</button>
+                  <button onClick={submit} className="btn btn-primary" disabled={sending}><Icon.Check /> {sending ? 'جاري الإرسال...' : 'أرسل الطلب'}</button>
                 </div>
               </div>
             )}

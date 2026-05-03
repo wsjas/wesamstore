@@ -9,26 +9,21 @@
 </head>
 <body>
 <div id="root"></div>
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script type="text/babel" src="admin-components.jsx"></script>
 <script type="text/babel" src="admin-shell.jsx"></script>
 
 <script type="text/babel">
-const { useState } = React;
+const { useState, useEffect } = React;
 
-const REPAIRS = [
-  { id: 'WS-48201', customer: 'محمد العمري', initial: 'م', phone: '0790123456', service: 'صيانة شاشة LED', device: 'Samsung 55"', issue: 'لا يوجد صورة', status: 'progress', tech: 'يوسف', date: '2026-04-30', amount: 45 },
-  { id: 'WS-48200', customer: 'سارة الحسن', initial: 'س', phone: '0795554321', service: 'صيانة ميكروويف', device: 'LG MS2540', issue: 'لا يسخّن', status: 'new', tech: '-', date: '2026-04-30', amount: 25 },
-  { id: 'WS-48199', customer: 'خالد أبو زيد', initial: 'خ', phone: '0791234567', service: 'صيانة مكنسة', device: 'Bosch BGL35', issue: 'ضعف شفط', status: 'done', tech: 'كريم', date: '2026-04-29', amount: 18 },
-  { id: 'WS-48198', customer: 'لينا قاسم', initial: 'ل', phone: '0792345678', service: 'برمجة ريموت', device: 'Samsung TV', issue: 'يحتاج برمجة', status: 'done', tech: 'يوسف', date: '2026-04-29', amount: 12 },
-  { id: 'WS-48197', customer: 'يوسف الشريف', initial: 'ي', phone: '0793456789', service: 'صيانة رسيفر', device: 'HD Receiver', issue: 'لا يلتقط القنوات', status: 'progress', tech: 'كريم', date: '2026-04-29', amount: 32 },
-  { id: 'WS-48196', customer: 'فاطمة العلي', initial: 'ف', phone: '0794567890', service: 'صيانة شاشة LED', device: 'LG 50"', issue: 'بقع على الشاشة', status: 'new', tech: '-', date: '2026-04-28', amount: 65 },
-  { id: 'WS-48195', customer: 'عمر الزعبي', initial: 'ع', phone: '0795678901', service: 'صيانة ميكروويف', device: 'Samsung MG23', issue: 'لوحة التحكم', status: 'cancelled', tech: '-', date: '2026-04-28', amount: 0 },
-  { id: 'WS-48194', customer: 'هند سلامة', initial: 'ه', phone: '0796789012', service: 'صيانة مكنسة', device: 'Philips FC8',  issue: 'لا تعمل', status: 'done', tech: 'كريم', date: '2026-04-28', amount: 22 },
-  { id: 'WS-48193', customer: 'ربى المصري', initial: 'ر', phone: '0797890123', service: 'صيانة شاشة LED', device: 'TCL 43"', issue: 'لا يعمل الصوت', status: 'progress', tech: 'يوسف', date: '2026-04-27', amount: 38 },
-];
+const INITIAL_REPAIRS = [];
 
 const STATUS_LBL = { new: 'جديد', progress: 'قيد الإصلاح', done: 'مكتمل', cancelled: 'ملغي' };
 
@@ -36,27 +31,45 @@ function RepairsPage() {
   const [lang, setLang] = useState('ar');
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [repairs, setRepairs] = useState(INITIAL_REPAIRS);
+  useEffect(() => {
+    window.WesamFirebase.getCollection('service_requests', { limit: 200 }).then(rows => {
+      setRepairs(rows.map(r => ({
+        id: r.requestId || r.id,
+        customer: r.customerName || r.name || 'عميل',
+        initial: (r.customerName || r.name || 'ع').trim().charAt(0),
+        phone: r.phone || '',
+        service: r.serviceLabel || r.type || r.serviceType || 'صيانة',
+        device: [r.brand, r.model].filter(Boolean).join(' ') || '-',
+        issue: Array.isArray(r.issues) ? r.issues.join('، ') : (r.faultDesc || r.issue || ''),
+        status: r.status || 'new',
+        tech: r.tech || '-',
+        date: r.createdAt?.toDate ? r.createdAt.toDate().toISOString().slice(0,10) : (r.preferredDate || ''),
+        amount: Number(r.total || r.price || 0)
+      })));
+    }).catch(console.error);
+  }, []);
   const isAr = lang === 'ar';
   const t = T[lang];
 
-  const filtered = REPAIRS.filter(r =>
+  const filtered = repairs.filter(r =>
     (filter === 'all' || r.status === filter) &&
     (search === '' || r.customer.includes(search) || r.id.includes(search))
   );
 
-  const counts = { all: REPAIRS.length, new: 0, progress: 0, done: 0, cancelled: 0 };
-  REPAIRS.forEach(r => counts[r.status]++);
+  const counts = { all: repairs.length, new: 0, progress: 0, done: 0, cancelled: 0 };
+  repairs.forEach(r => counts[r.status]++);
 
   return (
     <AdminShell active="repairs" lang={lang} setLang={setLang}>
       <div className="page-head">
         <div>
           <h1>{t.repairs}</h1>
-          <div className="sub">{isAr ? `إدارة جميع طلبات الصيانة • ${REPAIRS.length} طلب` : `Manage all repair tickets • ${REPAIRS.length} total`}</div>
+          <div className="sub">{isAr ? `إدارة جميع طلبات الصيانة • ${repairs.length} طلب` : `Manage all repair tickets • ${repairs.length} total`}</div>
         </div>
         <div className="page-head-actions">
-          <button className="btn btn-outline"><AICON.Download /> {t.export}</button>
-          <button className="btn btn-primary"><AICON.Plus /> {isAr ? 'طلب صيانة جديد' : 'New Repair'}</button>
+          <button className="btn btn-outline" onClick={() => window.print()}><AICON.Download /> {t.export}</button>
+          <a className="btn btn-primary" href="request.html"><AICON.Plus /> {isAr ? 'طلب صيانة جديد' : 'New Repair'}</a>
         </div>
       </div>
 

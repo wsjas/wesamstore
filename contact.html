@@ -88,10 +88,15 @@
 <body>
 <div id="root"></div>
 
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script type="text/babel" src="components.jsx"></script>
 
 <script type="text/babel">
@@ -100,9 +105,11 @@ const { useState } = React;
 function ContactPage() {
   const [form, setForm] = useState({ name: '', phone: '', subject: '', message: '' });
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState('');
   const [errors, setErrors] = useState({});
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     const errs = {};
     if (!form.name.trim()) errs.name = 'الاسم مطلوب';
@@ -110,9 +117,19 @@ function ContactPage() {
     if (!form.message.trim()) errs.message = 'الرسالة مطلوبة';
     setErrors(errs);
     if (Object.keys(errs).length === 0) {
-      setSent(true);
-      setForm({ name: '', phone: '', subject: '', message: '' });
-      setTimeout(() => setSent(false), 4000);
+      setSending(true);
+      setSendError('');
+      try {
+        await window.WesamFirebase.addDoc('contact_messages', { ...form, status: 'new', sourcePage: 'contact.html' });
+        setSent(true);
+        setForm({ name: '', phone: '', subject: '', message: '' });
+        setTimeout(() => setSent(false), 4000);
+      } catch (err) {
+        console.error(err);
+        setSendError('تعذر إرسال الرسالة إلى Firebase. تحقق من قواعد Firestore أو الاتصال.');
+      } finally {
+        setSending(false);
+      }
     }
   };
 
@@ -177,6 +194,7 @@ function ContactPage() {
             <h2 style={{fontSize: 24, marginBottom: 6}}>أرسل لنا رسالة</h2>
             <p style={{color: 'var(--slate)', marginBottom: 24}}>سنتواصل معك خلال ساعات قليلة.</p>
 
+            {sendError && <div className="success-msg" style={{background:'#FEF2F2', color:'#DC2626'}}>{sendError}</div>}
             {sent && (
               <div className="success-msg">
                 <Icon.Check /> تم إرسال رسالتك بنجاح. سنتواصل معك قريباً.
@@ -213,7 +231,7 @@ function ContactPage() {
                 {errors.message && <div style={{color: '#DC2626', fontSize: 12, marginTop: 6}}>{errors.message}</div>}
               </div>
               <button type="submit" className="btn btn-primary" style={{width: '100%', justifyContent: 'center'}}>
-                <Icon.Mail /> أرسل الرسالة
+                <Icon.Mail /> {sending ? 'جاري الإرسال...' : 'أرسل الرسالة'}
               </button>
             </form>
           </div>

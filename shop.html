@@ -214,41 +214,21 @@
 <body>
 <div id="root"></div>
 
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script type="text/babel" src="components.jsx"></script>
 
 <script type="text/babel">
 const { useState, useEffect, useMemo } = React;
 
-const PRODUCTS = [
-  // REMOTES
-  { id: 'r1', cat: 'remotes', kind: 'remote', name: 'ريموت Samsung Smart TV أصلي', price: 12, old: 18, rating: 5, badge: 'الأكثر مبيعاً' },
-  { id: 'r2', cat: 'remotes', kind: 'remote', name: 'ريموت LG Smart TV', price: 11, old: 15, rating: 5 },
-  { id: 'r3', cat: 'remotes', kind: 'remote', name: 'ريموت Sony BRAVIA', price: 14, rating: 4 },
-  { id: 'r4', cat: 'remotes', kind: 'remote', name: 'ريموت TCL / Hisense', price: 9, old: 12, rating: 4 },
-  { id: 'r5', cat: 'remotes', kind: 'remote', name: 'ريموت ميكروويف Samsung', price: 8, rating: 5 },
-  { id: 'r6', cat: 'remotes', kind: 'remote', name: 'ريموت بديل عام (يبرمج لأي شاشة)', price: 6, old: 10, rating: 4, badge: 'عرض' },
-  // MOUNTS
-  { id: 'm1', cat: 'mounts', kind: 'mount', name: 'حامل شاشة ثابت 32"-55"', price: 15, rating: 5 },
-  { id: 'm2', cat: 'mounts', kind: 'mount', name: 'حامل شاشة متحرك 40"-70"', price: 28, old: 35, rating: 5, badge: 'الأكثر مبيعاً' },
-  { id: 'm3', cat: 'mounts', kind: 'mount', name: 'حامل سقفي للشاشات', price: 22, rating: 4 },
-  { id: 'm4', cat: 'mounts', kind: 'mount', name: 'قاعدة طاولة بديلة', price: 12, rating: 4 },
-  // RECEIVERS
-  { id: 's1', cat: 'receivers', kind: 'receiver', name: 'رسيفر HD مع IPTV', price: 35, old: 45, rating: 5, badge: 'عرض' },
-  { id: 's2', cat: 'receivers', kind: 'receiver', name: 'رسيفر 4K Ultra HD', price: 65, rating: 5 },
-  { id: 's3', cat: 'receivers', kind: 'receiver', name: 'رسيفر هوائي عادي', price: 18, rating: 4 },
-  { id: 's4', cat: 'receivers', kind: 'receiver', name: 'بطاقة اشتراك IPTV (سنة)', price: 25, rating: 4 },
-  // CABLES
-  { id: 'c1', cat: 'cables', kind: 'cable', name: 'كابل HDMI 4K 1.5 متر', price: 4, rating: 5 },
-  { id: 'c2', cat: 'cables', kind: 'cable', name: 'كابل HDMI 4K 3 متر', price: 6, old: 8, rating: 5 },
-  { id: 'c3', cat: 'cables', kind: 'cable', name: 'محوّل HDMI ↔ AV', price: 7, rating: 4 },
-  { id: 'c4', cat: 'cables', kind: 'cable', name: 'كابل تمديد طاقة', price: 5, rating: 4 },
-  { id: 'c5', cat: 'cables', kind: 'cable', name: 'موزّع HDMI 1×4', price: 12, old: 16, rating: 5, badge: 'عرض' },
-  { id: 'c6', cat: 'cables', kind: 'cable', name: 'كابل USB-C عالي السرعة', price: 4, rating: 5 },
-];
+const INITIAL_PRODUCTS = [];
 
 const CATEGORIES = [
   { key: 'all', label: 'كل المنتجات' },
@@ -263,6 +243,9 @@ function getQuery(key) {
 }
 
 function ShopPage() {
+  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [productsError, setProductsError] = useState('');
   const [cat, setCat] = useState(getQuery('cat') || 'all');
   const [sort, setSort] = useState('popular');
   const [search, setSearch] = useState('');
@@ -270,20 +253,46 @@ function ShopPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const counts = useMemo(() => {
-    const c = { all: PRODUCTS.length };
-    PRODUCTS.forEach(p => { c[p.cat] = (c[p.cat] || 0) + 1; });
-    return c;
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const list = await window.WesamFirebase.loadProducts();
+        if (!cancelled) {
+          setProducts(list);
+          setProductsError('');
+        }
+      } catch (err) {
+        console.error(err);
+        if (!cancelled) setProductsError('تعذر تحميل المنتجات من Firebase. تحقق من قواعد Firestore أو الاتصال.');
+      } finally {
+        if (!cancelled) setLoadingProducts(false);
+      }
+    }
+    load();
+    try {
+      const saved = JSON.parse(localStorage.getItem('wesam_cart') || '{}');
+      setCart(saved && typeof saved === 'object' ? saved : {});
+    } catch (_) {}
+    return () => { cancelled = true; };
   }, []);
 
+  useEffect(() => { localStorage.setItem('wesam_cart', JSON.stringify(cart)); }, [cart]);
+
+  const counts = useMemo(() => {
+    const c = { all: products.length };
+    products.forEach(p => { c[p.cat] = (c[p.cat] || 0) + 1; });
+    return c;
+  }, [products]);
+
   const filtered = useMemo(() => {
-    let list = PRODUCTS.filter(p => cat === 'all' || p.cat === cat);
+    let list = products.filter(p => cat === 'all' || p.cat === cat);
     if (search.trim()) list = list.filter(p => p.name.includes(search.trim()));
     if (sort === 'price-asc') list = [...list].sort((a,b) => a.price - b.price);
     else if (sort === 'price-desc') list = [...list].sort((a,b) => b.price - a.price);
     else if (sort === 'rating') list = [...list].sort((a,b) => b.rating - a.rating);
     return list;
-  }, [cat, sort, search]);
+  }, [cat, sort, search, products]);
 
   const addToCart = (id) => {
     setCart(c => ({ ...c, [id]: (c[id] || 0) + 1 }));
@@ -299,7 +308,7 @@ function ShopPage() {
       return out;
     });
   };
-  const cartItems = Object.entries(cart).map(([id, qty]) => ({...PRODUCTS.find(p => p.id === id), qty}));
+  const cartItems = Object.entries(cart).map(([id, qty]) => ({...products.find(p => p.id === id), qty})).filter(it => it.id);
   const cartTotal = cartItems.reduce((s, i) => s + i.price * i.qty, 0);
   const cartCount = Object.values(cart).reduce((a,b) => a + b, 0);
 
@@ -359,7 +368,11 @@ function ShopPage() {
               </div>
             </div>
 
-            {filtered.length === 0 ? (
+            {loadingProducts ? (
+              <div className="empty-state">جاري تحميل المنتجات من Firebase...</div>
+            ) : productsError ? (
+              <div className="empty-state" style={{color: '#DC2626'}}>{productsError}</div>
+            ) : filtered.length === 0 ? (
               <div className="empty-state">
                 <div style={{fontSize: 18, marginBottom: 8, fontWeight: 700}}>لا توجد منتجات مطابقة</div>
                 <div>جرّب تغيير الفلتر أو كلمة البحث</div>
@@ -369,7 +382,7 @@ function ShopPage() {
                 {filtered.map(p => (
                   <div key={p.id} className="product-card">
                     {p.badge && <div className="badge-top">{p.badge}</div>}
-                    <div className="img-wrap"><ProductImage kind={p.kind} height={140} /></div>
+                    <div className="img-wrap">{p.imageUrl ? <img src={p.imageUrl} alt={p.name} style={{width: '100%', height: 140, objectFit: 'contain'}} /> : <ProductImage kind={p.kind} height={140} />}</div>
                     <div className="body">
                       <div className="cat-tag">{CATEGORIES.find(c => c.key === p.cat)?.label}</div>
                       <h4>{p.name}</h4>
@@ -420,7 +433,7 @@ function ShopPage() {
                 <div className="empty-state">السلة فارغة</div>
               ) : cartItems.map(it => (
                 <div key={it.id} className="cart-item">
-                  <ProductImage kind={it.kind} height={60} />
+                  {it.imageUrl ? <img src={it.imageUrl} alt={it.name} style={{width: 72, height: 60, objectFit: 'contain'}} /> : <ProductImage kind={it.kind} height={60} />}
                   <div>
                     <div style={{fontWeight: 700, fontSize: 14}}>{it.name}</div>
                     <div style={{color: 'var(--orange-dark)', fontWeight: 800, fontSize: 14}}>{it.price} د.أ</div>
