@@ -21,6 +21,7 @@ function AdminShell({ active, lang, setLang, children }) {
       { key: 'customers', href: 'admin-customers.html', icon: <AICON.Users /> },
       { key: 'offers', href: 'admin-offers.html', icon: <AICON.Tag /> },
       { key: 'techs', href: 'admin-techs.html', icon: <AICON.HardHat /> },
+      { key: 'accounting', href: 'admin-accounting.html', icon: <AICON.Money /> },
     ]},
     { section: 'system', items: [
       { key: 'reports', href: 'admin-reports.html', icon: <AICON.Chart /> },
