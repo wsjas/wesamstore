@@ -1,28 +1,156 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>المحاسبة - وسام للإلكترونيات</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="admin-styles.css">
-<style>.acc-tabs{display:flex;gap:8px;flex-wrap:wrap}.acc-tabs button{padding:10px 18px;border-radius:8px;font-weight:700;font-size:14px;color:var(--slate);display:flex;align-items:center;gap:8px}.acc-tabs button.active{background:var(--navy);color:#fff}.amount-pos{color:#16A34A;font-weight:800}.amount-neg{color:#DC2626;font-weight:800}.save-msg{margin:0 0 16px;padding:12px 14px;border-radius:12px;font-weight:700}.save-msg.ok{background:#DCFCE7;color:#166534}.save-msg.err{background:#FEE2E2;color:#991B1B}.mini-form{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:10px;padding:16px;border-top:1px solid var(--border)}@media(max-width:1000px){.mini-form{grid-template-columns:1fr 1fr}}@media(max-width:600px){.mini-form{grid-template-columns:1fr}}</style>
-</head><body><div id="root"></div>
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script><script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script><script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics-compat.js"></script>
-<script src="firebase-config.js"></script><script type="text/babel" src="admin-components.jsx"></script><script type="text/babel" src="admin-shell.jsx"></script>
-<script type="text/babel">
-const {useState,useEffect}=React;
-const emptyTx={type:'income',description:'',amount:'',method:'كاش',category:'مبيعات',date:new Date().toISOString().slice(0,10),source:'manual'};
-function AccountingPage(){const [lang,setLang]=useState('ar'),[tab,setTab]=useState('overview'),[tx,setTx]=useState([]),[form,setForm]=useState(emptyTx),[msg,setMsg]=useState(null),[saving,setSaving]=useState(false),[loading,setLoading]=useState(true);const isAr=lang==='ar';
- const normalize=(r,src='manual')=>({docId:r.id,id:r.txId||r.orderId||r.requestId||r.id,type:r.type||'income',description:r.description||r.desc||r.title||'حركة مالية',amount:Number(r.amount??r.total??0),method:r.method||r.paymentMethod||r.payment||'غير محدد',category:r.category||src,date:r.date||window.WesamFirebase.toDateText(r.createdAt)||new Date().toISOString().slice(0,10),source:r.source||src,auto:r.auto===true});
- const load=async()=>{setLoading(true);setMsg(null);try{await window.WesamFirebase.ensureCoreCollections({force:true});const manual=(await window.WesamFirebase.getCollection('accounting_transactions',{limit:300})).map(r=>normalize(r,'manual'));const orders=(await window.WesamFirebase.getCollection('orders',{limit:300})).filter(o=>o.status!=='cancelled').map(o=>normalize({...o,type:'income',description:'طلب بيع: '+(o.customerName||o.name||o.orderId||''),category:'مبيعات',method:o.paymentMethod||o.payment||'غير محدد',auto:true},'orders'));const repairs=(await window.WesamFirebase.getCollection('service_requests',{limit:300})).filter(r=>Number(r.total||r.paid||0)>0).map(r=>normalize({...r,type:'income',amount:Number(r.total||r.paid||0),description:'طلب صيانة: '+(r.customerName||r.name||r.requestId||''),category:'صيانة',method:r.paymentMethod||'غير محدد',auto:true},'service_requests'));setTx([...manual,...orders,...repairs].sort((a,b)=>String(b.date).localeCompare(String(a.date))));}catch(e){console.error(e);setMsg({type:'err',text:'تعذر تحميل المحاسبة من Firebase. تحقق من القواعد.'})}finally{setLoading(false)}};
- useEffect(()=>{load()},[]);
- const add=async()=>{if(!form.description.trim()||!Number(form.amount)){setMsg({type:'err',text:'أدخل البيان والمبلغ أولًا.'});return}setSaving(true);try{await window.WesamFirebase.addDoc('accounting_transactions',{...form,amount:Number(form.amount),status:'active'});setForm(emptyTx);setMsg({type:'ok',text:'تم حفظ الحركة المالية في Firebase.'});load()}catch(e){console.error(e);setMsg({type:'err',text:'فشل حفظ الحركة المالية في Firebase. عدّل قواعد Firestore.'})}finally{setSaving(false)}};
- const del=async(row)=>{if(row.auto){setMsg({type:'err',text:'هذه حركة تلقائية من الطلبات أو الصيانة. احذف أو عدّل أصل الطلب من صفحته.'});return} if(!confirm('حذف الحركة من Firebase؟')) return; await window.WesamFirebase.deleteDoc('accounting_transactions',row.docId); setMsg({type:'ok',text:'تم الحذف من Firebase.'}); load()};
- const filtered=tab==='overview'?tx:tx.filter(t=>tab==='incomes'?t.type==='income':t.type==='expense');const income=tx.filter(t=>t.type==='income').reduce((s,t)=>s+Math.abs(t.amount),0);const expense=tx.filter(t=>t.type==='expense').reduce((s,t)=>s+Math.abs(t.amount),0);const balance=income-expense;const byCat={};tx.filter(t=>t.type==='expense').forEach(t=>byCat[t.category]=(byCat[t.category]||0)+Math.abs(t.amount));
- const summary=[['إجمالي الإيرادات',income,'green',<AICON.ArrowUp/>],['إجمالي المصروفات',expense,'orange',<AICON.ArrowDown/>],['الصافي',balance,'blue',<AICON.Tag/>],['عدد الحركات',tx.length,'purple',<AICON.FileText/>]];
- return <AdminShell active="accounting" lang={lang} setLang={setLang}><div className="page-head"><div><h1>المحاسبة 💰</h1><div className="sub">{loading?'جاري التحميل من Firebase...':'الحفظ في مجموعة accounting_transactions مع قراءة الطلبات والصيانة تلقائيًا'}</div></div><div className="page-head-actions"><button className="btn btn-outline" onClick={()=>window.print()}><AICON.Download/> تصدير/طباعة</button><button className="btn btn-primary" onClick={add} disabled={saving}><AICON.Plus/> {saving?'جاري الحفظ...':'حفظ حركة جديدة'}</button></div></div>{msg&&<div className={`save-msg ${msg.type}`}>{msg.text}</div>}
- <div className="summary-grid">{summary.map((k,i)=><div key={i} className={`kpi ${k[2]}`}><div className="kpi-head"><div className="ico">{k[3]}</div></div><div className="num">{Number(k[1]).toLocaleString()} د.أ</div><div className="label">{k[0]}</div></div>)}</div>
- <div className="card" style={{marginBottom:20}}><div className="card-head"><h3>إضافة حركة مالية وحفظها في Firebase</h3></div><div className="mini-form"><select className="form-control" value={form.type} onChange={e=>setForm({...form,type:e.target.value,category:e.target.value==='income'?'مبيعات':'مصروفات'})}><option value="income">إيراد</option><option value="expense">مصروف</option></select><input className="form-control" placeholder="البيان" value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/><input className="form-control" type="number" placeholder="المبلغ" value={form.amount} onChange={e=>setForm({...form,amount:e.target.value})}/><input className="form-control" placeholder="التصنيف" value={form.category} onChange={e=>setForm({...form,category:e.target.value})}/><select className="form-control" value={form.method} onChange={e=>setForm({...form,method:e.target.value})}><option>كاش</option><option>بطاقة</option><option>تحويل</option><option>غير محدد</option></select><input className="form-control" type="date" value={form.date} onChange={e=>setForm({...form,date:e.target.value})}/></div></div>
- <div className="grid-2" style={{marginBottom:20}}><div className="card"><div className="card-head"><h3>ملخص المصروفات</h3></div><div style={{padding:20}}>{Object.keys(byCat).length?Object.entries(byCat).map(([c,v])=><div key={c} className="setting-row"><div><div className="title">{c}</div></div><strong className="amount-neg">{v.toLocaleString()} د.أ</strong></div>):<div style={{color:'var(--slate)'}}>لا توجد مصروفات محفوظة</div>}</div></div><div className="card"><div className="card-head"><h3>مصادر البيانات</h3></div><div style={{padding:20,lineHeight:2}}><div>الحركات اليدوية: {tx.filter(t=>t.source==='manual').length}</div><div>طلبات المتجر: {tx.filter(t=>t.source==='orders').length}</div><div>طلبات الصيانة المدفوعة: {tx.filter(t=>t.source==='service_requests').length}</div></div></div></div>
- <div className="card"><div className="card-head"><div><h3>سجل الحركات المالية</h3><div className="sub">كل حركة يدوية محفوظة في Firebase، والحركات التلقائية تُقرأ من orders و service_requests</div></div><div className="acc-tabs"><button className={tab==='overview'?'active':''} onClick={()=>setTab('overview')}>الكل</button><button className={tab==='incomes'?'active':''} onClick={()=>setTab('incomes')}>الإيرادات</button><button className={tab==='expenses'?'active':''} onClick={()=>setTab('expenses')}>المصروفات</button></div></div><div className="table-wrap"><table className="tbl"><thead><tr><th>الرقم</th><th>التاريخ</th><th>البيان</th><th>النوع</th><th>التصنيف</th><th>الطريقة</th><th>المبلغ</th><th>المصدر</th><th>إجراءات</th></tr></thead><tbody>{filtered.map(row=><tr key={row.source+'-'+row.docId}><td style={{fontWeight:700,color:'var(--orange-dark)'}}>{row.id}</td><td>{row.date}</td><td>{row.description}</td><td><span className={`pill ${row.type==='income'?'done':'canceled'}`}>{row.type==='income'?'إيراد':'مصروف'}</span></td><td>{row.category}</td><td>{row.method}</td><td className={row.type==='income'?'amount-pos':'amount-neg'}>{row.type==='income'?'+':'-'}{Math.abs(row.amount).toFixed(2)}</td><td>{row.auto?'تلقائي':'يدوي'}</td><td><button className="action-btn danger" onClick={()=>del(row)} disabled={row.auto}><AICON.Trash/></button></td></tr>)}</tbody></table></div>{filtered.length===0&&<div style={{padding:40,textAlign:'center',color:'var(--slate)'}}>لا توجد حركات</div>}</div></AdminShell>}
-ReactDOM.createRoot(document.getElementById('root')).render(<AccountingPage/>);
-</script></body></html>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>المحاسبة - وسام للإلكترونيات</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin-styles.css" />
+  <style>
+    :root{--navy:#14256f;--orange:#ff7a00;--orange-dark:#e56800;--slate:#64748b;--border:#e5e7eb;--bg:#f6f7fb;--green:#16a34a;--red:#dc2626;--blue:#2563eb;--card:#fff}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:Cairo,Inter,Arial,sans-serif;color:#111827}
+    .layout{display:grid;grid-template-columns:280px 1fr;min-height:100vh}.sidebar{background:#fff;border-left:1px solid var(--border);padding:18px;position:sticky;top:0;height:100vh;overflow:auto}.brand{display:flex;gap:12px;align-items:center;margin-bottom:24px}.mark{width:44px;height:44px;border-radius:16px;background:linear-gradient(135deg,var(--orange),#ffb15c);color:#fff;display:grid;place-items:center;font-weight:900;font-size:24px}.brand .name{font-weight:900;color:var(--navy)}.brand .sub{font-size:12px;color:var(--slate)}.nav-title{font-size:12px;color:#94a3b8;font-weight:800;margin:18px 8px 8px}.nav-link{display:flex;align-items:center;gap:10px;text-decoration:none;color:#334155;padding:12px;border-radius:12px;font-weight:800;margin-bottom:6px}.nav-link:hover,.nav-link.active{background:#fff3e8;color:var(--orange-dark)}.main{min-width:0}.topbar{height:72px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px}.content{padding:24px}.page-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}.page-head h1{margin:0;color:var(--navy);font-size:30px}.sub{color:var(--slate);font-size:14px}.btn{border:0;border-radius:12px;padding:11px 16px;font-weight:900;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:inherit}.btn-primary{background:var(--orange);color:#fff}.btn-outline{background:#fff;color:var(--navy);border:1px solid var(--border)}.btn-danger{background:#fee2e2;color:#991b1b}.btn:disabled{opacity:.55;cursor:not-allowed}.grid{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:16px;margin-bottom:20px}.kpi{background:#fff;border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:0 10px 30px rgba(15,23,42,.04)}.kpi .num{font-size:24px;font-weight:900;color:var(--navy);margin-top:8px}.kpi .label{color:var(--slate);font-weight:700}.card{background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:0 10px 30px rgba(15,23,42,.04);margin-bottom:20px;overflow:hidden}.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px;border-bottom:1px solid var(--border)}.card-head h3{margin:0;color:var(--navy)}.form-grid{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:10px;padding:18px}.form-control{width:100%;border:1px solid var(--border);border-radius:12px;padding:11px 12px;font-family:inherit;background:#fff}.msg{display:none;margin-bottom:16px;padding:13px 16px;border-radius:14px;font-weight:900}.msg.ok{display:block;background:#dcfce7;color:#166534}.msg.err{display:block;background:#fee2e2;color:#991b1b}.msg.info{display:block;background:#dbeafe;color:#1e40af}.tabs{display:flex;gap:8px;flex-wrap:wrap}.tabs button{border:0;background:#f1f5f9;color:#334155;border-radius:999px;padding:9px 14px;font-family:inherit;font-weight:900;cursor:pointer}.tabs button.active{background:var(--navy);color:#fff}.table-wrap{overflow:auto}.tbl{width:100%;border-collapse:collapse;min-width:950px}.tbl th,.tbl td{padding:13px 14px;border-bottom:1px solid var(--border);text-align:right;vertical-align:middle}.tbl th{background:#f8fafc;color:#475569;font-size:13px}.amount-pos{color:var(--green);font-weight:900}.amount-neg{color:var(--red);font-weight:900}.pill{display:inline-flex;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:900}.pill.income{background:#dcfce7;color:#166534}.pill.expense{background:#fee2e2;color:#991b1b}.empty{padding:40px;text-align:center;color:var(--slate);font-weight:800}.small-actions{display:flex;gap:6px}.icon-btn{border:1px solid var(--border);background:#fff;border-radius:10px;padding:8px 10px;cursor:pointer;font-family:inherit;font-weight:900}.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}.source-list{padding:18px;line-height:2.1;font-weight:800}.mobile-menu{display:none}
+    @media(max-width:1000px){.layout{grid-template-columns:1fr}.sidebar{position:fixed;inset:0 auto 0 0;width:290px;z-index:30;transform:translateX(-110%);transition:.2s}.sidebar.open{transform:translateX(0)}.mobile-menu{display:inline-flex}.grid{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}.content{padding:16px}.page-head{flex-direction:column}.topbar{padding:0 16px}}
+    @media(max-width:620px){.grid,.form-grid{grid-template-columns:1fr}.page-head h1{font-size:24px}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="mark">و</div><div><div class="name">وسام للإلكترونيات</div><div class="sub">لوحة التحكم</div></div></div>
+    <div class="nav-title">القائمة الرئيسية</div>
+    <a class="nav-link" href="admin.html">🏠 نظرة عامة</a>
+    <a class="nav-link" href="admin-repairs.html">🔧 طلبات الصيانة</a>
+    <a class="nav-link" href="admin-orders.html">🛒 طلبات المتجر</a>
+    <div class="nav-title">الإدارة</div>
+    <a class="nav-link" href="admin-products.html">📦 المنتجات والمخزون</a>
+    <a class="nav-link" href="admin-customers.html">👥 العملاء</a>
+    <a class="nav-link" href="admin-offers.html">🏷️ العروض</a>
+    <a class="nav-link" href="admin-techs.html">👷 الفنيون</a>
+    <a class="nav-link active" href="admin-accounting.html">💰 المحاسبة</a>
+    <div class="nav-title">النظام</div>
+    <a class="nav-link" href="admin-reports.html">📊 التقارير</a>
+    <a class="nav-link" href="admin-settings.html">⚙️ الإعدادات</a>
+    <a class="nav-link" href="index.html">↩️ العودة للموقع</a>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <button class="btn btn-outline mobile-menu" onclick="document.getElementById('sidebar').classList.toggle('open')">☰ القائمة</button>
+      <strong>مشروع Firebase: <span id="projectId">...</span></strong>
+      <button class="btn btn-outline" onclick="location.reload()">تحديث الصفحة</button>
+    </div>
+    <div class="content">
+      <div class="page-head">
+        <div><h1>المحاسبة 💰</h1><div class="sub" id="statusText">جاري الاتصال مع Firebase...</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-outline" onclick="window.print()">طباعة / تصدير</button><button class="btn btn-primary" id="reloadBtn">تحديث من Firebase</button></div>
+      </div>
+      <div id="msg" class="msg"></div>
+      <div class="grid">
+        <div class="kpi"><div class="label">إجمالي الإيرادات</div><div class="num" id="incomeBox">0 د.أ</div></div>
+        <div class="kpi"><div class="label">إجمالي المصروفات</div><div class="num" id="expenseBox">0 د.أ</div></div>
+        <div class="kpi"><div class="label">الصافي</div><div class="num" id="balanceBox">0 د.أ</div></div>
+        <div class="kpi"><div class="label">عدد الحركات</div><div class="num" id="countBox">0</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>إضافة حركة مالية وحفظها في Firebase</h3><button class="btn btn-primary" id="saveBtn">حفظ الحركة</button></div>
+        <div class="form-grid">
+          <select class="form-control" id="type"><option value="income">إيراد</option><option value="expense">مصروف</option></select>
+          <input class="form-control" id="description" placeholder="البيان مثل: بيع ريموت / مصروف توصيل">
+          <input class="form-control" id="amount" type="number" step="0.01" placeholder="المبلغ">
+          <input class="form-control" id="category" placeholder="التصنيف" value="مبيعات">
+          <select class="form-control" id="method"><option>كاش</option><option>بطاقة</option><option>تحويل</option><option>غير محدد</option></select>
+          <input class="form-control" id="date" type="date">
+        </div>
+      </div>
+      <div class="two">
+        <div class="card"><div class="card-head"><h3>مصادر البيانات</h3></div><div class="source-list" id="sourcesBox">...</div></div>
+        <div class="card"><div class="card-head"><h3>ملخص المصروفات حسب التصنيف</h3></div><div class="source-list" id="expenseCats">لا توجد مصروفات</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h3>سجل الحركات المالية</h3><div class="sub">الحركات اليدوية من accounting_transactions، والإيرادات التلقائية من orders و service_requests</div></div><div class="tabs"><button data-tab="all" class="active">الكل</button><button data-tab="income">الإيرادات</button><button data-tab="expense">المصروفات</button></div></div>
+        <div class="table-wrap"><table class="tbl"><thead><tr><th>الرقم</th><th>التاريخ</th><th>البيان</th><th>النوع</th><th>التصنيف</th><th>الطريقة</th><th>المبلغ</th><th>المصدر</th><th>إجراءات</th></tr></thead><tbody id="tbody"></tbody></table></div>
+        <div id="empty" class="empty" style="display:none">لا توجد حركات مالية محفوظة حتى الآن</div>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+(function(){
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const msg = $('msg');
+  let allRows = [];
+  let activeTab = 'all';
+  $('date').value = new Date().toISOString().slice(0,10);
+  $('type').addEventListener('change', e => { if(!$('category').value || ['مبيعات','مصروفات'].includes($('category').value)) $('category').value = e.target.value === 'income' ? 'مبيعات' : 'مصروفات'; });
+  document.querySelectorAll('.tabs button').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');activeTab=btn.dataset.tab;render();}));
+  $('reloadBtn').addEventListener('click', loadAll);
+  $('saveBtn').addEventListener('click', saveTransaction);
+  function show(type,text){ msg.className='msg '+type; msg.textContent=text; }
+  function clearMsg(){ msg.className='msg'; msg.textContent=''; }
+  function money(n){ return (Number(n)||0).toLocaleString('ar-JO',{minimumFractionDigits:2,maximumFractionDigits:2})+' د.أ'; }
+  function dateText(v){ try{ if(window.WesamFirebase && window.WesamFirebase.toDateText) return window.WesamFirebase.toDateText(v); const d=v&&v.toDate?v.toDate():new Date(v||Date.now()); return isNaN(d.getTime())?'':d.toISOString().slice(0,10); }catch(e){ return ''; } }
+  function normalize(row, source){
+    const amount = Number(row.amount ?? row.total ?? row.grandTotal ?? row.subtotal ?? row.paid ?? 0) || 0;
+    return { docId: row.id, id: row.txId || row.orderId || row.requestId || row.id || '-', type: row.type || 'income', description: row.description || row.desc || row.title || row.note || 'حركة مالية', amount, method: row.method || row.paymentMethod || row.payment || 'غير محدد', category: row.category || source, date: row.date || dateText(row.createdAt) || dateText(row.updatedAt) || new Date().toISOString().slice(0,10), source, auto: source !== 'manual' };
+  }
+  async function waitFirebase(){
+    if(!window.WesamFirebase) throw new Error('ملف firebase-config.js لم يعمل أو لم يتم تحميل Firebase SDK. تأكد أنك تفتح الصفحة من السيرفر أو Firebase Hosting وليس من ملف مباشر على الكمبيوتر.');
+    $('projectId').textContent = window.WesamFirebase.projectId || 'غير معروف';
+    if(!window.WesamFirebase.db) throw new Error('Firebase لم يتهيأ. تحقق من بيانات firebaseConfig.');
+  }
+  async function loadAll(){
+    clearMsg(); $('statusText').textContent='جاري تحميل المحاسبة من Firebase...'; $('tbody').innerHTML=''; $('empty').style.display='none';
+    try{
+      await waitFirebase();
+      if(window.WesamFirebase.ensureCoreCollections) await window.WesamFirebase.ensureCoreCollections({force:true}).catch(()=>{});
+      const manualRaw = await window.WesamFirebase.getCollection('accounting_transactions',{limit:500});
+      const ordersRaw = await window.WesamFirebase.getCollection('orders',{limit:500});
+      const repairsRaw = await window.WesamFirebase.getCollection('service_requests',{limit:500});
+      const manual = manualRaw.map(r=>normalize(r,'manual'));
+      const orders = ordersRaw.filter(o=>o.status!=='cancelled').map(o=>normalize(Object.assign({},o,{type:'income',description:'طلب بيع: '+(o.customerName||o.name||o.orderId||'')}),'orders'));
+      const repairs = repairsRaw.filter(r=>Number(r.total||r.paid||r.amount||0)>0).map(r=>normalize(Object.assign({},r,{type:'income',amount:Number(r.total||r.paid||r.amount||0),description:'طلب صيانة: '+(r.customerName||r.name||r.requestId||'')}),'service_requests'));
+      allRows = manual.concat(orders,repairs).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+      $('sourcesBox').innerHTML = `<div>الحركات اليدوية: ${manual.length}</div><div>طلبات المتجر: ${orders.length}</div><div>طلبات الصيانة المدفوعة: ${repairs.length}</div>`;
+      $('statusText').textContent='تم الاتصال والتحميل من Firebase';
+      show('ok','تم تحميل المحاسبة من Firebase بنجاح.');
+      render();
+    }catch(e){ console.error(e); $('statusText').textContent='فشل الاتصال أو التحميل'; show('err', e.message || 'فشل تحميل المحاسبة من Firebase.'); render(); }
+  }
+  function render(){
+    const rows = activeTab==='all' ? allRows : allRows.filter(r=>r.type===activeTab);
+    const income = allRows.filter(r=>r.type==='income').reduce((s,r)=>s+Math.abs(Number(r.amount)||0),0);
+    const expense = allRows.filter(r=>r.type==='expense').reduce((s,r)=>s+Math.abs(Number(r.amount)||0),0);
+    $('incomeBox').textContent=money(income); $('expenseBox').textContent=money(expense); $('balanceBox').textContent=money(income-expense); $('countBox').textContent=allRows.length;
+    const cats={}; allRows.filter(r=>r.type==='expense').forEach(r=>cats[r.category]=(cats[r.category]||0)+Math.abs(Number(r.amount)||0));
+    $('expenseCats').innerHTML = Object.keys(cats).length ? Object.entries(cats).map(([c,v])=>`<div style="display:flex;justify-content:space-between;gap:10px"><span>${escapeHtml(c)}</span><strong class="amount-neg">${money(v)}</strong></div>`).join('') : 'لا توجد مصروفات';
+    $('tbody').innerHTML = rows.map(r=>`<tr><td><strong style="color:var(--orange-dark)">${escapeHtml(r.id)}</strong></td><td>${escapeHtml(r.date)}</td><td>${escapeHtml(r.description)}</td><td><span class="pill ${r.type}">${r.type==='income'?'إيراد':'مصروف'}</span></td><td>${escapeHtml(r.category)}</td><td>${escapeHtml(r.method)}</td><td class="${r.type==='income'?'amount-pos':'amount-neg'}">${r.type==='income'?'+':'-'}${money(Math.abs(Number(r.amount)||0))}</td><td>${r.auto?'تلقائي':'يدوي'}</td><td><div class="small-actions">${r.auto?'<button class="icon-btn" disabled>مرتبط</button>':`<button class="icon-btn btn-danger" data-del="${escapeHtml(r.docId)}">حذف</button>`}</div></td></tr>`).join('');
+    $('empty').style.display = rows.length ? 'none' : 'block';
+    document.querySelectorAll('[data-del]').forEach(btn=>btn.addEventListener('click',()=>deleteManual(btn.dataset.del)));
+  }
+  async function saveTransaction(){
+    clearMsg();
+    const data = { type:$('type').value, description:$('description').value.trim(), amount:Number($('amount').value), category:$('category').value.trim() || ($('type').value==='income'?'مبيعات':'مصروفات'), method:$('method').value, date:$('date').value || new Date().toISOString().slice(0,10), status:'active', source:'manual' };
+    if(!data.description || !data.amount){ show('err','اكتب البيان والمبلغ أولًا.'); return; }
+    try{ await waitFirebase(); $('saveBtn').disabled=true; await window.WesamFirebase.addDoc('accounting_transactions',data); $('description').value=''; $('amount').value=''; show('ok','تم حفظ الحركة في Firebase.'); await loadAll(); }
+    catch(e){ console.error(e); show('err', e.message || 'فشل حفظ الحركة في Firebase. تحقق من قواعد Firestore.'); }
+    finally{ $('saveBtn').disabled=false; }
+  }
+  async function deleteManual(id){
+    if(!id || !confirm('حذف هذه الحركة المالية من Firebase؟')) return;
+    try{ await waitFirebase(); await window.WesamFirebase.deleteDoc('accounting_transactions',id); show('ok','تم حذف الحركة من Firebase.'); await loadAll(); }
+    catch(e){ console.error(e); show('err', e.message || 'فشل الحذف من Firebase.'); }
+  }
+  function escapeHtml(v){ return String(v ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch])); }
+  window.addEventListener('error', function(e){ show('err','خطأ في الصفحة: '+(e.message||'غير معروف')); });
+  loadAll();
+})();
+</script>
+</body>
+</html>
