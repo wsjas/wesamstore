@@ -57,7 +57,18 @@
     await db.collection(name).doc(id).delete();
   }
 
+  async function getDoc(name, id) {
+    if (!db) throw new Error('Firebase غير مهيأ');
+    const snap = await db.collection(name).doc(id).get();
+    return snap.exists ? { id: snap.id, ...snap.data() } : null;
+  }
 
+  function toDateText(value) {
+    try {
+      const d = value && value.toDate ? value.toDate() : (value ? new Date(value) : new Date());
+      return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+    } catch (e) { return ''; }
+  }
 
   const DEFAULT_SITE_SETTINGS = {
     storeName: 'وسام للإلكترونيات',
@@ -115,7 +126,12 @@
       ensureDocument('contact_messages', '_template', { status: 'system', name: 'قالب داخلي', phone: '', message: '' }),
       ensureDocument('subscribers', '_template', { status: 'system', name: 'قالب داخلي', phone: '' }),
       ensureDocument('coupons', '_template', { active: false, code: 'SYSTEM-TEMPLATE', discountType: 'fixed', value: 0 }),
-      ensureDocument('notifications', '_template', { status: 'system', title: 'قالب داخلي', read: true })
+      ensureDocument('notifications', '_template', { status: 'system', title: 'قالب داخلي', read: true }),
+      ensureDocument('accounting_transactions', '_template', { status: 'system', type: 'income', amount: 0, description: 'قالب داخلي' }),
+      ensureDocument('expenses', '_template', { status: 'system', amount: 0, category: 'system' }),
+      ensureDocument('customers', '_template', { status: 'system', name: 'قالب داخلي', phone: '' }),
+      ensureDocument('technicians', '_template', { status: 'system', name: 'قالب داخلي', phone: '' }),
+      ensureDocument('admin_users', '_template', { status: 'system', name: 'قالب داخلي', role: 'admin' })
     ];
 
     const results = await Promise.allSettled(tasks);
@@ -163,6 +179,6 @@
   }
 
   window.WESAM_FIREBASE_CONFIG = firebaseConfig;
-  window.WesamFirebase = { app, db, auth, getCollection, addDoc, setDoc, deleteDoc, loadProducts, normalizeProduct, ensureCoreCollections };
+  window.WesamFirebase = { app, db, auth, getCollection, addDoc, setDoc, deleteDoc, getDoc, toDateText, loadProducts, normalizeProduct, ensureCoreCollections, serverTimestamp: () => firebase.firestore.FieldValue.serverTimestamp() };
   autoRunSetup();
 })();

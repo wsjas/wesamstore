@@ -10,59 +10,63 @@ service cloud.firestore {
 
     match /settings/{docId} {
       allow read: if true;
-      allow create: if docId == 'site' && isSystemTemplate();
-      // مؤقتًا حتى تعمل لوحة التحكم بدون تسجيل دخول إداري.
-      // بعد إضافة نظام المدراء، اجعل التعديل للمدير فقط.
-      allow update: if docId == 'site';
+      allow create, update: if docId == 'site';
       allow delete: if false;
     }
 
     match /config/{docId} {
       allow read: if true;
-      allow create: if docId == 'site' && isSystemTemplate();
-      allow update: if docId == 'site';
+      allow create, update: if docId == 'site';
       allow delete: if false;
     }
 
     match /products/{productId} {
       allow read: if true;
-      allow create: if true;
-      allow update, delete: if true;
+      allow create, update, delete: if true;
     }
 
     match /orders/{orderId} {
-      allow create: if true;
-      allow read: if true;
-      allow update, delete: if orderId == '_template' && resource.data.__system == true;
+      allow create, read, update, delete: if true;
     }
 
     match /service_requests/{requestId} {
-      allow create: if true;
-      allow read: if true;
-      allow update, delete: if requestId == '_template' && resource.data.__system == true;
+      allow create, read, update, delete: if true;
     }
 
     match /contact_messages/{messageId} {
-      allow create: if true;
-      allow read: if true;
-      allow update, delete: if messageId == '_template' && resource.data.__system == true;
+      allow create, read, update, delete: if true;
     }
 
     match /subscribers/{subscriberId} {
-      allow create: if true;
-      allow read: if true;
-      allow update, delete: if subscriberId == '_template' && resource.data.__system == true;
+      allow create, read, update, delete: if true;
     }
 
     match /coupons/{couponId} {
-      allow read: if true;
-      allow create: if true;
-      allow update, delete: if true;
+      allow read, create, update, delete: if true;
     }
 
     match /notifications/{notificationId} {
-      allow create, read: if true;
-      allow update, delete: if notificationId == '_template' && resource.data.__system == true;
+      allow create, read, update, delete: if true;
+    }
+
+    match /accounting_transactions/{txId} {
+      allow create, read, update, delete: if true;
+    }
+
+    match /expenses/{expenseId} {
+      allow create, read, update, delete: if true;
+    }
+
+    match /customers/{customerId} {
+      allow create, read, update, delete: if true;
+    }
+
+    match /technicians/{techId} {
+      allow create, read, update, delete: if true;
+    }
+
+    match /admin_users/{userId} {
+      allow create, read, update, delete: if true;
     }
 
     match /{document=**} {

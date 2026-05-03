@@ -44,3 +44,12 @@ __system: true
 - عند إرسال طلب من صفحة السلة يتم إنشاء وثيقة داخل `orders`.
 - عند إرسال طلب صيانة يتم إنشاء وثيقة داخل `service_requests`.
 - عند إرسال رسالة تواصل يتم إنشاء وثيقة داخل `contact_messages`.
+
+
+## تحديث مهم للحفظ في Firebase
+تم إصلاح الحفظ في:
+- `admin-settings.html`: يحفظ في `settings/site` و `config/site`.
+- `admin-accounting.html`: يحفظ الحركات اليدوية في `accounting_transactions` ويقرأ الإيرادات تلقائيًا من `orders` و `service_requests`.
+- تم توسيع `firestore.rules` للسماح مؤقتًا بالقراءة والكتابة لأقسام لوحة التحكم أثناء التجربة.
+
+بعد رفع الملفات، انسخ محتوى `firestore.rules` إلى Firebase Console > Firestore Database > Rules ثم اضغط Publish.

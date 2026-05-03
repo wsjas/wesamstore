@@ -1,232 +1,28 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>المحاسبة - وسام للإلكترونيات</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin-styles.css">
-<style>
-.acc-tabs { display: flex; gap: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 6px; margin-bottom: 20px; width: fit-content; }
-.acc-tabs button { padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 14px; color: var(--slate); display: flex; align-items: center; gap: 8px; }
-.acc-tabs button.active { background: var(--navy); color: #fff; }
-.amount-pos { color: #16A34A; font-weight: 700; }
-.amount-neg { color: #DC2626; font-weight: 700; }
-.summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
-.payment-method-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
-.payment-method-bar .lbl { font-size: 13px; min-width: 80px; }
-.payment-method-bar .bar-track { flex: 1; height: 8px; background: var(--bg); border-radius: 999px; overflow: hidden; }
-.payment-method-bar .bar-fill { height: 100%; border-radius: 999px; }
-.payment-method-bar .val { font-size: 13px; font-weight: 700; min-width: 70px; text-align: end; }
-@media (max-width: 880px) { .summary-grid { grid-template-columns: 1fr 1fr; } }
-</style>
-</head>
-<body>
-<div id="root"></div>
-
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
-
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics-compat.js"></script>
-<script src="firebase-config.js"></script>
-<script type="text/babel" src="admin-components.jsx"></script>
-<script type="text/babel" src="admin-shell.jsx"></script>
-
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>المحاسبة - وسام للإلكترونيات</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="admin-styles.css">
+<style>.acc-tabs{display:flex;gap:8px;flex-wrap:wrap}.acc-tabs button{padding:10px 18px;border-radius:8px;font-weight:700;font-size:14px;color:var(--slate);display:flex;align-items:center;gap:8px}.acc-tabs button.active{background:var(--navy);color:#fff}.amount-pos{color:#16A34A;font-weight:800}.amount-neg{color:#DC2626;font-weight:800}.save-msg{margin:0 0 16px;padding:12px 14px;border-radius:12px;font-weight:700}.save-msg.ok{background:#DCFCE7;color:#166534}.save-msg.err{background:#FEE2E2;color:#991B1B}.mini-form{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:10px;padding:16px;border-top:1px solid var(--border)}@media(max-width:1000px){.mini-form{grid-template-columns:1fr 1fr}}@media(max-width:600px){.mini-form{grid-template-columns:1fr}}</style>
+</head><body><div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script><script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script><script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics-compat.js"></script>
+<script src="firebase-config.js"></script><script type="text/babel" src="admin-components.jsx"></script><script type="text/babel" src="admin-shell.jsx"></script>
 <script type="text/babel">
-
-const { useState } = React;
-
-function AccountingPage() {
-  const [lang, setLang] = useState('ar');
-  const [tab, setTab] = useState('overview');
-  const isAr = lang === 'ar';
-
-  const summary = [];
-
-
-  const transactions = [];
-
-
-  const filtered = tab === 'overview' ? transactions : transactions.filter((t) => t.type === tab.replace('s', ''));
-
-  const expenseCats = [];
-
-  const totalExp = expenseCats.reduce((s, c) => s + c.val, 0);
-
-  const paymentMethods = [
-  { lbl: isAr ? 'كاش' : 'Cash', pct: 58, val: '7,221', color: '#10B981' },
-  { lbl: isAr ? 'بطاقة' : 'Card', pct: 32, val: '3,984', color: '#3B82F6' },
-  { lbl: isAr ? 'تحويل' : 'Transfer', pct: 10, val: '1,245', color: '#8B5CF6' }];
-
-
-  const months = isAr ? ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو'] : ['Jan', 'Feb', 'Mar', 'Apr', 'May'];
-  const incomeChart = [82, 68, 91, 76, 95];
-  const expenseChart = [45, 38, 52, 41, 48];
-
-  return (
-    <AdminShell active="accounting" lang={lang} setLang={setLang}>
-      <div className="page-head">
-        <div>
-          <h1>{isAr ? 'المحاسبة' : 'Accounting'} 💰</h1>
-          <div className="sub">{isAr ? 'إدارة الإيرادات والمصروفات والفواتير' : 'Manage revenue, expenses & invoices'}</div>
-        </div>
-        <div className="page-head-actions">
-          <button className="btn btn-outline"><AICON.Download /> {isAr ? 'تصدير كشف' : 'Export Statement'}</button>
-          <button className="btn btn-primary"><AICON.Plus /> {isAr ? 'حركة جديدة' : 'New Transaction'}</button>
-        </div>
-      </div>
-
-      <div className="summary-grid">
-        {summary.map((k, i) =>
-        <div key={i} className={`kpi ${k.color}`}>
-            <div className="kpi-head">
-              <div className="ico">{k.icon}</div>
-              <span className="trend up"><AICON.ArrowUp /> {k.trend}</span>
-            </div>
-            <div className="num">{k.num}</div>
-            <div className="label">{k.label}</div>
-          </div>
-        )}
-      </div>
-
-      <div className="grid-2" style={{ marginBottom: 20 }}>
-        <div className="card chart-card">
-          <div className="card-head" style={{ padding: 0, border: 'none', marginBottom: 8 }}>
-            <div>
-              <h3>{isAr ? 'الإيرادات مقابل المصروفات' : 'Revenue vs Expenses'}</h3>
-              <div className="sub">{isAr ? 'آخر ٥ أشهر (آلاف الدنانير)' : 'Last 5 months (thousands JOD)'}</div>
-            </div>
-            <div style={{ display: 'flex', gap: 14, fontSize: 12, color: 'var(--slate)' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 10, height: 10, background: '#10B981', borderRadius: 2 }}></span>{isAr ? 'إيرادات' : 'Income'}</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 10, height: 10, background: '#F97316', borderRadius: 2 }}></span>{isAr ? 'مصروفات' : 'Expenses'}</span>
-            </div>
-          </div>
-          <div className="bars" style={{ gap: 18 }}>
-            {months.map((m, i) =>
-            <div key={i} className="bar-col">
-                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 4, height: '100%', width: '100%' }}>
-                  <div style={{ width: '40%', background: '#10B981', borderRadius: '6px 6px 0 0', height: `${incomeChart[i]}%` }}></div>
-                  <div style={{ width: '40%', background: '#F97316', borderRadius: '6px 6px 0 0', height: `${expenseChart[i]}%` }}></div>
-                </div>
-                <div className="bar-label">{m}</div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-head">
-            <div>
-              <h3>{isAr ? 'توزيع المصروفات' : 'Expense Breakdown'}</h3>
-              <div className="sub">{isAr ? 'الشهر الحالي' : 'Current month'}</div>
-            </div>
-          </div>
-          <div style={{ padding: 20 }}>
-            {expenseCats.map((c) => {
-              const pct = (c.val / totalExp * 100).toFixed(0);
-              return (
-                <div key={c.lbl} style={{ marginBottom: 14 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13 }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ width: 10, height: 10, background: c.color, borderRadius: 2 }}></span>{c.lbl}</span>
-                    <span style={{ fontWeight: 700 }}>{c.val} د.أ <span style={{ color: 'var(--slate)', fontWeight: 400 }}>({pct}٪)</span></span>
-                  </div>
-                  <div className="payment-method-bar" style={{ margin: 0 }}>
-                    <div className="bar-track"><div className="bar-fill" style={{ ...{ width: pct + '%', background: c.color }, height: "5px", width: "5px" }}></div></div>
-                  </div>
-                </div>);
-
-            })}
-            <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px dashed var(--border)', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontWeight: 700 }}>{isAr ? 'الإجمالي' : 'Total'}</span>
-              <span style={{ fontWeight: 800, color: '#DC2626' }}>{totalExp.toLocaleString()} د.أ</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="card" style={{ marginBottom: 20 }}>
-        <div className="card-head">
-          <div>
-            <h3>{isAr ? 'طرق الدفع' : 'Payment Methods'}</h3>
-            <div className="sub">{isAr ? 'توزيع الإيرادات حسب طريقة الدفع' : 'Revenue by payment method'}</div>
-          </div>
-        </div>
-        <div style={{ padding: 20 }}>
-          {paymentMethods.map((p) =>
-          <div key={p.lbl} className="payment-method-bar">
-              <span className="lbl">{p.lbl}</span>
-              <div className="bar-track"><div className="bar-fill" style={{ ...{ width: p.pct + '%', background: p.color, borderRadius: "0px" }, height: "0px", width: "0px" }}></div></div>
-              <span className="val">{p.val} د.أ ({p.pct}٪)</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="card">
-        <div className="card-head">
-          <div>
-            <h3>{isAr ? 'سجل الحركات المالية' : 'Transaction Log'}</h3>
-            <div className="sub">{isAr ? 'كل الحركات الواردة والصادرة' : 'All incoming and outgoing transactions'}</div>
-          </div>
-          <div className="acc-tabs">
-            <button className={tab === 'overview' ? 'active' : ''} onClick={() => setTab('overview')}>{isAr ? 'الكل' : 'All'}</button>
-            <button className={tab === 'incomes' ? 'active' : ''} onClick={() => setTab('incomes')} style={{ color: tab === 'incomes' ? '#fff' : '#16A34A' }}>{isAr ? 'الإيرادات' : 'Income'}</button>
-            <button className={tab === 'expenses' ? 'active' : ''} onClick={() => setTab('expenses')} style={{ color: tab === 'expenses' ? '#fff' : '#DC2626' }}>{isAr ? 'المصروفات' : 'Expenses'}</button>
-          </div>
-        </div>
-        <div className="table-wrap">
-          <table className="tbl">
-            <thead>
-              <tr>
-                <th>{isAr ? 'الرقم' : 'ID'}</th>
-                <th>{isAr ? 'التاريخ' : 'Date'}</th>
-                <th>{isAr ? 'البيان' : 'Description'}</th>
-                <th>{isAr ? 'النوع' : 'Type'}</th>
-                <th>{isAr ? 'الطريقة' : 'Method'}</th>
-                <th>{isAr ? 'المبلغ (د.أ)' : 'Amount (JOD)'}</th>
-                <th>{isAr ? 'إجراءات' : 'Actions'}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((tx) =>
-              <tr key={tx.id}>
-                  <td style={{ fontWeight: 700, color: 'var(--orange-dark)' }}>{tx.id}</td>
-                  <td style={{ color: 'var(--slate)' }}>{tx.date}</td>
-                  <td>{tx.desc}</td>
-                  <td>
-                    <span className={`pill ${tx.type === 'income' ? 'done' : 'canceled'}`}>
-                      {tx.type === 'income' ? isAr ? 'إيراد' : 'Income' : isAr ? 'مصروف' : 'Expense'}
-                    </span>
-                  </td>
-                  <td>{tx.method}</td>
-                  <td className={tx.amount > 0 ? 'amount-pos' : 'amount-neg'}>
-                    {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)}
-                  </td>
-                  <td>
-                    <div className="row-actions">
-                      <button className="action-btn"><AICON.Eye /></button>
-                      <button className="action-btn"><AICON.Print /></button>
-                      <button className="action-btn"><AICON.Edit /></button>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-        {filtered.length === 0 &&
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--slate)' }}>{isAr ? 'لا توجد حركات' : 'No transactions'}</div>
-        }
-      </div>
-    </AdminShell>);
-
-}
-
-ReactDOM.createRoot(document.getElementById('root')).render(<AccountingPage />);
-</script>
-</body>
-</html>
+const {useState,useEffect}=React;
+const emptyTx={type:'income',description:'',amount:'',method:'كاش',category:'مبيعات',date:new Date().toISOString().slice(0,10),source:'manual'};
+function AccountingPage(){const [lang,setLang]=useState('ar'),[tab,setTab]=useState('overview'),[tx,setTx]=useState([]),[form,setForm]=useState(emptyTx),[msg,setMsg]=useState(null),[saving,setSaving]=useState(false),[loading,setLoading]=useState(true);const isAr=lang==='ar';
+ const normalize=(r,src='manual')=>({docId:r.id,id:r.txId||r.orderId||r.requestId||r.id,type:r.type||'income',description:r.description||r.desc||r.title||'حركة مالية',amount:Number(r.amount??r.total??0),method:r.method||r.paymentMethod||r.payment||'غير محدد',category:r.category||src,date:r.date||window.WesamFirebase.toDateText(r.createdAt)||new Date().toISOString().slice(0,10),source:r.source||src,auto:r.auto===true});
+ const load=async()=>{setLoading(true);setMsg(null);try{await window.WesamFirebase.ensureCoreCollections({force:true});const manual=(await window.WesamFirebase.getCollection('accounting_transactions',{limit:300})).map(r=>normalize(r,'manual'));const orders=(await window.WesamFirebase.getCollection('orders',{limit:300})).filter(o=>o.status!=='cancelled').map(o=>normalize({...o,type:'income',description:'طلب بيع: '+(o.customerName||o.name||o.orderId||''),category:'مبيعات',method:o.paymentMethod||o.payment||'غير محدد',auto:true},'orders'));const repairs=(await window.WesamFirebase.getCollection('service_requests',{limit:300})).filter(r=>Number(r.total||r.paid||0)>0).map(r=>normalize({...r,type:'income',amount:Number(r.total||r.paid||0),description:'طلب صيانة: '+(r.customerName||r.name||r.requestId||''),category:'صيانة',method:r.paymentMethod||'غير محدد',auto:true},'service_requests'));setTx([...manual,...orders,...repairs].sort((a,b)=>String(b.date).localeCompare(String(a.date))));}catch(e){console.error(e);setMsg({type:'err',text:'تعذر تحميل المحاسبة من Firebase. تحقق من القواعد.'})}finally{setLoading(false)}};
+ useEffect(()=>{load()},[]);
+ const add=async()=>{if(!form.description.trim()||!Number(form.amount)){setMsg({type:'err',text:'أدخل البيان والمبلغ أولًا.'});return}setSaving(true);try{await window.WesamFirebase.addDoc('accounting_transactions',{...form,amount:Number(form.amount),status:'active'});setForm(emptyTx);setMsg({type:'ok',text:'تم حفظ الحركة المالية في Firebase.'});load()}catch(e){console.error(e);setMsg({type:'err',text:'فشل حفظ الحركة المالية في Firebase. عدّل قواعد Firestore.'})}finally{setSaving(false)}};
+ const del=async(row)=>{if(row.auto){setMsg({type:'err',text:'هذه حركة تلقائية من الطلبات أو الصيانة. احذف أو عدّل أصل الطلب من صفحته.'});return} if(!confirm('حذف الحركة من Firebase؟')) return; await window.WesamFirebase.deleteDoc('accounting_transactions',row.docId); setMsg({type:'ok',text:'تم الحذف من Firebase.'}); load()};
+ const filtered=tab==='overview'?tx:tx.filter(t=>tab==='incomes'?t.type==='income':t.type==='expense');const income=tx.filter(t=>t.type==='income').reduce((s,t)=>s+Math.abs(t.amount),0);const expense=tx.filter(t=>t.type==='expense').reduce((s,t)=>s+Math.abs(t.amount),0);const balance=income-expense;const byCat={};tx.filter(t=>t.type==='expense').forEach(t=>byCat[t.category]=(byCat[t.category]||0)+Math.abs(t.amount));
+ const summary=[['إجمالي الإيرادات',income,'green',<AICON.ArrowUp/>],['إجمالي المصروفات',expense,'orange',<AICON.ArrowDown/>],['الصافي',balance,'blue',<AICON.Tag/>],['عدد الحركات',tx.length,'purple',<AICON.FileText/>]];
+ return <AdminShell active="accounting" lang={lang} setLang={setLang}><div className="page-head"><div><h1>المحاسبة 💰</h1><div className="sub">{loading?'جاري التحميل من Firebase...':'الحفظ في مجموعة accounting_transactions مع قراءة الطلبات والصيانة تلقائيًا'}</div></div><div className="page-head-actions"><button className="btn btn-outline" onClick={()=>window.print()}><AICON.Download/> تصدير/طباعة</button><button className="btn btn-primary" onClick={add} disabled={saving}><AICON.Plus/> {saving?'جاري الحفظ...':'حفظ حركة جديدة'}</button></div></div>{msg&&<div className={`save-msg ${msg.type}`}>{msg.text}</div>}
+ <div className="summary-grid">{summary.map((k,i)=><div key={i} className={`kpi ${k[2]}`}><div className="kpi-head"><div className="ico">{k[3]}</div></div><div className="num">{Number(k[1]).toLocaleString()} د.أ</div><div className="label">{k[0]}</div></div>)}</div>
+ <div className="card" style={{marginBottom:20}}><div className="card-head"><h3>إضافة حركة مالية وحفظها في Firebase</h3></div><div className="mini-form"><select className="form-control" value={form.type} onChange={e=>setForm({...form,type:e.target.value,category:e.target.value==='income'?'مبيعات':'مصروفات'})}><option value="income">إيراد</option><option value="expense">مصروف</option></select><input className="form-control" placeholder="البيان" value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/><input className="form-control" type="number" placeholder="المبلغ" value={form.amount} onChange={e=>setForm({...form,amount:e.target.value})}/><input className="form-control" placeholder="التصنيف" value={form.category} onChange={e=>setForm({...form,category:e.target.value})}/><select className="form-control" value={form.method} onChange={e=>setForm({...form,method:e.target.value})}><option>كاش</option><option>بطاقة</option><option>تحويل</option><option>غير محدد</option></select><input className="form-control" type="date" value={form.date} onChange={e=>setForm({...form,date:e.target.value})}/></div></div>
+ <div className="grid-2" style={{marginBottom:20}}><div className="card"><div className="card-head"><h3>ملخص المصروفات</h3></div><div style={{padding:20}}>{Object.keys(byCat).length?Object.entries(byCat).map(([c,v])=><div key={c} className="setting-row"><div><div className="title">{c}</div></div><strong className="amount-neg">{v.toLocaleString()} د.أ</strong></div>):<div style={{color:'var(--slate)'}}>لا توجد مصروفات محفوظة</div>}</div></div><div className="card"><div className="card-head"><h3>مصادر البيانات</h3></div><div style={{padding:20,lineHeight:2}}><div>الحركات اليدوية: {tx.filter(t=>t.source==='manual').length}</div><div>طلبات المتجر: {tx.filter(t=>t.source==='orders').length}</div><div>طلبات الصيانة المدفوعة: {tx.filter(t=>t.source==='service_requests').length}</div></div></div></div>
+ <div className="card"><div className="card-head"><div><h3>سجل الحركات المالية</h3><div className="sub">كل حركة يدوية محفوظة في Firebase، والحركات التلقائية تُقرأ من orders و service_requests</div></div><div className="acc-tabs"><button className={tab==='overview'?'active':''} onClick={()=>setTab('overview')}>الكل</button><button className={tab==='incomes'?'active':''} onClick={()=>setTab('incomes')}>الإيرادات</button><button className={tab==='expenses'?'active':''} onClick={()=>setTab('expenses')}>المصروفات</button></div></div><div className="table-wrap"><table className="tbl"><thead><tr><th>الرقم</th><th>التاريخ</th><th>البيان</th><th>النوع</th><th>التصنيف</th><th>الطريقة</th><th>المبلغ</th><th>المصدر</th><th>إجراءات</th></tr></thead><tbody>{filtered.map(row=><tr key={row.source+'-'+row.docId}><td style={{fontWeight:700,color:'var(--orange-dark)'}}>{row.id}</td><td>{row.date}</td><td>{row.description}</td><td><span className={`pill ${row.type==='income'?'done':'canceled'}`}>{row.type==='income'?'إيراد':'مصروف'}</span></td><td>{row.category}</td><td>{row.method}</td><td className={row.type==='income'?'amount-pos':'amount-neg'}>{row.type==='income'?'+':'-'}{Math.abs(row.amount).toFixed(2)}</td><td>{row.auto?'تلقائي':'يدوي'}</td><td><button className="action-btn danger" onClick={()=>del(row)} disabled={row.auto}><AICON.Trash/></button></td></tr>)}</tbody></table></div>{filtered.length===0&&<div style={{padding:40,textAlign:'center',color:'var(--slate)'}}>لا توجد حركات</div>}</div></AdminShell>}
+ReactDOM.createRoot(document.getElementById('root')).render(<AccountingPage/>);
+</script></body></html>
