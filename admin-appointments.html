@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>مركز مواعيد الصيانة</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="wesam-error-logger.js"></script>
+  <style>
+    :root{--bg:#f6f8fc;--card:#fff;--text:#142033;--muted:#64748b;--line:#e5e7eb;--orange:#f97316;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--dark:#111827;--violet:#7c3aed;--shadow:0 18px 44px rgba(15,23,42,.08);--r:20px}
+    *{box-sizing:border-box} body{margin:0;font-family:Tahoma,Arial,sans-serif;background:radial-gradient(circle at top right,#fff3e5 0,#f6f8fc 42%,#eef6ff 100%);color:var(--text)}
+    a{color:inherit;text-decoration:none} button,input,select,textarea{font:inherit} button{cursor:pointer}
+    .wrap{max-width:1280px;margin:auto;padding:18px} .top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap}
+    h1{margin:0;font-size:25px} .muted{color:var(--muted)} .card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px} .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px} .full{grid-column:1/-1}
+    label{font-size:13px;color:#475569;font-weight:900;display:block;margin-bottom:6px} input,select,textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px;background:#fff} textarea{min-height:90px;resize:vertical}
+    .actions,.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center} .btn{border:0;border-radius:13px;padding:10px 14px;background:#e5e7eb;color:#111827;font-weight:800;display:inline-flex;align-items:center;gap:7px;justify-content:center} .btn.primary{background:linear-gradient(135deg,var(--orange),#fb923c);color:white} .btn.blue{background:var(--blue);color:white} .btn.green{background:var(--green);color:white} .btn.red{background:var(--red);color:white} .btn.dark{background:var(--dark);color:white} .btn.ghost{background:white;border:1px solid var(--line)}
+    .notice{border:1px dashed #fdba74;background:#fff7ed;color:#9a3412;border-radius:16px;padding:12px;margin-bottom:14px;line-height:1.8} .notice.ok{background:#f0fdf4;border-color:#86efac;color:#166534} .notice.err{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px;background:white;box-shadow:var(--shadow)} table{width:100%;border-collapse:collapse;min-width:940px} th,td{padding:12px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top;font-size:13px} th{background:#f8fafc;color:#475569;position:sticky;top:0}
+    .badge{display:inline-flex;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900;background:#eef2ff;color:#3730a3} .badge.green{background:#dcfce7;color:#166534} .badge.red{background:#fee2e2;color:#991b1b} .badge.orange{background:#ffedd5;color:#9a3412} .badge.blue{background:#dbeafe;color:#1e40af} .badge.gray{background:#f1f5f9;color:#334155} .badge.violet{background:#ede9fe;color:#5b21b6}
+    .mini{padding:7px 9px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:800} .mini.red{background:#fff1f2;color:#991b1b;border-color:#fecdd3} .mini.green{background:#ecfdf5;color:#166534;border-color:#bbf7d0} .mini.blue{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
+    .stat b{display:block;font-size:28px;margin-top:6px} .kpi{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)} .ltr{direction:ltr;text-align:left} .hidden{display:none!important}
+    .toast{position:fixed;left:18px;bottom:18px;background:#111827;color:#fff;border-radius:14px;padding:12px 16px;box-shadow:var(--shadow);display:none;z-index:50;max-width:min(540px,calc(100vw - 36px));line-height:1.7} .toast.show{display:block}
+    @media(max-width:800px){.grid,.grid3{grid-template-columns:1fr} .wrap{padding:12px} h1{font-size:21px}}
+    @media print{.top,.toolbar,.no-print,.btn,.mini{display:none!important} body{background:white} .card,.table-wrap{box-shadow:none;border:0} .wrap{max-width:none;padding:0}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><h1>مركز مواعيد الصيانة</h1><div class="muted">جدولة زيارات الصيانة أو مواعيد تسليم واستلام الأجهزة، مع ربط اختياري بطلب صيانة وفني.</div></div>
+    <div class="actions no-print"><a class="btn ghost" href="admin.html">رجوع للوحة</a><button class="btn blue" onclick="location.reload()">تحديث الصفحة</button><a class="btn primary" href="index.html" target="_blank">فتح الموقع</a></div>
+  </div>
+  <div id="msg" class="notice">جار الاتصال مع Firebase...</div>
+  
+  <div class="grid3">
+    <div class="card stat"><span>مواعيد اليوم</span><b id="todayCount">0</b></div>
+    <div class="card stat"><span>المواعيد القادمة</span><b id="upcomingCount">0</b></div>
+    <div class="card stat"><span>المواعيد المتأخرة</span><b id="lateCount">0</b></div>
+  </div>
+  <div class="card">
+    <h2>إضافة / تعديل موعد صيانة</h2>
+    <form id="appointmentForm" class="grid">
+      <input type="hidden" id="editId">
+      <div><label>طلب صيانة مرتبط</label><select id="serviceId"><option value="">بدون ربط</option></select></div>
+      <div><label>الفني</label><select id="technician"><option value="">غير محدد</option></select></div>
+      <div><label>اسم العميل</label><input id="customerName" required></div>
+      <div><label>الهاتف</label><input id="phone" required></div>
+      <div><label>تاريخ الموعد</label><input id="date" type="date" required></div>
+      <div><label>الوقت</label><input id="time" type="time"></div>
+      <div><label>المكان</label><select id="place"><option value="المحل">المحل</option><option value="زيارة منزلية">زيارة منزلية</option><option value="استلام من العميل">استلام من العميل</option></select></div>
+      <div><label>الحالة</label><select id="status"><option value="scheduled">مجدول</option><option value="confirmed">مؤكد</option><option value="completed">مكتمل</option><option value="cancelled">ملغي</option></select></div>
+      <div class="full"><label>ملاحظة</label><textarea id="note"></textarea></div>
+      <div class="full actions"><button class="btn primary">حفظ الموعد</button><button type="button" class="btn ghost" onclick="resetAppointmentForm()">تفريغ</button><button type="button" class="btn blue" onclick="window.print()">طباعة</button></div>
+    </form>
+  </div>
+  <div class="card">
+    <div class="toolbar"><input id="search" placeholder="بحث بالاسم أو الهاتف أو الفني" oninput="render()"><select id="statusFilter" onchange="render()"><option value="">كل الحالات</option><option value="scheduled">مجدول</option><option value="confirmed">مؤكد</option><option value="completed">مكتمل</option><option value="cancelled">ملغي</option></select></div>
+    <div id="list"></div>
+  </div>
+
+</div>
+<div id="toast" class="toast"></div>
+<script>
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const F = () => window.WesamFirebase;
+const JOD = v => (Number(v||0)).toFixed(2) + ' د.أ';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const phoneOnly = p => String(p||'').replace(/\D/g,'').replace(/^0/,'962');
+const today = () => new Date().toISOString().slice(0,10);
+function toast(msg, ok=true){ const t=$('toast'); t.textContent=msg; t.style.background=ok?'#111827':'#991b1b'; t.classList.add('show'); clearTimeout(window.__t); window.__t=setTimeout(()=>t.classList.remove('show'),3500); }
+function setMsg(text, cls='notice'){ const m=$('msg'); m.className=cls; m.textContent=text; }
+function dateText(v){ try{ const d = v && v.toDate ? v.toDate() : (v ? new Date(v) : null); return d && !isNaN(d) ? d.toLocaleString('ar-JO') : '—'; }catch(e){ return '—'; } }
+function rowDate(v){ try{ const d = v && v.toDate ? v.toDate() : (v ? new Date(v) : null); return d && !isNaN(d) ? d.toISOString().slice(0,10) : ''; }catch(e){ return ''; } }
+function badge(s){ const map={new:['جديد','orange'],pending:['بانتظار','orange'],scheduled:['مجدول','blue'],confirmed:['مؤكد','blue'],processing:['قيد التنفيذ','violet'],completed:['مكتمل','green'],done:['منتهي','green'],cancelled:['ملغي','red'],rejected:['مرفوض','red'],published:['منشور','green'],draft:['مسودة','gray'],active:['فعال','green'],inactive:['معطل','gray'],refunded:['مسترجع','red'],exchanged:['استبدال','blue']}; const x=map[String(s||'new')]||[String(s||'new'),'gray']; return `<span class="badge ${x[1]}">${x[0]}</span>`; }
+function table(headers, rows, empty='لا توجد بيانات'){ return `<div class="table-wrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.join(''):`<tr><td colspan="${headers.length}" style="text-align:center;color:#64748b;padding:28px">${empty}</td></tr>`}</tbody></table></div>`; }
+async function requireFirebase(){ if(!F() || !F().db) throw new Error('Firebase غير محمل. تأكد من الإنترنت ومن ملف firebase-config.js'); await F().ensureCoreCollections({force:false}).catch(()=>null); setMsg('تم الاتصال مع Firebase: ' + F().projectId, 'notice ok'); }
+
+let appointments=[], repairs=[], techs=[];
+async function init(){ await requireFirebase(); await load(); bind(); render(); }
+function bind(){
+  $('appointmentForm').addEventListener('submit', saveAppointment);
+  $('serviceId').addEventListener('change', () => {
+    const r = repairs.find(x => x.id === $('serviceId').value);
+    if(r){ $('customerName').value = r.customerName || r.name || ''; $('phone').value = r.phone || r.customerPhone || ''; }
+  });
+}
+async function load(){
+  const W=F();
+  appointments = await W.getCollection('appointments',{limit:1000}).catch(()=>[]);
+  repairs = await W.getCollection('service_requests',{limit:1000}).catch(()=>[]);
+  techs = await W.getCollection('technicians',{limit:500}).catch(()=>[]);
+  $('serviceId').innerHTML = '<option value="">بدون ربط</option>' + repairs.map(r=>`<option value="${esc(r.id)}">${esc(r.requestId||r.id)} - ${esc(r.customerName||r.name||'')}</option>`).join('');
+  $('technician').innerHTML = '<option value="">غير محدد</option>' + techs.map(t=>`<option value="${esc(t.name||t.id)}">${esc(t.name||t.id)}</option>`).join('');
+}
+async function saveAppointment(e){
+  e.preventDefault(); const id=$('editId').value; const data={serviceId:$('serviceId').value, technician:$('technician').value, customerName:$('customerName').value.trim(), phone:$('phone').value.trim(), date:$('date').value, time:$('time').value, place:$('place').value, status:$('status').value, note:$('note').value.trim()};
+  if(!data.customerName || !data.phone || !data.date) return toast('أدخل الاسم والهاتف والتاريخ', false);
+  if(id) await F().setDoc('appointments', id, data, true); else await F().addDoc('appointments', data);
+  await F().addDoc('audit_logs',{action:id?'update_appointment':'create_appointment', description:`موعد صيانة: ${data.customerName}`, phone:data.phone}).catch(()=>null);
+  toast('تم حفظ الموعد'); resetAppointmentForm(); await load(); render();
+}
+window.resetAppointmentForm=function(){ $('appointmentForm').reset(); $('editId').value=''; $('date').value=today(); };
+window.editAppointment=function(id){ const a=appointments.find(x=>x.id===id); if(!a) return; $('editId').value=a.id; ['serviceId','technician','customerName','phone','date','time','place','status','note'].forEach(k=>{ if($(k)) $(k).value=a[k]||''; }); scrollTo({top:0,behavior:'smooth'}); };
+window.setAppointmentStatus=async function(id,status){ await F().setDoc('appointments',id,{status},true); toast('تم تحديث الحالة'); await load(); render(); };
+window.deleteAppointment=async function(id){ if(!confirm('حذف الموعد؟')) return; await F().deleteDoc('appointments',id); toast('تم الحذف'); await load(); render(); };
+window.render=function(){
+  const q=($('search').value||'').toLowerCase(), sf=$('statusFilter').value, d=today();
+  const rows=appointments.filter(a=>(!sf||a.status===sf) && (!q||JSON.stringify(a).toLowerCase().includes(q))).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||String(a.time||'').localeCompare(String(b.time||'')));
+  $('todayCount').textContent = appointments.filter(a=>a.date===d && !['completed','cancelled'].includes(a.status)).length;
+  $('upcomingCount').textContent = appointments.filter(a=>String(a.date||'')>=d && !['completed','cancelled'].includes(a.status)).length;
+  $('lateCount').textContent = appointments.filter(a=>String(a.date||'')<d && !['completed','cancelled'].includes(a.status)).length;
+  $('list').innerHTML=table(['التاريخ','الوقت','العميل','الهاتف','الفني','المكان','الحالة','إجراءات'], rows.map(a=>`<tr><td><b>${esc(a.date||'')}</b></td><td>${esc(a.time||'')}</td><td>${esc(a.customerName)}</td><td><a target="_blank" href="https://wa.me/${phoneOnly(a.phone)}">${esc(a.phone)}</a></td><td>${esc(a.technician||'—')}</td><td>${esc(a.place||'')}</td><td>${badge(a.status)}</td><td><button class="mini blue" onclick="editAppointment('${a.id}')">تعديل</button> <button class="mini green" onclick="setAppointmentStatus('${a.id}','completed')">مكتمل</button> <a class="mini green" target="_blank" href="https://wa.me/${phoneOnly(a.phone)}?text=${encodeURIComponent('تذكير بموعد الصيانة لدى وسام للإلكترونيات بتاريخ ' + (a.date||''))}">واتساب</a> <button class="mini red" onclick="deleteAppointment('${a.id}')">حذف</button></td></tr>`));
+};
+$('date').value=today();
+
+window.addEventListener('error', e => { setMsg('خطأ JavaScript: ' + (e.message||'غير معروف'), 'notice err'); });
+init().catch(e => { console.error(e); setMsg(e.message || String(e), 'notice err'); toast(e.message || String(e), false); });
+})();
+</script>
+</body>
+</html>

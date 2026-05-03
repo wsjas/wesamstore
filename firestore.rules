@@ -21,6 +21,26 @@ service cloud.firestore {
     match /technicians/{docId} { allow read, create, update, delete: if true; }
     match /admin_users/{docId} { allow read, write: if true; }
     match /audit_logs/{docId} { allow read, create, update, delete: if true; }
+    match /suppliers/{docId} { allow read, create, update, delete: if true; }
+    match /purchase_orders/{docId} { allow read, create, update, delete: if true; }
+    match /inventory_movements/{docId} { allow read, create, update, delete: if true; }
+    match /warranties/{docId} { allow read, create, update, delete: if true; }
+    match /work_notes/{docId} { allow read, create, update, delete: if true; }
+    match /followups/{docId} { allow read, create, update, delete: if true; }
+    match /diagnostics/{docId} { allow read, create, update, delete: if true; }
+    match /message_templates/{docId} { allow read, create, update, delete: if true; }
+    match /error_logs/{docId} { allow read, create, update, delete: if true; }
+    match /archived_records/{docId} { allow read, create, update, delete: if true; }
+    match /devices/{docId} { allow read, create, update, delete: if true; }
+    match /daily_tasks/{docId} { allow read, create, update, delete: if true; }
+    match /button_audits/{docId} { allow read, create, update, delete: if true; }
+    match /data_exports/{docId} { allow read, create, update, delete: if true; }
+    match /appointments/{docId} { allow read, create, update, delete: if true; }
+    match /returns/{docId} { allow read, create, update, delete: if true; }
+    match /reviews/{docId} { allow read, create, update, delete: if true; }
+    match /seo/{docId} { allow read, write: if true; }
+    match /notification_rules/{docId} { allow read, write: if true; }
+    match /status_templates/{docId} { allow read, create, update, delete: if true; }
 
     match /{document=**} { allow read, write: if false; }
   }

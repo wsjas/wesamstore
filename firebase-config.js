@@ -98,6 +98,10 @@
     whatsapp: '+962790781206',
     email: 'info@wesam.store',
     website: 'https://wesam.store',
+    facebook: '',
+    mapUrl: '',
+    appUrl: '',
+    announcement: '',
     address: 'عمّان - الأردن',
     currency: 'JOD',
     currencyLabel: 'د.أ',
@@ -126,7 +130,7 @@
   async function ensureCoreCollections(options = {}) {
     if (!db) throw new Error('Firebase غير مهيأ');
     const force = options.force === true;
-    const key = 'wesam_firebase_auto_setup_done_' + firebaseConfig.projectId + '_v5';
+    const key = 'wesam_firebase_auto_setup_done_' + firebaseConfig.projectId + '_v8';
     if (!force && localStorage.getItem(key) === '1') return { skipped: true, reason: 'already-ran-on-this-browser' };
     const tasks = [
       ensureDocument('settings', 'site', DEFAULT_SITE_SETTINGS),
@@ -144,7 +148,27 @@
       ensureDocument('audit_logs', '_template', { status: 'system', action: 'template', description: 'قالب داخلي' }),
       ensureDocument('customers', '_template', { status: 'system', name: 'قالب داخلي', phone: '' }),
       ensureDocument('technicians', '_template', { status: 'system', name: 'قالب داخلي', phone: '' }),
-      ensureDocument('admin_users', '_template', { status: 'system', name: 'قالب داخلي', role: 'admin' })
+      ensureDocument('admin_users', '_template', { status: 'system', name: 'قالب داخلي', role: 'admin' }),
+      ensureDocument('suppliers', '_template', { status: 'system', name: 'قالب داخلي', phone: '' }),
+      ensureDocument('purchase_orders', '_template', { status: 'system', supplierName: 'قالب داخلي', total: 0 }),
+      ensureDocument('inventory_movements', '_template', { status: 'system', productId: 'SYSTEM-TEMPLATE', quantity: 0, type: 'adjust' }),
+      ensureDocument('warranties', '_template', { status: 'system', warrantyId: 'SYSTEM-TEMPLATE', customerName: 'قالب داخلي' }),
+      ensureDocument('work_notes', '_template', { status: 'system', sourceCollection: 'system', sourceId: 'SYSTEM-TEMPLATE', note: 'قالب داخلي' }),
+      ensureDocument('diagnostics', '_template', { status: 'system', message: 'قالب داخلي' }),
+      ensureDocument('followups', '_template', { status: 'system', sourceCollection: 'system', sourceId: 'SYSTEM-TEMPLATE', note: 'قالب داخلي' }),
+      ensureDocument('message_templates', '_template', { status: 'system', name: 'قالب داخلي', type: 'system', text: '' }),
+      ensureDocument('error_logs', '_template', { status: 'system', message: 'قالب داخلي', page: 'system' }),
+      ensureDocument('archived_records', '_template', { status: 'system', originalCollection: 'system', originalId: 'SYSTEM-TEMPLATE', title: 'قالب داخلي' }),
+      ensureDocument('devices', '_template', { status: 'system', customerName: 'قالب داخلي', phone: '', deviceType: 'system', deviceSerial: '' }),
+      ensureDocument('daily_tasks', '_template', { status: 'system', title: 'قالب داخلي', type: 'system', priority: 'normal' }),
+      ensureDocument('button_audits', '_template', { status: 'system', type: 'system', summary: {} }),
+      ensureDocument('data_exports', '_template', { status: 'system', type: 'system', summary: {} }),
+      ensureDocument('appointments', '_template', { status: 'system', customerName: 'قالب داخلي', phone: '', date: '' }),
+      ensureDocument('returns', '_template', { status: 'system', customerName: 'قالب داخلي', type: 'return', amount: 0 }),
+      ensureDocument('reviews', '_template', { status: 'system', customerName: 'قالب داخلي', rating: 5, text: '' }),
+      ensureDocument('seo', 'site', { title: 'وسام للإلكترونيات', description: 'صيانة وبيع إلكترونيات في عمّان', keywords: 'وسام للإلكترونيات, صيانة شاشات, عمان' }),
+      ensureDocument('notification_rules', 'site', { stockLimit: 2, lateDays: 3, followupDays: 0 }),
+      ensureDocument('status_templates', '_template', { status: 'system', collection: 'system', code: 'SYSTEM-TEMPLATE', labelAr: 'قالب داخلي', color: 'gray' })
     ];
     const results = await Promise.allSettled(tasks);
     const failed = results.filter(r => r.status === 'rejected');

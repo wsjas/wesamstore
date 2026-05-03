@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>مركز الأرشفة والتنظيف</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="wesam-error-logger.js"></script>
+<style>
+:root{--bg:#f6f8fc;--card:#fff;--text:#142033;--muted:#64748b;--line:#e5e7eb;--orange:#f97316;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--dark:#111827;--shadow:0 16px 42px rgba(15,23,42,.08);--r:20px}
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:radial-gradient(circle at top right,#fff3e5 0,#f6f8fc 38%,#eef6ff 100%);color:var(--text)}
+a{text-decoration:none;color:inherit}.wrap{max-width:1240px;margin:auto;padding:18px}.top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px}.title h1{margin:0;font-size:24px}.title p{color:var(--muted);line-height:1.7;margin:6px 0 0}.actions,.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.btn{border:0;border-radius:13px;padding:10px 14px;background:#e5e7eb;color:#111827;font-weight:800;cursor:pointer;display:inline-flex;gap:7px;align-items:center;justify-content:center}.btn.primary{background:linear-gradient(135deg,var(--orange),#fb923c);color:#fff}.btn.blue{background:var(--blue);color:#fff}.btn.green{background:var(--green);color:#fff}.btn.red{background:var(--red);color:#fff}.btn.dark{background:var(--dark);color:#fff}.btn.ghost{background:#fff;border:1px solid var(--line)}.btn:disabled{opacity:.55;cursor:not-allowed}.grid{display:grid;gap:14px}.cards{grid-template-columns:repeat(4,minmax(0,1fr))}.two{grid-template-columns:repeat(2,minmax(0,1fr))}.three{grid-template-columns:repeat(3,minmax(0,1fr))}.card{background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}.stat span{color:var(--muted);font-size:13px}.stat b{display:block;font-size:28px;margin-top:6px}.notice{border:1px dashed #fdba74;background:#fff7ed;color:#9a3412;border-radius:16px;padding:12px;margin-bottom:14px;line-height:1.7}.notice.ok{border-color:#86efac;background:#f0fdf4;color:#166534}.notice.err{border-color:#fca5a5;background:#fef2f2;color:#991b1b}.toolbar{margin:12px 0}.search,.filter,input,select,textarea{border:1px solid var(--line);border-radius:14px;padding:11px;background:#fff;font:inherit;min-width:0}.search{min-width:260px;flex:1}.field{display:grid;gap:6px}.field label{font-size:13px;color:#475569;font-weight:900}.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.full{grid-column:1/-1}textarea{min-height:90px;resize:vertical}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:var(--shadow)}table{width:100%;border-collapse:collapse;min-width:960px}th,td{padding:11px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle;font-size:13px}th{background:#f8fafc;color:#475569;position:sticky;top:0}.badge{display:inline-flex;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900;background:#eef2ff;color:#3730a3}.badge.green{background:#dcfce7;color:#166534}.badge.red{background:#fee2e2;color:#991b1b}.badge.orange{background:#ffedd5;color:#9a3412}.badge.gray{background:#f1f5f9;color:#334155}.muted{color:var(--muted)}.ltr{direction:ltr;text-align:left}.hidden{display:none!important}.empty{text-align:center;color:var(--muted);padding:22px}.toast{position:fixed;left:18px;bottom:18px;background:#111827;color:#fff;padding:12px 16px;border-radius:14px;display:none;z-index:30;max-width:min(520px,calc(100vw - 36px));line-height:1.7}.toast.show{display:block}.modal{position:fixed;inset:0;background:rgba(15,23,42,.58);display:none;align-items:center;justify-content:center;padding:14px;z-index:20}.modal.show{display:flex}.modal-box{width:min(760px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:24px;padding:18px;box-shadow:0 28px 80px rgba(0,0,0,.28)}.modal-head{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px}.modal-head h3{margin:0}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;font-weight:900;cursor:pointer}.tab.active{background:#111827;color:#fff}.print-area{display:none}@media(max-width:900px){.cards,.two,.three,.form{grid-template-columns:1fr}.top{flex-direction:column}.search{min-width:100%}.wrap{padding:12px}}@media print{.top,.toolbar,.btn,.notice,.tabs,.no-print{display:none!important}body{background:#fff}.wrap{max-width:none;padding:0}.card,.table-wrap{box-shadow:none;border:0}.print-area{display:block}}
+</style></head>
+<body><div class="wrap">
+<div class="top"><div class="title"><h1>مركز الأرشفة والتنظيف</h1><p>أرشفة الطلبات المنتهية أو الملغاة بدل حذفها نهائيًا، مع إمكانية الاسترجاع لاحقًا.</p></div><div class="actions"><a class="btn ghost" href="admin.html">لوحة التحكم</a><button class="btn primary" id="refreshBtn">تحديث</button></div></div>
+<div id="status" class="notice">جار التحميل...</div>
+<div class="grid cards">
+  <div class="card stat"><span>طلبات قابلة للأرشفة</span><b id="kOrders">0</b></div>
+  <div class="card stat"><span>صيانة قابلة للأرشفة</span><b id="kServices">0</b></div>
+  <div class="card stat"><span>الأرشيف</span><b id="kArchive">0</b></div>
+  <div class="card stat"><span>المحدد</span><b id="kSelected">0</b></div>
+</div>
+<div class="card toolbar">
+  <input id="q" class="search" placeholder="بحث بالاسم، الهاتف، رقم الطلب...">
+  <select id="source" class="filter"><option value="all">كل المصادر</option><option value="orders">طلبات البيع</option><option value="service_requests">الصيانة</option><option value="archived_records">الأرشيف</option></select>
+  <button class="btn green" id="archiveSelected">أرشفة المحدد</button>
+  <button class="btn blue" id="exportBtn">تصدير CSV</button>
+</div>
+<div class="table-wrap"><table><thead><tr><th><input type="checkbox" id="checkAll"></th><th>المصدر</th><th>الرقم</th><th>العميل</th><th>الهاتف</th><th>الحالة</th><th>المبلغ</th><th>التاريخ</th><th>إجراء</th></tr></thead><tbody id="rows"><tr><td colspan="9" class="empty">جار التحميل...</td></tr></tbody></table></div>
+</div><div id="toast" class="toast"></div>
+<script>
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+function toast(msg){ const t=$('#toast'); if(!t) return alert(msg); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3600); }
+function money(v){ return (Number(v||0)).toFixed(2) + ' د.أ'; }
+function dateText(v){ try{ const d=v&&v.toDate?v.toDate():(v?new Date(v):null); return d&&!isNaN(d)?d.toISOString().slice(0,10):''; }catch(e){ return ''; } }
+function escapeHtml(s){ return String(s??'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function systemRow(x){ return x && (x.__system || x.id==='_template' || x.status==='system'); }
+function csvDownload(name, rows){
+  if(!rows.length){ toast('لا توجد بيانات للتصدير'); return; }
+  const keys=[...new Set(rows.flatMap(r=>Object.keys(r)))];
+  const val=v=>{ if(v&&v.toDate) v=v.toDate().toISOString(); if(typeof v==='object'&&v!==null) v=JSON.stringify(v); return '"'+String(v??'').replace(/"/g,'""')+'"'; };
+  const csv='\ufeff'+keys.join(',')+'\n'+rows.map(r=>keys.map(k=>val(r[k])).join(',')).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function jsonDownload(name, data){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); }
+async function waitFirebase(){
+  for(let i=0;i<40;i++){ if(window.WesamFirebase && window.WesamFirebase.db) return window.WesamFirebase; await new Promise(r=>setTimeout(r,100)); }
+  throw new Error('لم يتم تحميل Firebase. تأكد من firebase-config.js والإنترنت.');
+}
+</script>
+
+<script>
+let WF, rows=[];
+const archiveStatuses = new Set(['completed','delivered','done','cancelled','closed','تم التسليم','مكتمل','ملغي','منتهي']);
+function normalize(collection, r){
+  return {rowKey:collection+':'+r.id, collection, id:r.id, number:r.orderId||r.requestId||r.invoiceId||r.id, customerName:r.customerName||r.name||r.clientName||'', phone:r.phone||r.customerPhone||'', status:r.status||'', total:Number(r.total||r.amount||r.finalAmount||r.repairCost||r.serviceCost||0), date:dateText(r.createdAt||r.updatedAt||r.date), raw:r};
+}
+async function load(){
+  $('#status').textContent='جار قراءة البيانات من Firebase...';
+  try{
+    WF = await waitFirebase();
+    const [orders, services, archived] = await Promise.all([WF.getCollection('orders',{limit:1000}),WF.getCollection('service_requests',{limit:1000}),WF.getCollection('archived_records',{limit:1000})]);
+    rows=[...orders.filter(r=>archiveStatuses.has(String(r.status||'').toLowerCase()) || r.archivable===true).map(r=>normalize('orders',r)), ...services.filter(r=>archiveStatuses.has(String(r.status||'').toLowerCase()) || r.archivable===true).map(r=>normalize('service_requests',r)), ...archived.map(r=>normalize('archived_records',r))];
+    $('#kOrders').textContent=rows.filter(r=>r.collection==='orders').length; $('#kServices').textContent=rows.filter(r=>r.collection==='service_requests').length; $('#kArchive').textContent=rows.filter(r=>r.collection==='archived_records').length; $('#status').className='notice ok'; $('#status').textContent='تم تحميل البيانات. الأرشفة تنسخ السجل إلى archived_records ثم تعلّم الأصل بأنه مؤرشف.'; render();
+  }catch(e){ $('#status').className='notice err'; $('#status').textContent='خطأ: '+e.message; }
+}
+function filtered(){ const q=$('#q').value.trim().toLowerCase(); const s=$('#source').value; return rows.filter(r=>(s==='all'||r.collection===s) && (!q || [r.number,r.customerName,r.phone,r.status,r.collection].join(' ').toLowerCase().includes(q))); }
+function render(){ const data=filtered(); $('#rows').innerHTML=data.length?data.map(r=>`<tr><td>${r.collection!=='archived_records'?`<input type="checkbox" class="pick" data-key="${r.rowKey}">`:''}</td><td><span class="badge ${r.collection==='orders'?'blue':r.collection==='service_requests'?'orange':'gray'}">${r.collection}</span></td><td class="ltr">${escapeHtml(r.number)}</td><td>${escapeHtml(r.customerName)}</td><td class="ltr">${escapeHtml(r.phone)}</td><td>${escapeHtml(r.status)}</td><td>${money(r.total)}</td><td>${escapeHtml(r.date)}</td><td><button class="btn ghost" onclick="viewRow('${r.rowKey}')">عرض</button>${r.collection==='archived_records'?` <button class="btn green" onclick="restoreArchived('${r.id}')">استرجاع</button>`:` <button class="btn dark" onclick="archiveOne('${r.rowKey}')">أرشفة</button>`}</td></tr>`).join(''):'<tr><td colspan="9" class="empty">لا توجد سجلات مطابقة</td></tr>'; updateSelected(); }
+function updateSelected(){ $('#kSelected').textContent=$$('.pick:checked').length; }
+async function archiveOne(key){ const r=rows.find(x=>x.rowKey===key); if(!r||r.collection==='archived_records')return; if(!confirm('أرشفة هذا السجل؟'))return; await WF.addDoc('archived_records',{...r.raw, originalCollection:r.collection, originalId:r.id, archivedAt:WF.serverTimestamp(), archivedBy:'admin'}); await WF.setDoc(r.collection,r.id,{archived:true, archivedAt:WF.serverTimestamp()}); await WF.addAuditLog('archive_record',{sourceCollection:r.collection, sourceId:r.id, title:r.number}); toast('تمت الأرشفة'); await load(); }
+async function restoreArchived(id){ const r=rows.find(x=>x.collection==='archived_records'&&x.id===id); if(!r)return; const original=r.raw.originalCollection; const originalId=r.raw.originalId; if(!original||!originalId){toast('لا يوجد مسار أصل للسجل');return;} await WF.setDoc(original,originalId,{archived:false, restoredAt:WF.serverTimestamp()}); await WF.deleteDoc('archived_records',id); await WF.addAuditLog('restore_archive',{sourceCollection:original, sourceId:originalId}); toast('تم الاسترجاع'); await load(); }
+function viewRow(key){ const r=rows.find(x=>x.rowKey===key); alert(JSON.stringify(r.raw,null,2)); }
+$('#refreshBtn').onclick=load; $('#q').oninput=render; $('#source').onchange=render; $('#checkAll').onchange=e=>{$$('.pick').forEach(c=>c.checked=e.target.checked); updateSelected();}; document.addEventListener('change',e=>{if(e.target.classList.contains('pick'))updateSelected();}); $('#archiveSelected').onclick=async()=>{for(const c of $$('.pick:checked')) await archiveOne(c.dataset.key);}; $('#exportBtn').onclick=()=>csvDownload('wesam-archive-center.csv', filtered()); load();
+</script>
+</body></html>

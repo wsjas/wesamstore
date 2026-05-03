@@ -54,6 +54,26 @@ service cloud.firestore {
     match /admin_users/{docId} { allow read, write: if isAdmin(); }
     match /admins/{docId} { allow read, write: if isAdmin(); }
     match /audit_logs/{docId} { allow read, write: if isAdmin(); }
+    match /suppliers/{docId} { allow read, write: if isAdmin(); }
+    match /purchase_orders/{docId} { allow read, write: if isAdmin(); }
+    match /inventory_movements/{docId} { allow read, write: if isAdmin(); }
+    match /warranties/{docId} { allow read, write: if isAdmin(); }
+    match /work_notes/{docId} { allow read, write: if isAdmin(); }
+    match /followups/{docId} { allow read, write: if isAdmin(); }
+    match /diagnostics/{docId} { allow read, write: if isAdmin(); }
+    match /message_templates/{docId} { allow read, write: if isAdmin(); }
+    match /error_logs/{docId} { allow read, write: if isAdmin(); }
+    match /archived_records/{docId} { allow read, write: if isAdmin(); }
+    match /devices/{docId} { allow read, write: if isAdmin(); }
+    match /daily_tasks/{docId} { allow read, write: if isAdmin(); }
+    match /button_audits/{docId} { allow read, write: if isAdmin(); }
+    match /data_exports/{docId} { allow read, write: if isAdmin(); }
+    match /appointments/{docId} { allow read, write: if isAdmin(); }
+    match /returns/{docId} { allow read, write: if isAdmin(); }
+    match /reviews/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /seo/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /notification_rules/{docId} { allow read, write: if isAdmin(); }
+    match /status_templates/{docId} { allow read, write: if isAdmin(); }
 
     match /{document=**} { allow read, write: if false; }
   }

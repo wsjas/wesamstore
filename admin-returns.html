@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>المرتجعات والاستبدال</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="wesam-error-logger.js"></script>
+  <style>
+    :root{--bg:#f6f8fc;--card:#fff;--text:#142033;--muted:#64748b;--line:#e5e7eb;--orange:#f97316;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--dark:#111827;--violet:#7c3aed;--shadow:0 18px 44px rgba(15,23,42,.08);--r:20px}
+    *{box-sizing:border-box} body{margin:0;font-family:Tahoma,Arial,sans-serif;background:radial-gradient(circle at top right,#fff3e5 0,#f6f8fc 42%,#eef6ff 100%);color:var(--text)}
+    a{color:inherit;text-decoration:none} button,input,select,textarea{font:inherit} button{cursor:pointer}
+    .wrap{max-width:1280px;margin:auto;padding:18px} .top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap}
+    h1{margin:0;font-size:25px} .muted{color:var(--muted)} .card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px} .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px} .full{grid-column:1/-1}
+    label{font-size:13px;color:#475569;font-weight:900;display:block;margin-bottom:6px} input,select,textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px;background:#fff} textarea{min-height:90px;resize:vertical}
+    .actions,.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center} .btn{border:0;border-radius:13px;padding:10px 14px;background:#e5e7eb;color:#111827;font-weight:800;display:inline-flex;align-items:center;gap:7px;justify-content:center} .btn.primary{background:linear-gradient(135deg,var(--orange),#fb923c);color:white} .btn.blue{background:var(--blue);color:white} .btn.green{background:var(--green);color:white} .btn.red{background:var(--red);color:white} .btn.dark{background:var(--dark);color:white} .btn.ghost{background:white;border:1px solid var(--line)}
+    .notice{border:1px dashed #fdba74;background:#fff7ed;color:#9a3412;border-radius:16px;padding:12px;margin-bottom:14px;line-height:1.8} .notice.ok{background:#f0fdf4;border-color:#86efac;color:#166534} .notice.err{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px;background:white;box-shadow:var(--shadow)} table{width:100%;border-collapse:collapse;min-width:940px} th,td{padding:12px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top;font-size:13px} th{background:#f8fafc;color:#475569;position:sticky;top:0}
+    .badge{display:inline-flex;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900;background:#eef2ff;color:#3730a3} .badge.green{background:#dcfce7;color:#166534} .badge.red{background:#fee2e2;color:#991b1b} .badge.orange{background:#ffedd5;color:#9a3412} .badge.blue{background:#dbeafe;color:#1e40af} .badge.gray{background:#f1f5f9;color:#334155} .badge.violet{background:#ede9fe;color:#5b21b6}
+    .mini{padding:7px 9px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:800} .mini.red{background:#fff1f2;color:#991b1b;border-color:#fecdd3} .mini.green{background:#ecfdf5;color:#166534;border-color:#bbf7d0} .mini.blue{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
+    .stat b{display:block;font-size:28px;margin-top:6px} .kpi{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)} .ltr{direction:ltr;text-align:left} .hidden{display:none!important}
+    .toast{position:fixed;left:18px;bottom:18px;background:#111827;color:#fff;border-radius:14px;padding:12px 16px;box-shadow:var(--shadow);display:none;z-index:50;max-width:min(540px,calc(100vw - 36px));line-height:1.7} .toast.show{display:block}
+    @media(max-width:800px){.grid,.grid3{grid-template-columns:1fr} .wrap{padding:12px} h1{font-size:21px}}
+    @media print{.top,.toolbar,.no-print,.btn,.mini{display:none!important} body{background:white} .card,.table-wrap{box-shadow:none;border:0} .wrap{max-width:none;padding:0}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><h1>المرتجعات والاستبدال</h1><div class="muted">تسجيل المرتجعات والاستبدال والضمان وربط الاسترجاع بالمحاسبة عند إكمال العملية.</div></div>
+    <div class="actions no-print"><a class="btn ghost" href="admin.html">رجوع للوحة</a><button class="btn blue" onclick="location.reload()">تحديث الصفحة</button><a class="btn primary" href="index.html" target="_blank">فتح الموقع</a></div>
+  </div>
+  <div id="msg" class="notice">جار الاتصال مع Firebase...</div>
+  
+  <div class="grid3">
+    <div class="card stat"><span>طلبات مرتجعة</span><b id="returnsCount">0</b></div>
+    <div class="card stat"><span>قيد المعالجة</span><b id="pendingCount">0</b></div>
+    <div class="card stat"><span>قيمة الاسترجاع</span><b id="refundTotal">0.00 د.أ</b></div>
+  </div>
+  <div class="card">
+    <h2>تسجيل مرتجع / استبدال</h2>
+    <form id="returnForm" class="grid">
+      <input type="hidden" id="editId">
+      <div><label>طلب بيع مرتبط</label><select id="orderId"><option value="">بدون ربط</option></select></div>
+      <div><label>نوع العملية</label><select id="type"><option value="return">استرجاع</option><option value="exchange">استبدال</option><option value="warranty">ضمان</option></select></div>
+      <div><label>اسم العميل</label><input id="customerName"></div>
+      <div><label>الهاتف</label><input id="phone"></div>
+      <div><label>اسم المنتج</label><input id="itemName"></div>
+      <div><label>المبلغ</label><input id="amount" type="number" step="0.01" value="0"></div>
+      <div><label>الحالة</label><select id="status"><option value="pending">بانتظار</option><option value="processing">قيد المعالجة</option><option value="refunded">تم الاسترجاع</option><option value="exchanged">تم الاستبدال</option><option value="rejected">مرفوض</option></select></div>
+      <div><label>التاريخ</label><input id="date" type="date"></div>
+      <div class="full"><label>السبب / الملاحظات</label><textarea id="reason"></textarea></div>
+      <div class="full actions"><button class="btn primary">حفظ</button><button type="button" class="btn ghost" onclick="resetReturnForm()">تفريغ</button><button type="button" class="btn blue" onclick="window.print()">طباعة</button></div>
+    </form>
+  </div>
+  <div class="card"><div class="toolbar"><input id="search" placeholder="بحث" oninput="render()"><select id="statusFilter" onchange="render()"><option value="">كل الحالات</option><option value="pending">بانتظار</option><option value="processing">قيد المعالجة</option><option value="refunded">تم الاسترجاع</option><option value="exchanged">تم الاستبدال</option><option value="rejected">مرفوض</option></select></div><div id="list"></div></div>
+
+</div>
+<div id="toast" class="toast"></div>
+<script>
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const F = () => window.WesamFirebase;
+const JOD = v => (Number(v||0)).toFixed(2) + ' د.أ';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const phoneOnly = p => String(p||'').replace(/\D/g,'').replace(/^0/,'962');
+const today = () => new Date().toISOString().slice(0,10);
+function toast(msg, ok=true){ const t=$('toast'); t.textContent=msg; t.style.background=ok?'#111827':'#991b1b'; t.classList.add('show'); clearTimeout(window.__t); window.__t=setTimeout(()=>t.classList.remove('show'),3500); }
+function setMsg(text, cls='notice'){ const m=$('msg'); m.className=cls; m.textContent=text; }
+function dateText(v){ try{ const d = v && v.toDate ? v.toDate() : (v ? new Date(v) : null); return d && !isNaN(d) ? d.toLocaleString('ar-JO') : '—'; }catch(e){ return '—'; } }
+function rowDate(v){ try{ const d = v && v.toDate ? v.toDate() : (v ? new Date(v) : null); return d && !isNaN(d) ? d.toISOString().slice(0,10) : ''; }catch(e){ return ''; } }
+function badge(s){ const map={new:['جديد','orange'],pending:['بانتظار','orange'],scheduled:['مجدول','blue'],confirmed:['مؤكد','blue'],processing:['قيد التنفيذ','violet'],completed:['مكتمل','green'],done:['منتهي','green'],cancelled:['ملغي','red'],rejected:['مرفوض','red'],published:['منشور','green'],draft:['مسودة','gray'],active:['فعال','green'],inactive:['معطل','gray'],refunded:['مسترجع','red'],exchanged:['استبدال','blue']}; const x=map[String(s||'new')]||[String(s||'new'),'gray']; return `<span class="badge ${x[1]}">${x[0]}</span>`; }
+function table(headers, rows, empty='لا توجد بيانات'){ return `<div class="table-wrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.join(''):`<tr><td colspan="${headers.length}" style="text-align:center;color:#64748b;padding:28px">${empty}</td></tr>`}</tbody></table></div>`; }
+async function requireFirebase(){ if(!F() || !F().db) throw new Error('Firebase غير محمل. تأكد من الإنترنت ومن ملف firebase-config.js'); await F().ensureCoreCollections({force:false}).catch(()=>null); setMsg('تم الاتصال مع Firebase: ' + F().projectId, 'notice ok'); }
+
+let returnsRows=[], orders=[];
+async function init(){ await requireFirebase(); await load(); bind(); render(); }
+function bind(){ $('returnForm').addEventListener('submit', saveReturn); $('orderId').addEventListener('change',()=>{ const o=orders.find(x=>x.id===$('orderId').value); if(o){ $('customerName').value=o.customerName||o.name||''; $('phone').value=o.phone||o.customerPhone||''; $('amount').value=Number(o.total||o.amount||0); } }); }
+async function load(){ returnsRows=await F().getCollection('returns',{limit:1000}).catch(()=>[]); orders=await F().getCollection('orders',{limit:1000}).catch(()=>[]); $('orderId').innerHTML='<option value="">بدون ربط</option>'+orders.map(o=>`<option value="${esc(o.id)}">${esc(o.orderId||o.id)} - ${esc(o.customerName||o.name||'')}</option>`).join(''); }
+async function saveReturn(e){ e.preventDefault(); const id=$('editId').value; const data={orderId:$('orderId').value,type:$('type').value,customerName:$('customerName').value.trim(),phone:$('phone').value.trim(),itemName:$('itemName').value.trim(),amount:Number($('amount').value||0),status:$('status').value,date:$('date').value,reason:$('reason').value.trim()}; if(!data.customerName) return toast('أدخل اسم العميل', false); if(id) await F().setDoc('returns',id,data,true); else await F().addDoc('returns',data); await F().addDoc('audit_logs',{action:'save_return',description:`مرتجع/استبدال: ${data.customerName}`, amount:data.amount}).catch(()=>null); toast('تم حفظ العملية'); resetReturnForm(); await load(); render(); }
+window.resetReturnForm=function(){ $('returnForm').reset(); $('editId').value=''; $('date').value=today(); $('amount').value=0; };
+window.editReturn=function(id){ const r=returnsRows.find(x=>x.id===id); if(!r) return; ['orderId','type','customerName','phone','itemName','amount','status','date','reason'].forEach(k=>{ if($(k)) $(k).value=r[k]||''; }); $('editId').value=r.id; scrollTo({top:0,behavior:'smooth'}); };
+window.finishRefund=async function(id){ const r=returnsRows.find(x=>x.id===id); if(!r) return; await F().setDoc('returns',id,{status:r.type==='exchange'?'exchanged':'refunded'},true); if(Number(r.amount||0)>0){ await F().addDoc('accounting_transactions',{type:'expense',category:'returns',description:'استرجاع مبلغ للعميل ' + (r.customerName||''),amount:Number(r.amount||0),sourceCollection:'returns',sourceId:id}); } toast('تم إكمال العملية وتسجيلها محاسبيًا'); await load(); render(); };
+window.deleteReturn=async function(id){ if(!confirm('حذف العملية؟')) return; await F().deleteDoc('returns',id); toast('تم الحذف'); await load(); render(); };
+window.render=function(){ const q=($('search').value||'').toLowerCase(), sf=$('statusFilter').value; const rows=returnsRows.filter(r=>(!sf||r.status===sf)&&(!q||JSON.stringify(r).toLowerCase().includes(q))); $('returnsCount').textContent=returnsRows.length; $('pendingCount').textContent=returnsRows.filter(r=>['pending','processing'].includes(r.status)).length; $('refundTotal').textContent=JOD(returnsRows.filter(r=>['refunded','pending','processing'].includes(r.status)).reduce((s,r)=>s+Number(r.amount||0),0)); $('list').innerHTML=table(['التاريخ','النوع','العميل','الهاتف','المنتج','المبلغ','الحالة','إجراءات'], rows.map(r=>`<tr><td>${esc(r.date||rowDate(r.createdAt))}</td><td>${esc(r.type||'')}</td><td>${esc(r.customerName)}</td><td>${esc(r.phone)}</td><td>${esc(r.itemName||'')}</td><td>${JOD(r.amount)}</td><td>${badge(r.status)}</td><td><button class="mini blue" onclick="editReturn('${r.id}')">تعديل</button> <button class="mini green" onclick="finishRefund('${r.id}')">إكمال</button> <button class="mini red" onclick="deleteReturn('${r.id}')">حذف</button></td></tr>`)); };
+$('date').value=today();
+
+window.addEventListener('error', e => { setMsg('خطأ JavaScript: ' + (e.message||'غير معروف'), 'notice err'); });
+init().catch(e => { console.error(e); setMsg(e.message || String(e), 'notice err'); toast(e.message || String(e), false); });
+})();
+</script>
+</body>
+</html>
