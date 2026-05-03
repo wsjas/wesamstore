@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="admin-styles.css">
 </head>
 <body>
-<div id="root"></div>
+<div id="root"></div><noscript><div style="padding:30px;font-family:Tahoma"><h2>لوحة التحكم تحتاج JavaScript</h2><p><a href="admin-accounting.html">فتح المحاسبة مباشرة</a></p></div></noscript>
 
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
@@ -44,7 +44,6 @@ function AdminShell({ active, lang, setLang, children }) {
       { key: 'customers', href: 'admin-customers.html', icon: <AICON.Users /> },
       { key: 'offers', href: 'admin-offers.html', icon: <AICON.Tag /> },
       { key: 'techs', href: 'admin-techs.html', icon: <AICON.HardHat /> },
-      { key: 'accounting', href: 'admin-accounting.html', icon: <AICON.Money /> },
     ]},
     { section: 'system', items: [
       { key: 'reports', href: 'admin-reports.html', icon: <AICON.Chart /> },

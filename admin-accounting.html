@@ -1,155 +1,84 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>المحاسبة - وسام للإلكترونيات</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin-styles.css" />
-  <style>
-    :root{--navy:#14256f;--orange:#ff7a00;--orange-dark:#e56800;--slate:#64748b;--border:#e5e7eb;--bg:#f6f7fb;--green:#16a34a;--red:#dc2626;--blue:#2563eb;--card:#fff}
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:Cairo,Inter,Arial,sans-serif;color:#111827}
-    .layout{display:grid;grid-template-columns:280px 1fr;min-height:100vh}.sidebar{background:#fff;border-left:1px solid var(--border);padding:18px;position:sticky;top:0;height:100vh;overflow:auto}.brand{display:flex;gap:12px;align-items:center;margin-bottom:24px}.mark{width:44px;height:44px;border-radius:16px;background:linear-gradient(135deg,var(--orange),#ffb15c);color:#fff;display:grid;place-items:center;font-weight:900;font-size:24px}.brand .name{font-weight:900;color:var(--navy)}.brand .sub{font-size:12px;color:var(--slate)}.nav-title{font-size:12px;color:#94a3b8;font-weight:800;margin:18px 8px 8px}.nav-link{display:flex;align-items:center;gap:10px;text-decoration:none;color:#334155;padding:12px;border-radius:12px;font-weight:800;margin-bottom:6px}.nav-link:hover,.nav-link.active{background:#fff3e8;color:var(--orange-dark)}.main{min-width:0}.topbar{height:72px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px}.content{padding:24px}.page-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}.page-head h1{margin:0;color:var(--navy);font-size:30px}.sub{color:var(--slate);font-size:14px}.btn{border:0;border-radius:12px;padding:11px 16px;font-weight:900;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:inherit}.btn-primary{background:var(--orange);color:#fff}.btn-outline{background:#fff;color:var(--navy);border:1px solid var(--border)}.btn-danger{background:#fee2e2;color:#991b1b}.btn:disabled{opacity:.55;cursor:not-allowed}.grid{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:16px;margin-bottom:20px}.kpi{background:#fff;border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:0 10px 30px rgba(15,23,42,.04)}.kpi .num{font-size:24px;font-weight:900;color:var(--navy);margin-top:8px}.kpi .label{color:var(--slate);font-weight:700}.card{background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:0 10px 30px rgba(15,23,42,.04);margin-bottom:20px;overflow:hidden}.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px;border-bottom:1px solid var(--border)}.card-head h3{margin:0;color:var(--navy)}.form-grid{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:10px;padding:18px}.form-control{width:100%;border:1px solid var(--border);border-radius:12px;padding:11px 12px;font-family:inherit;background:#fff}.msg{display:none;margin-bottom:16px;padding:13px 16px;border-radius:14px;font-weight:900}.msg.ok{display:block;background:#dcfce7;color:#166534}.msg.err{display:block;background:#fee2e2;color:#991b1b}.msg.info{display:block;background:#dbeafe;color:#1e40af}.tabs{display:flex;gap:8px;flex-wrap:wrap}.tabs button{border:0;background:#f1f5f9;color:#334155;border-radius:999px;padding:9px 14px;font-family:inherit;font-weight:900;cursor:pointer}.tabs button.active{background:var(--navy);color:#fff}.table-wrap{overflow:auto}.tbl{width:100%;border-collapse:collapse;min-width:950px}.tbl th,.tbl td{padding:13px 14px;border-bottom:1px solid var(--border);text-align:right;vertical-align:middle}.tbl th{background:#f8fafc;color:#475569;font-size:13px}.amount-pos{color:var(--green);font-weight:900}.amount-neg{color:var(--red);font-weight:900}.pill{display:inline-flex;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:900}.pill.income{background:#dcfce7;color:#166534}.pill.expense{background:#fee2e2;color:#991b1b}.empty{padding:40px;text-align:center;color:var(--slate);font-weight:800}.small-actions{display:flex;gap:6px}.icon-btn{border:1px solid var(--border);background:#fff;border-radius:10px;padding:8px 10px;cursor:pointer;font-family:inherit;font-weight:900}.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}.source-list{padding:18px;line-height:2.1;font-weight:800}.mobile-menu{display:none}
-    @media(max-width:1000px){.layout{grid-template-columns:1fr}.sidebar{position:fixed;inset:0 auto 0 0;width:290px;z-index:30;transform:translateX(-110%);transition:.2s}.sidebar.open{transform:translateX(0)}.mobile-menu{display:inline-flex}.grid{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}.content{padding:16px}.page-head{flex-direction:column}.topbar{padding:0 16px}}
-    @media(max-width:620px){.grid,.form-grid{grid-template-columns:1fr}.page-head h1{font-size:24px}}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>المحاسبة - وسام للإلكترونيات</title>
+<style>
+:root{--navy:#14256f;--orange:#f97316;--bg:#f6f7fb;--card:#fff;--border:#e5e7eb;--text:#111827;--muted:#64748b;--green:#16a34a;--red:#dc2626;--blue:#2563eb;--shadow:0 12px 30px rgba(15,23,42,.08)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif}.layout{display:grid;grid-template-columns:270px 1fr;min-height:100vh}.side{background:#0f172a;color:#fff;padding:18px;position:sticky;top:0;height:100vh;overflow:auto}.brand{display:flex;align-items:center;gap:10px;margin-bottom:18px}.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--orange),#ffb15c);display:grid;place-items:center;font-weight:900;font-size:24px}.brand strong{display:block}.brand small{color:#cbd5e1}.nav-title{font-size:12px;color:#94a3b8;margin:16px 0 8px}.nav a{display:flex;gap:8px;align-items:center;padding:12px;border-radius:12px;color:#e2e8f0;text-decoration:none;font-weight:700;margin-bottom:5px}.nav a:hover,.nav a.active{background:#fff;color:var(--orange)}.main{min-width:0}.top{height:70px;background:#fff;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;padding:0 22px;gap:10px}.content{padding:22px}.head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}h1{margin:0;color:var(--navy);font-size:30px}.muted{color:var(--muted);font-size:14px}.btn{border:0;border-radius:12px;padding:11px 15px;font-weight:900;cursor:pointer;font-family:inherit;display:inline-flex;gap:7px;align-items:center;justify-content:center;text-decoration:none}.btn-primary{background:var(--orange);color:#fff}.btn-outline{background:#fff;border:1px solid var(--border);color:var(--navy)}.btn-danger{background:#fee2e2;color:#991b1b}.btn-blue{background:#dbeafe;color:#1e40af}.grid{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:14px;margin-bottom:18px}.kpi,.card{background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow)}.kpi{padding:17px}.kpi .label{color:var(--muted);font-weight:700}.kpi .num{font-size:25px;font-weight:900;color:var(--navy);margin-top:8px}.card{margin-bottom:18px;overflow:hidden}.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:17px 18px;border-bottom:1px solid var(--border)}.card-head h3{margin:0;color:var(--navy)}.form{display:grid;grid-template-columns:1fr 1.5fr 1fr 1fr 1fr 1fr auto;gap:9px;padding:16px}.control{width:100%;border:1px solid var(--border);border-radius:12px;padding:11px;background:#fff;font-family:inherit}.msg{display:block;margin:0 0 16px;padding:13px 15px;border-radius:14px;font-weight:800}.info{background:#e0f2fe;color:#075985}.ok{background:#dcfce7;color:#166534}.err{background:#fee2e2;color:#991b1b}.warn{background:#fff7ed;color:#9a3412}.table-wrap{overflow:auto}.tbl{width:100%;border-collapse:collapse;min-width:980px}.tbl th,.tbl td{padding:12px 13px;border-bottom:1px solid var(--border);text-align:right;vertical-align:middle}.tbl th{background:#f8fafc;color:#475569;font-size:13px}.pill{display:inline-flex;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:900}.income{background:#dcfce7;color:#166534}.expense{background:#fee2e2;color:#991b1b}.amount-in{color:var(--green);font-weight:900}.amount-out{color:var(--red);font-weight:900}.tabs{display:flex;gap:7px;flex-wrap:wrap}.tab{border:0;border-radius:999px;padding:8px 13px;font-family:inherit;font-weight:900;background:#f1f5f9;color:#334155;cursor:pointer}.tab.active{background:var(--navy);color:#fff}.empty{padding:34px;text-align:center;color:var(--muted);font-weight:900}.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.box{padding:16px;line-height:2;font-weight:800}.hamb{display:none}.hide{display:none!important}@media(max-width:950px){.layout{grid-template-columns:1fr}.side{position:fixed;right:0;top:0;bottom:0;width:285px;z-index:10;transform:translateX(110%);transition:.2s}.side.open{transform:none}.hamb{display:inline-flex}.grid{grid-template-columns:1fr 1fr}.form{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}.content{padding:14px}.head{flex-direction:column}}@media(max-width:600px){.grid,.form{grid-template-columns:1fr}h1{font-size:24px}.top{padding:0 12px}}
+</style>
 </head>
 <body>
 <div class="layout">
-  <aside class="sidebar" id="sidebar">
-    <div class="brand"><div class="mark">و</div><div><div class="name">وسام للإلكترونيات</div><div class="sub">لوحة التحكم</div></div></div>
+<aside id="side" class="side">
+  <div class="brand"><div class="logo">و</div><div><strong>وسام للإلكترونيات</strong><small>لوحة التحكم</small></div></div>
+  <nav class="nav">
     <div class="nav-title">القائمة الرئيسية</div>
-    <a class="nav-link" href="admin.html">🏠 نظرة عامة</a>
-    <a class="nav-link" href="admin-repairs.html">🔧 طلبات الصيانة</a>
-    <a class="nav-link" href="admin-orders.html">🛒 طلبات المتجر</a>
+    <a href="admin.html">🏠 الرئيسية</a><a href="admin-repairs.html">🔧 طلبات الصيانة</a><a href="admin-orders.html">🛒 طلبات المتجر</a>
     <div class="nav-title">الإدارة</div>
-    <a class="nav-link" href="admin-products.html">📦 المنتجات والمخزون</a>
-    <a class="nav-link" href="admin-customers.html">👥 العملاء</a>
-    <a class="nav-link" href="admin-offers.html">🏷️ العروض</a>
-    <a class="nav-link" href="admin-techs.html">👷 الفنيون</a>
-    <a class="nav-link active" href="admin-accounting.html">💰 المحاسبة</a>
+    <a href="admin-products.html">📦 المنتجات</a><a href="admin-customers.html">👥 العملاء</a><a href="admin-offers.html">🏷️ العروض</a><a href="admin-techs.html">👷 الفنيون</a><a class="active" href="admin-accounting.html">💰 المحاسبة</a>
     <div class="nav-title">النظام</div>
-    <a class="nav-link" href="admin-reports.html">📊 التقارير</a>
-    <a class="nav-link" href="admin-settings.html">⚙️ الإعدادات</a>
-    <a class="nav-link" href="index.html">↩️ العودة للموقع</a>
-  </aside>
-  <main class="main">
-    <div class="topbar">
-      <button class="btn btn-outline mobile-menu" onclick="document.getElementById('sidebar').classList.toggle('open')">☰ القائمة</button>
-      <strong>مشروع Firebase: <span id="projectId">...</span></strong>
-      <button class="btn btn-outline" onclick="location.reload()">تحديث الصفحة</button>
-    </div>
-    <div class="content">
-      <div class="page-head">
-        <div><h1>المحاسبة 💰</h1><div class="sub" id="statusText">جاري الاتصال مع Firebase...</div></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-outline" onclick="window.print()">طباعة / تصدير</button><button class="btn btn-primary" id="reloadBtn">تحديث من Firebase</button></div>
-      </div>
-      <div id="msg" class="msg"></div>
-      <div class="grid">
-        <div class="kpi"><div class="label">إجمالي الإيرادات</div><div class="num" id="incomeBox">0 د.أ</div></div>
-        <div class="kpi"><div class="label">إجمالي المصروفات</div><div class="num" id="expenseBox">0 د.أ</div></div>
-        <div class="kpi"><div class="label">الصافي</div><div class="num" id="balanceBox">0 د.أ</div></div>
-        <div class="kpi"><div class="label">عدد الحركات</div><div class="num" id="countBox">0</div></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><h3>إضافة حركة مالية وحفظها في Firebase</h3><button class="btn btn-primary" id="saveBtn">حفظ الحركة</button></div>
-        <div class="form-grid">
-          <select class="form-control" id="type"><option value="income">إيراد</option><option value="expense">مصروف</option></select>
-          <input class="form-control" id="description" placeholder="البيان مثل: بيع ريموت / مصروف توصيل">
-          <input class="form-control" id="amount" type="number" step="0.01" placeholder="المبلغ">
-          <input class="form-control" id="category" placeholder="التصنيف" value="مبيعات">
-          <select class="form-control" id="method"><option>كاش</option><option>بطاقة</option><option>تحويل</option><option>غير محدد</option></select>
-          <input class="form-control" id="date" type="date">
-        </div>
-      </div>
-      <div class="two">
-        <div class="card"><div class="card-head"><h3>مصادر البيانات</h3></div><div class="source-list" id="sourcesBox">...</div></div>
-        <div class="card"><div class="card-head"><h3>ملخص المصروفات حسب التصنيف</h3></div><div class="source-list" id="expenseCats">لا توجد مصروفات</div></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><div><h3>سجل الحركات المالية</h3><div class="sub">الحركات اليدوية من accounting_transactions، والإيرادات التلقائية من orders و service_requests</div></div><div class="tabs"><button data-tab="all" class="active">الكل</button><button data-tab="income">الإيرادات</button><button data-tab="expense">المصروفات</button></div></div>
-        <div class="table-wrap"><table class="tbl"><thead><tr><th>الرقم</th><th>التاريخ</th><th>البيان</th><th>النوع</th><th>التصنيف</th><th>الطريقة</th><th>المبلغ</th><th>المصدر</th><th>إجراءات</th></tr></thead><tbody id="tbody"></tbody></table></div>
-        <div id="empty" class="empty" style="display:none">لا توجد حركات مالية محفوظة حتى الآن</div>
-      </div>
-    </div>
-  </main>
+    <a href="admin-reports.html">📊 التقارير</a><a href="admin-settings.html">⚙️ الإعدادات</a><a href="index.html">↩️ العودة للموقع</a>
+  </nav>
+</aside>
+<main class="main">
+  <div class="top"><button class="btn btn-outline hamb" id="menuBtn">☰ القائمة</button><strong>المحاسبة - Firebase: <span id="projectId">wesamstore-98c1f</span></strong><button class="btn btn-outline" id="hardReload">تحديث الصفحة</button></div>
+  <div class="content">
+    <div class="head"><div><h1>المحاسبة 💰</h1><div class="muted" id="subText">تعمل كصفحة مستقلة، وتعرض خطأ واضحًا بدل الصفحة البيضاء.</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-blue" id="testBtn">اختبار الاتصال</button><button class="btn btn-primary" id="loadBtn">تحديث من Firebase</button><button class="btn btn-outline" id="printBtn">طباعة</button></div></div>
+    <div id="msg" class="msg info">تم فتح صفحة المحاسبة. جاري تجهيز الاتصال مع Firebase...</div>
+    <div class="grid"><div class="kpi"><div class="label">الإيرادات</div><div class="num" id="incomeBox">0 د.أ</div></div><div class="kpi"><div class="label">المصروفات</div><div class="num" id="expenseBox">0 د.أ</div></div><div class="kpi"><div class="label">الصافي</div><div class="num" id="balanceBox">0 د.أ</div></div><div class="kpi"><div class="label">عدد الحركات</div><div class="num" id="countBox">0</div></div></div>
+    <div class="card"><div class="card-head"><h3>إضافة حركة مالية</h3><span class="muted">تحفظ في accounting_transactions</span></div><div class="form"><select id="type" class="control"><option value="income">إيراد</option><option value="expense">مصروف</option></select><input id="description" class="control" placeholder="البيان"><input id="amount" class="control" type="number" step="0.01" placeholder="المبلغ"><input id="category" class="control" placeholder="التصنيف" value="مبيعات"><select id="method" class="control"><option>كاش</option><option>بطاقة</option><option>تحويل</option><option>غير محدد</option></select><input id="date" class="control" type="date"><button id="saveBtn" class="btn btn-primary">حفظ</button></div></div>
+    <div class="two"><div class="card"><div class="card-head"><h3>مصادر البيانات</h3></div><div class="box" id="sourcesBox">لم يتم التحميل بعد</div></div><div class="card"><div class="card-head"><h3>تشخيص سريع</h3></div><div class="box" id="diagBox">بانتظار اختبار الاتصال</div></div></div>
+    <div class="card"><div class="card-head"><div><h3>سجل الحركات</h3><div class="muted">إيرادات تلقائية من orders و service_requests + حركات يدوية</div></div><div class="tabs"><button class="tab active" data-tab="all">الكل</button><button class="tab" data-tab="income">الإيرادات</button><button class="tab" data-tab="expense">المصروفات</button></div></div><div class="table-wrap"><table class="tbl"><thead><tr><th>الرقم</th><th>التاريخ</th><th>البيان</th><th>النوع</th><th>التصنيف</th><th>الطريقة</th><th>المبلغ</th><th>المصدر</th><th>إجراءات</th></tr></thead><tbody id="tbody"></tbody></table></div><div id="empty" class="empty">لا توجد بيانات محاسبة محمّلة بعد</div></div>
+  </div>
+</main>
 </div>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics-compat.js"></script>
-<script src="firebase-config.js"></script>
 <script>
 (function(){
-  'use strict';
-  const $ = id => document.getElementById(id);
-  const msg = $('msg');
-  let allRows = [];
-  let activeTab = 'all';
-  $('date').value = new Date().toISOString().slice(0,10);
-  $('type').addEventListener('change', e => { if(!$('category').value || ['مبيعات','مصروفات'].includes($('category').value)) $('category').value = e.target.value === 'income' ? 'مبيعات' : 'مصروفات'; });
-  document.querySelectorAll('.tabs button').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');activeTab=btn.dataset.tab;render();}));
-  $('reloadBtn').addEventListener('click', loadAll);
-  $('saveBtn').addEventListener('click', saveTransaction);
-  function show(type,text){ msg.className='msg '+type; msg.textContent=text; }
-  function clearMsg(){ msg.className='msg'; msg.textContent=''; }
-  function money(n){ return (Number(n)||0).toLocaleString('ar-JO',{minimumFractionDigits:2,maximumFractionDigits:2})+' د.أ'; }
-  function dateText(v){ try{ if(window.WesamFirebase && window.WesamFirebase.toDateText) return window.WesamFirebase.toDateText(v); const d=v&&v.toDate?v.toDate():new Date(v||Date.now()); return isNaN(d.getTime())?'':d.toISOString().slice(0,10); }catch(e){ return ''; } }
-  function normalize(row, source){
-    const amount = Number(row.amount ?? row.total ?? row.grandTotal ?? row.subtotal ?? row.paid ?? 0) || 0;
-    return { docId: row.id, id: row.txId || row.orderId || row.requestId || row.id || '-', type: row.type || 'income', description: row.description || row.desc || row.title || row.note || 'حركة مالية', amount, method: row.method || row.paymentMethod || row.payment || 'غير محدد', category: row.category || source, date: row.date || dateText(row.createdAt) || dateText(row.updatedAt) || new Date().toISOString().slice(0,10), source, auto: source !== 'manual' };
-  }
-  async function waitFirebase(){
-    if(!window.WesamFirebase) throw new Error('ملف firebase-config.js لم يعمل أو لم يتم تحميل Firebase SDK. تأكد أنك تفتح الصفحة من السيرفر أو Firebase Hosting وليس من ملف مباشر على الكمبيوتر.');
-    $('projectId').textContent = window.WesamFirebase.projectId || 'غير معروف';
-    if(!window.WesamFirebase.db) throw new Error('Firebase لم يتهيأ. تحقق من بيانات firebaseConfig.');
-  }
-  async function loadAll(){
-    clearMsg(); $('statusText').textContent='جاري تحميل المحاسبة من Firebase...'; $('tbody').innerHTML=''; $('empty').style.display='none';
-    try{
-      await waitFirebase();
-      if(window.WesamFirebase.ensureCoreCollections) await window.WesamFirebase.ensureCoreCollections({force:true}).catch(()=>{});
-      const manualRaw = await window.WesamFirebase.getCollection('accounting_transactions',{limit:500});
-      const ordersRaw = await window.WesamFirebase.getCollection('orders',{limit:500});
-      const repairsRaw = await window.WesamFirebase.getCollection('service_requests',{limit:500});
-      const manual = manualRaw.map(r=>normalize(r,'manual'));
-      const orders = ordersRaw.filter(o=>o.status!=='cancelled').map(o=>normalize(Object.assign({},o,{type:'income',description:'طلب بيع: '+(o.customerName||o.name||o.orderId||'')}),'orders'));
-      const repairs = repairsRaw.filter(r=>Number(r.total||r.paid||r.amount||0)>0).map(r=>normalize(Object.assign({},r,{type:'income',amount:Number(r.total||r.paid||r.amount||0),description:'طلب صيانة: '+(r.customerName||r.name||r.requestId||'')}),'service_requests'));
-      allRows = manual.concat(orders,repairs).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
-      $('sourcesBox').innerHTML = `<div>الحركات اليدوية: ${manual.length}</div><div>طلبات المتجر: ${orders.length}</div><div>طلبات الصيانة المدفوعة: ${repairs.length}</div>`;
-      $('statusText').textContent='تم الاتصال والتحميل من Firebase';
-      show('ok','تم تحميل المحاسبة من Firebase بنجاح.');
-      render();
-    }catch(e){ console.error(e); $('statusText').textContent='فشل الاتصال أو التحميل'; show('err', e.message || 'فشل تحميل المحاسبة من Firebase.'); render(); }
-  }
-  function render(){
-    const rows = activeTab==='all' ? allRows : allRows.filter(r=>r.type===activeTab);
-    const income = allRows.filter(r=>r.type==='income').reduce((s,r)=>s+Math.abs(Number(r.amount)||0),0);
-    const expense = allRows.filter(r=>r.type==='expense').reduce((s,r)=>s+Math.abs(Number(r.amount)||0),0);
-    $('incomeBox').textContent=money(income); $('expenseBox').textContent=money(expense); $('balanceBox').textContent=money(income-expense); $('countBox').textContent=allRows.length;
-    const cats={}; allRows.filter(r=>r.type==='expense').forEach(r=>cats[r.category]=(cats[r.category]||0)+Math.abs(Number(r.amount)||0));
-    $('expenseCats').innerHTML = Object.keys(cats).length ? Object.entries(cats).map(([c,v])=>`<div style="display:flex;justify-content:space-between;gap:10px"><span>${escapeHtml(c)}</span><strong class="amount-neg">${money(v)}</strong></div>`).join('') : 'لا توجد مصروفات';
-    $('tbody').innerHTML = rows.map(r=>`<tr><td><strong style="color:var(--orange-dark)">${escapeHtml(r.id)}</strong></td><td>${escapeHtml(r.date)}</td><td>${escapeHtml(r.description)}</td><td><span class="pill ${r.type}">${r.type==='income'?'إيراد':'مصروف'}</span></td><td>${escapeHtml(r.category)}</td><td>${escapeHtml(r.method)}</td><td class="${r.type==='income'?'amount-pos':'amount-neg'}">${r.type==='income'?'+':'-'}${money(Math.abs(Number(r.amount)||0))}</td><td>${r.auto?'تلقائي':'يدوي'}</td><td><div class="small-actions">${r.auto?'<button class="icon-btn" disabled>مرتبط</button>':`<button class="icon-btn btn-danger" data-del="${escapeHtml(r.docId)}">حذف</button>`}</div></td></tr>`).join('');
-    $('empty').style.display = rows.length ? 'none' : 'block';
-    document.querySelectorAll('[data-del]').forEach(btn=>btn.addEventListener('click',()=>deleteManual(btn.dataset.del)));
-  }
-  async function saveTransaction(){
-    clearMsg();
-    const data = { type:$('type').value, description:$('description').value.trim(), amount:Number($('amount').value), category:$('category').value.trim() || ($('type').value==='income'?'مبيعات':'مصروفات'), method:$('method').value, date:$('date').value || new Date().toISOString().slice(0,10), status:'active', source:'manual' };
-    if(!data.description || !data.amount){ show('err','اكتب البيان والمبلغ أولًا.'); return; }
-    try{ await waitFirebase(); $('saveBtn').disabled=true; await window.WesamFirebase.addDoc('accounting_transactions',data); $('description').value=''; $('amount').value=''; show('ok','تم حفظ الحركة في Firebase.'); await loadAll(); }
-    catch(e){ console.error(e); show('err', e.message || 'فشل حفظ الحركة في Firebase. تحقق من قواعد Firestore.'); }
-    finally{ $('saveBtn').disabled=false; }
-  }
-  async function deleteManual(id){
-    if(!id || !confirm('حذف هذه الحركة المالية من Firebase؟')) return;
-    try{ await waitFirebase(); await window.WesamFirebase.deleteDoc('accounting_transactions',id); show('ok','تم حذف الحركة من Firebase.'); await loadAll(); }
-    catch(e){ console.error(e); show('err', e.message || 'فشل الحذف من Firebase.'); }
-  }
-  function escapeHtml(v){ return String(v ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch])); }
-  window.addEventListener('error', function(e){ show('err','خطأ في الصفحة: '+(e.message||'غير معروف')); });
-  loadAll();
+'use strict';
+var firebaseConfig={apiKey:"AIzaSyA8QALokJR8DXbOKfGNgkmOzJTAzhJ4ArQ",authDomain:"wesamstore-98c1f.firebaseapp.com",databaseURL:"https://wesamstore-98c1f-default-rtdb.firebaseio.com",projectId:"wesamstore-98c1f",storageBucket:"wesamstore-98c1f.firebasestorage.app",messagingSenderId:"89774380048",appId:"1:89774380048:web:601c7eef2cddff6deaa695",measurementId:"G-LZNN8106JC"};
+var db=null, rows=[], active='all';
+function el(id){return document.getElementById(id)}
+function msg(cls,txt){var m=el('msg');m.className='msg '+cls;m.textContent=txt}
+function html(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function money(n){return (Number(n)||0).toLocaleString('ar-JO',{minimumFractionDigits:2,maximumFractionDigits:2})+' د.أ'}
+function dateOf(v){try{var d=v&&v.toDate?v.toDate():new Date(v||Date.now());return isNaN(d.getTime())?'':d.toISOString().slice(0,10)}catch(e){return ''}}
+function setDiag(lines){el('diagBox').innerHTML=lines.map(function(x){return '<div>'+html(x)+'</div>'}).join('')}
+function loadScript(src){return new Promise(function(resolve,reject){var s=document.createElement('script');s.src=src;s.async=false;s.onload=resolve;s.onerror=function(){reject(new Error('تعذر تحميل: '+src))};document.head.appendChild(s)})}
+async function initFirebase(){
+ if(db) return db;
+ setDiag(['تحميل مكتبات Firebase...']);
+ if(!window.firebase){
+  await loadScript('https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js');
+  await loadScript('https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js');
+ }
+ if(!window.firebase) throw new Error('لم يتم تحميل Firebase SDK. تأكد من الإنترنت أو من عدم حجب gstatic.');
+ if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+ db=firebase.firestore();
+ el('projectId').textContent=firebaseConfig.projectId;
+ setDiag(['Firebase SDK: جاهز','Project ID: '+firebaseConfig.projectId,'Firestore: جاهز']);
+ return db;
+}
+async function getCol(name){var snap=await db.collection(name).limit(500).get();var out=[];snap.forEach(function(d){var x=d.data()||{};x.id=d.id;if(d.id!=='_template'&&x.status!=='system'&&x.__system!==true)out.push(x)});return out}
+function norm(x,source){var amount=Number(x.amount??x.total??x.grandTotal??x.subtotal??x.paid??0)||0;return{docId:x.id,id:x.txId||x.orderId||x.requestId||x.id||'-',type:x.type||'income',description:x.description||x.desc||x.title||x.note||'حركة مالية',amount:Math.abs(amount),method:x.method||x.paymentMethod||x.payment||'غير محدد',category:x.category||source,date:x.date||dateOf(x.createdAt)||dateOf(x.updatedAt)||'',source:source,auto:source!=='manual'}}
+async function loadAll(){
+ try{msg('info','جاري التحميل من Firebase...');await initFirebase();
+  var manual=(await getCol('accounting_transactions')).map(function(x){return norm(x,'manual')});
+  var orders=(await getCol('orders')).filter(function(x){return x.status!=='cancelled'}).map(function(x){x.type='income';x.description='طلب بيع: '+(x.customerName||x.name||x.orderId||'');return norm(x,'orders')});
+  var repairs=(await getCol('service_requests')).filter(function(x){return Number(x.total||x.paid||x.amount||0)>0}).map(function(x){x.type='income';x.amount=Number(x.total||x.paid||x.amount||0);x.description='طلب صيانة: '+(x.customerName||x.name||x.requestId||'');return norm(x,'service_requests')});
+  rows=manual.concat(orders,repairs).sort(function(a,b){return String(b.date).localeCompare(String(a.date))});
+  el('sourcesBox').innerHTML='<div>الحركات اليدوية: '+manual.length+'</div><div>طلبات المتجر: '+orders.length+'</div><div>طلبات الصيانة المدفوعة: '+repairs.length+'</div>';
+  msg('ok','تم التحميل من Firebase. إذا كان الجدول فارغًا فهذا يعني عدم وجود حركات محفوظة بعد.');render();
+ }catch(e){console.error(e);msg('err',e.message||'فشل التحميل من Firebase');setDiag(['خطأ: '+(e.message||e),'افتح Console لمزيد من التفاصيل']);render();}
+}
+function render(){var show=active==='all'?rows:rows.filter(function(r){return r.type===active});var inc=rows.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);var exp=rows.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);el('incomeBox').textContent=money(inc);el('expenseBox').textContent=money(exp);el('balanceBox').textContent=money(inc-exp);el('countBox').textContent=rows.length;el('tbody').innerHTML=show.map(function(r){return '<tr><td><b style="color:var(--orange)">'+html(r.id)+'</b></td><td>'+html(r.date)+'</td><td>'+html(r.description)+'</td><td><span class="pill '+r.type+'">'+(r.type==='income'?'إيراد':'مصروف')+'</span></td><td>'+html(r.category)+'</td><td>'+html(r.method)+'</td><td class="'+(r.type==='income'?'amount-in':'amount-out')+'">'+(r.type==='income'?'+':'-')+money(r.amount)+'</td><td>'+(r.auto?'تلقائي':'يدوي')+'</td><td>'+(r.auto?'<button class="btn btn-outline" disabled>مرتبط</button>':'<button class="btn btn-danger" data-del="'+html(r.docId)+'">حذف</button>')+'</td></tr>'}).join('');el('empty').style.display=show.length?'none':'block';Array.prototype.forEach.call(document.querySelectorAll('[data-del]'),function(b){b.onclick=function(){delTx(b.getAttribute('data-del'))}})}
+async function saveTx(){var data={type:el('type').value,description:el('description').value.trim(),amount:Number(el('amount').value),category:el('category').value.trim()||'عام',method:el('method').value,date:el('date').value||new Date().toISOString().slice(0,10),status:'active',source:'manual'};if(!data.description||!data.amount){msg('warn','اكتب البيان والمبلغ أولًا.');return}try{await initFirebase();el('saveBtn').disabled=true;await db.collection('accounting_transactions').add(Object.assign({},data,{createdAt:firebase.firestore.FieldValue.serverTimestamp()}));el('description').value='';el('amount').value='';msg('ok','تم حفظ الحركة في Firebase.');await loadAll()}catch(e){console.error(e);msg('err',e.message||'فشل الحفظ. تحقق من قواعد Firestore.')}finally{el('saveBtn').disabled=false}}
+async function delTx(id){if(!id||!confirm('حذف هذه الحركة؟'))return;try{await initFirebase();await db.collection('accounting_transactions').doc(id).delete();msg('ok','تم الحذف.');await loadAll()}catch(e){msg('err',e.message||'فشل الحذف')}}
+window.addEventListener('error',function(e){msg('err','خطأ في الصفحة: '+(e.message||'غير معروف'));setDiag(['JavaScript error: '+(e.message||'غير معروف')])});
+window.addEventListener('unhandledrejection',function(e){msg('err','خطأ اتصال أو وعد غير مكتمل: '+((e.reason&&e.reason.message)||e.reason||''))});
+el('date').value=new Date().toISOString().slice(0,10);el('menuBtn').onclick=function(){el('side').classList.toggle('open')};el('hardReload').onclick=function(){location.reload(true)};el('printBtn').onclick=function(){window.print()};el('loadBtn').onclick=loadAll;el('testBtn').onclick=async function(){try{await initFirebase();msg('ok','الاتصال مع Firebase جاهز.');}catch(e){msg('err',e.message)}};el('saveBtn').onclick=saveTx;Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(t){t.onclick=function(){Array.prototype.forEach.call(document.querySelectorAll('.tab'),x=>x.classList.remove('active'));t.classList.add('active');active=t.getAttribute('data-tab');render()}});
+msg('info','الصفحة ظهرت بنجاح. الآن سيتم تحميل Firebase...');setTimeout(loadAll,300);
 })();
 </script>
 </body>

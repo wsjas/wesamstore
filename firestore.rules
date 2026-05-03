@@ -1,70 +1,20 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    match /settings/{docId} {
-      allow read: if true;
-      allow create, update: if docId == 'site';
-      allow delete: if false;
-    }
-
-    match /config/{docId} {
-      allow read: if true;
-      allow create, update: if docId == 'site';
-      allow delete: if false;
-    }
-
-    match /products/{productId} {
-      allow read, create, update, delete: if true;
-    }
-
-    match /orders/{orderId} {
-      allow read, create, update, delete: if true;
-    }
-
-    match /service_requests/{requestId} {
-      allow read, create, update, delete: if true;
-    }
-
-    match /contact_messages/{messageId} {
-      allow read, create, update, delete: if true;
-    }
-
-    match /subscribers/{subscriberId} {
-      allow read, create, update, delete: if true;
-    }
-
-    match /coupons/{couponId} {
-      allow read, create, update, delete: if true;
-    }
-
-    match /notifications/{notificationId} {
-      allow read, create, update, delete: if true;
-    }
-
-    match /accounting_transactions/{txId} {
-      allow read, create, update, delete: if true;
-    }
-
-    match /expenses/{expenseId} {
-      allow read, create, update, delete: if true;
-    }
-
-    match /customers/{customerId} {
-      allow read, create, update, delete: if true;
-    }
-
-    match /technicians/{techId} {
-      allow read, create, update, delete: if true;
-    }
-
-    match /admin_users/{userId} {
-      allow read, create, update, delete: if true;
-    }
-
-    match /{document=**} {
-      allow read, write: if false;
-    }
+    match /settings/{docId} { allow read, write: if true; }
+    match /config/{docId} { allow read, write: if true; }
+    match /products/{docId} { allow read, write: if true; }
+    match /orders/{docId} { allow read, create, update, delete: if true; }
+    match /service_requests/{docId} { allow read, create, update, delete: if true; }
+    match /contact_messages/{docId} { allow read, create, update, delete: if true; }
+    match /subscribers/{docId} { allow read, create, update, delete: if true; }
+    match /coupons/{docId} { allow read, write: if true; }
+    match /notifications/{docId} { allow read, write: if true; }
+    match /accounting_transactions/{docId} { allow read, create, update, delete: if true; }
+    match /expenses/{docId} { allow read, create, update, delete: if true; }
+    match /customers/{docId} { allow read, create, update, delete: if true; }
+    match /technicians/{docId} { allow read, create, update, delete: if true; }
+    match /admin_users/{docId} { allow read, write: if true; }
+    match /{document=**} { allow read, write: if false; }
   }
 }
