@@ -1,56 +1,72 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
-    function isAdmin() {
-      return signedIn() && (
-        request.auth.token.admin == true ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-      );
+
+    function isSystemTemplate() {
+      return request.resource.data.__system == true
+        && request.resource.data.createdBy == 'wesam-auto-setup';
     }
 
-    match /products/{id} {
+    match /settings/{docId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create: if docId == 'site' && isSystemTemplate();
+      // مؤقتًا حتى تعمل لوحة التحكم بدون تسجيل دخول إداري.
+      // بعد إضافة نظام المدراء، اجعل التعديل للمدير فقط.
+      allow update: if docId == 'site';
+      allow delete: if false;
     }
 
-    match /settings/{id} {
+    match /config/{docId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create: if docId == 'site' && isSystemTemplate();
+      allow update: if docId == 'site';
+      allow delete: if false;
     }
 
-    match /config/{id} {
+    match /products/{productId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /coupons/{id} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
-    }
-
-    match /orders/{id} {
       allow create: if true;
-      allow read, update, delete: if isAdmin();
+      allow update, delete: if true;
     }
 
-    match /service_requests/{id} {
+    match /orders/{orderId} {
       allow create: if true;
-      allow read, update, delete: if isAdmin();
+      allow read: if true;
+      allow update, delete: if orderId == '_template' && resource.data.__system == true;
     }
 
-    match /contact_messages/{id} {
+    match /service_requests/{requestId} {
       allow create: if true;
-      allow read, update, delete: if isAdmin();
+      allow read: if true;
+      allow update, delete: if requestId == '_template' && resource.data.__system == true;
     }
 
-    match /admins/{uid} {
-      allow read: if signedIn() && request.auth.uid == uid;
-      allow write: if isAdmin();
+    match /contact_messages/{messageId} {
+      allow create: if true;
+      allow read: if true;
+      allow update, delete: if messageId == '_template' && resource.data.__system == true;
+    }
+
+    match /subscribers/{subscriberId} {
+      allow create: if true;
+      allow read: if true;
+      allow update, delete: if subscriberId == '_template' && resource.data.__system == true;
+    }
+
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if true;
+    }
+
+    match /notifications/{notificationId} {
+      allow create, read: if true;
+      allow update, delete: if notificationId == '_template' && resource.data.__system == true;
     }
 
     match /{document=**} {
-      allow read, write: if isAdmin();
+      allow read, write: if false;
     }
   }
 }

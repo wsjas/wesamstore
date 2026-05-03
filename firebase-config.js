@@ -34,7 +34,9 @@
     if (options.orderBy) ref = ref.orderBy(options.orderBy[0], options.orderBy[1] || 'asc');
     if (options.limit) ref = ref.limit(options.limit);
     const snap = await ref.get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    return snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(row => row.__system !== true);
   }
 
   async function addDoc(name, data) {
@@ -53,6 +55,87 @@
   async function deleteDoc(name, id) {
     if (!db) throw new Error('Firebase غير مهيأ');
     await db.collection(name).doc(id).delete();
+  }
+
+
+
+  const DEFAULT_SITE_SETTINGS = {
+    storeName: 'وسام للإلكترونيات',
+    siteName: 'وسام للإلكترونيات',
+    tagline: 'صيانة وبيع ومتجر إلكتروني',
+    phone: '0790781206',
+    whatsapp: '+962790781206',
+    email: 'info@wesam.store',
+    website: 'https://wesam.store',
+    address: 'عمّان - الأردن',
+    currency: 'JOD',
+    currencyLabel: 'د.أ',
+    timezone: 'Asia/Amman',
+    storeEnabled: true,
+    repairsEnabled: true,
+    ordersEnabled: true,
+    createdByAutoSetup: true
+  };
+
+  function withSystemFields(data) {
+    return cleanObject({
+      ...data,
+      __system: true,
+      createdBy: 'wesam-auto-setup',
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  async function ensureDocument(collectionName, docId, data) {
+    if (!db) throw new Error('Firebase غير مهيأ');
+    const ref = db.collection(collectionName).doc(docId);
+    const snap = await ref.get();
+    if (!snap.exists) {
+      await ref.set(withSystemFields({
+        ...data,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }), { merge: false });
+      return { path: collectionName + '/' + docId, created: true };
+    }
+    return { path: collectionName + '/' + docId, created: false };
+  }
+
+  async function ensureCoreCollections(options = {}) {
+    if (!db) throw new Error('Firebase غير مهيأ');
+    const force = options.force === true;
+    const key = 'wesam_firebase_auto_setup_done_v2';
+    if (!force && localStorage.getItem(key) === '1') return { skipped: true, reason: 'already-ran-on-this-browser' };
+
+    const tasks = [
+      ensureDocument('settings', 'site', DEFAULT_SITE_SETTINGS),
+      ensureDocument('config', 'site', DEFAULT_SITE_SETTINGS),
+      ensureDocument('products', '_template', { active: false, visible: false, name: 'قالب داخلي - لا يظهر في المتجر', category: 'system', price: 0, stock: 0 }),
+      ensureDocument('orders', '_template', { status: 'system', orderId: 'SYSTEM-TEMPLATE', customerName: 'قالب داخلي', total: 0 }),
+      ensureDocument('service_requests', '_template', { status: 'system', requestId: 'SYSTEM-TEMPLATE', customerName: 'قالب داخلي', deviceType: 'system' }),
+      ensureDocument('contact_messages', '_template', { status: 'system', name: 'قالب داخلي', phone: '', message: '' }),
+      ensureDocument('subscribers', '_template', { status: 'system', name: 'قالب داخلي', phone: '' }),
+      ensureDocument('coupons', '_template', { active: false, code: 'SYSTEM-TEMPLATE', discountType: 'fixed', value: 0 }),
+      ensureDocument('notifications', '_template', { status: 'system', title: 'قالب داخلي', read: true })
+    ];
+
+    const results = await Promise.allSettled(tasks);
+    const failed = results.filter(r => r.status === 'rejected');
+    if (!failed.length) localStorage.setItem(key, '1');
+    return {
+      skipped: false,
+      created: results.filter(r => r.status === 'fulfilled' && r.value.created).map(r => r.value.path),
+      existing: results.filter(r => r.status === 'fulfilled' && !r.value.created).map(r => r.value.path),
+      failed: failed.map(r => r.reason && r.reason.message ? r.reason.message : String(r.reason))
+    };
+  }
+
+  function autoRunSetup() {
+    if (!db) return;
+    window.setTimeout(() => {
+      ensureCoreCollections().then(res => {
+        if (res && !res.skipped) console.info('Wesam Firebase auto setup:', res);
+      }).catch(err => console.warn('تعذر إنشاء مجموعات Firebase تلقائيًا. تحقق من قواعد Firestore:', err.message));
+    }, 700);
   }
 
   function normalizeProduct(doc) {
@@ -80,5 +163,6 @@
   }
 
   window.WESAM_FIREBASE_CONFIG = firebaseConfig;
-  window.WesamFirebase = { app, db, auth, getCollection, addDoc, setDoc, deleteDoc, loadProducts, normalizeProduct };
+  window.WesamFirebase = { app, db, auth, getCollection, addDoc, setDoc, deleteDoc, loadProducts, normalizeProduct, ensureCoreCollections };
+  autoRunSetup();
 })();
