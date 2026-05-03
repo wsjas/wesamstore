@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>مركز الحملات والعروض الموسمية</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="wesam-error-logger.js"></script>
+  <style>
+:root{--bg:#f6f8fc;--card:#fff;--text:#142033;--muted:#64748b;--line:#e5e7eb;--orange:#f97316;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--dark:#111827;--violet:#7c3aed;--shadow:0 18px 44px rgba(15,23,42,.08);--r:20px}
+*{box-sizing:border-box} body{margin:0;font-family:Tahoma,Arial,sans-serif;background:radial-gradient(circle at top right,#fff3e5 0,#f6f8fc 42%,#eef6ff 100%);color:var(--text)}
+a{color:inherit;text-decoration:none} button,input,select,textarea{font:inherit} button{cursor:pointer}
+.wrap{max-width:1320px;margin:auto;padding:18px}.top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap}h1{margin:0;font-size:25px}.muted{color:var(--muted);line-height:1.7}.card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.full{grid-column:1/-1}label{font-size:13px;color:#475569;font-weight:900;display:block;margin-bottom:6px}input,select,textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px;background:#fff}textarea{min-height:92px;resize:vertical}.actions,.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.btn{border:0;border-radius:13px;padding:10px 14px;background:#e5e7eb;color:#111827;font-weight:800;display:inline-flex;align-items:center;gap:7px;justify-content:center}.btn.primary{background:linear-gradient(135deg,var(--orange),#fb923c);color:white}.btn.blue{background:var(--blue);color:white}.btn.green{background:var(--green);color:white}.btn.red{background:var(--red);color:white}.btn.dark{background:var(--dark);color:white}.btn.ghost{background:white;border:1px solid var(--line)}.notice{border:1px dashed #fdba74;background:#fff7ed;color:#9a3412;border-radius:16px;padding:12px;margin-bottom:14px;line-height:1.8}.notice.ok{background:#f0fdf4;border-color:#86efac;color:#166534}.notice.err{background:#fef2f2;border-color:#fca5a5;color:#991b1b}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px;background:white;box-shadow:var(--shadow)}table{width:100%;border-collapse:collapse;min-width:980px}th,td{padding:12px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top;font-size:13px}th{background:#f8fafc;color:#475569;position:sticky;top:0}.badge{display:inline-flex;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900;background:#eef2ff;color:#3730a3}.badge.green{background:#dcfce7;color:#166534}.badge.red{background:#fee2e2;color:#991b1b}.badge.orange{background:#ffedd5;color:#9a3412}.badge.blue{background:#dbeafe;color:#1e40af}.badge.gray{background:#f1f5f9;color:#334155}.badge.violet{background:#ede9fe;color:#5b21b6}.mini{padding:7px 9px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:800}.mini.red{background:#fff1f2;color:#991b1b;border-color:#fecdd3}.mini.green{background:#ecfdf5;color:#166534;border-color:#bbf7d0}.mini.blue{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.stat b{display:block;font-size:28px;margin-top:6px}.kpi{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}.ltr{direction:ltr;text-align:left}.hidden{display:none!important}.toast{position:fixed;left:18px;bottom:18px;background:#111827;color:#fff;border-radius:14px;padding:12px 16px;box-shadow:var(--shadow);display:none;z-index:50;max-width:min(560px,calc(100vw - 36px));line-height:1.7}.toast.show{display:block}.asset-img{width:70px;height:56px;object-fit:cover;border-radius:12px;border:1px solid var(--line);background:#f8fafc}.progress{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}.progress span{display:block;height:100%;background:linear-gradient(135deg,var(--orange),var(--blue));width:0%}
+@media(max-width:900px){.grid,.grid3,.grid4{grid-template-columns:1fr}.wrap{padding:12px}h1{font-size:21px}table{min-width:780px}}
+@media print{.top,.toolbar,.no-print,.btn,.mini{display:none!important}body{background:white}.card,.table-wrap{box-shadow:none;border:0}.wrap{max-width:none;padding:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><h1>مركز الحملات والعروض الموسمية</h1><div class="muted">إنشاء حملات موسمية تظهر في الموقع والصفحة الرئيسية بدون تعديل الكود.</div></div>
+    <div class="actions no-print"><a class="btn ghost" href="admin.html">رجوع للوحة</a><button class="btn blue" onclick="location.reload()">تحديث</button><button class="btn ghost" onclick="window.print()">طباعة</button><a class="btn primary" href="index.html" target="_blank">فتح الموقع</a></div>
+  </div>
+  <div id="msg" class="notice">جار الاتصال مع Firebase...</div>
+  
+<div class="grid4">
+  <div class="card stat"><span>إجمالي الحملات</span><b id="totalCount">0</b></div>
+  <div class="card stat"><span>حملات فعالة</span><b id="activeCount">0</b></div>
+  <div class="card stat"><span>حملات مجدولة</span><b id="scheduledCount">0</b></div>
+  <div class="card stat"><span>حملات منتهية</span><b id="endedCount">0</b></div>
+</div>
+<div class="card">
+  <h2>إضافة / تعديل حملة موسمية</h2>
+  <form id="campaignForm" class="grid">
+    <input type="hidden" id="editId">
+    <div><label>عنوان الحملة</label><input id="title" required placeholder="عرض صيانة الشاشات"></div>
+    <div><label>شارة قصيرة</label><input id="badgeText" placeholder="خصم 20%"></div>
+    <div><label>نوع الحملة</label><select id="type"><option value="maintenance">صيانة</option><option value="shop">متجر</option><option value="general">عام</option><option value="academy">أكاديمية</option></select></div>
+    <div><label>الأولوية</label><input id="priority" type="number" value="10"></div>
+    <div><label>تاريخ البداية</label><input id="startDate" type="date"></div>
+    <div><label>تاريخ النهاية</label><input id="endDate" type="date"></div>
+    <div><label>نص الزر</label><input id="ctaText" value="شاهد العرض"></div>
+    <div><label>رابط الزر</label><input id="targetUrl" value="request.html?service=maintenance"></div>
+    <div class="full"><label>رابط الصورة</label><input id="imageUrl" class="ltr" placeholder="https://..."></div>
+    <div class="full"><label>الوصف</label><textarea id="description" placeholder="وصف مختصر يظهر في الصفحة الرئيسية أو العروض"></textarea></div>
+    <div><label>الحالة</label><select id="active"><option value="true">فعال</option><option value="false">مخفي</option></select></div>
+    <div><label>مزامنة مع الصفحة الرئيسية</label><select id="syncHome"><option value="true">نعم</option><option value="false">لا</option></select></div>
+    <div class="full actions"><button class="btn primary">حفظ الحملة</button><button type="button" class="btn ghost" onclick="resetForm()">تفريغ</button><button type="button" class="btn blue" onclick="exportCampaigns()">تصدير CSV</button></div>
+  </form>
+</div>
+<div class="card"><div class="toolbar"><input id="search" placeholder="بحث في الحملات" oninput="render()"><select id="typeFilter" onchange="render()"><option value="">كل الأنواع</option><option value="maintenance">صيانة</option><option value="shop">متجر</option><option value="general">عام</option><option value="academy">أكاديمية</option></select></div><div id="list"></div></div>
+
+</div>
+<div id="toast" class="toast"></div>
+<script>
+(function(){
+'use strict';
+
+const $ = id => document.getElementById(id);
+const F = () => window.WesamFirebase;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const JOD = v => (Number(v||0)).toFixed(2) + ' د.أ';
+const phoneOnly = p => String(p||'').replace(/\D/g,'').replace(/^0/,'962');
+function toast(msg, ok=true){ const t=$('toast'); t.textContent=msg; t.style.background=ok?'#111827':'#991b1b'; t.classList.add('show'); clearTimeout(window.__t); window.__t=setTimeout(()=>t.classList.remove('show'),3800); }
+function setMsg(text, cls='notice'){ const m=$('msg'); if(m){m.className=cls; m.textContent=text;} }
+function today(){ return new Date().toISOString().slice(0,10); }
+function dateText(v){ try{ const d = v && v.toDate ? v.toDate() : (v ? new Date(v) : null); return d && !isNaN(d) ? d.toLocaleString('ar-JO') : '—'; }catch(e){ return '—'; } }
+function badge(s){ const map={active:['فعال','green'],inactive:['معطل','gray'],draft:['مسودة','gray'],published:['منشور','green'],scheduled:['مجدول','blue'],ended:['منتهي','gray'],paid:['مدفوع','green'],partial:['جزئي','orange'],unpaid:['غير مدفوع','red'],ordered:['مطلوب','blue'],received:['مستلم','green'],cancelled:['ملغي','red'],pending:['بانتظار','orange'],passed:['ناجح','green'],failed:['فشل','red'],review:['مراجعة','orange']}; const x=map[String(s||'pending')]||[String(s||'pending'),'gray']; return `<span class="badge ${x[1]}">${x[0]}</span>`; }
+function table(headers, rows, empty='لا توجد بيانات'){ return `<div class="table-wrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.join(''):`<tr><td colspan="${headers.length}" style="text-align:center;color:#64748b;padding:28px">${empty}</td></tr>`}</tbody></table></div>`; }
+async function requireFirebase(){ if(!F() || !F().db) throw new Error('Firebase غير محمل. تأكد من الإنترنت ومن ملف firebase-config.js'); await F().ensureCoreCollections({force:false}).catch(()=>null); setMsg('تم الاتصال مع Firebase: ' + F().projectId, 'notice ok'); }
+async function audit(action, description){ try{ await F().addDoc('audit_logs',{action, description, page:location.pathname, createdAt:new Date().toISOString()}); }catch(e){} }
+function csvDownload(filename, rows){ const csv = rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'); const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
+window.addEventListener('error', e => setMsg('خطأ JavaScript: ' + (e.message||'غير معروف'), 'notice err'));
+
+
+let campaigns=[];
+async function init(){ await requireFirebase(); await load(); bind(); render(); }
+function bind(){ $('campaignForm').addEventListener('submit', saveCampaign); $('startDate').value=today(); }
+function campaignStatus(c){ const d=today(); if(c.active===false) return 'inactive'; if(c.startDate && c.startDate>d) return 'scheduled'; if(c.endDate && c.endDate<d) return 'ended'; return 'active'; }
+async function load(){ campaigns=await F().getCollection('seasonal_campaigns',{limit:1000}).catch(()=>[]); }
+async function saveCampaign(e){ e.preventDefault(); const id=$('editId').value; const data={title:$('title').value.trim(), badgeText:$('badgeText').value.trim(), type:$('type').value, priority:Number($('priority').value||0), startDate:$('startDate').value, endDate:$('endDate').value, ctaText:$('ctaText').value.trim(), targetUrl:$('targetUrl').value.trim(), imageUrl:$('imageUrl').value.trim(), description:$('description').value.trim(), active:$('active').value==='true'}; if(!data.title) return toast('أدخل عنوان الحملة', false); let docId=id; if(id) await F().setDoc('seasonal_campaigns', id, data, true); else docId = await F().addDoc('seasonal_campaigns', data); if($('syncHome').value==='true'){ await F().setDoc('homepage_blocks','campaign_'+docId,{title:data.title, subtitle:data.description, badge:data.badgeText, imageUrl:data.imageUrl, link:data.targetUrl, ctaText:data.ctaText, placement:'campaigns', sortOrder:data.priority, active:data.active, linkedCampaignId:docId, type:'seasonal_campaign'}, true); } await audit(id?'update_campaign':'create_campaign', data.title); toast('تم حفظ الحملة'); resetForm(); await load(); render(); }
+window.resetForm=function(){ $('campaignForm').reset(); $('editId').value=''; $('priority').value=10; $('startDate').value=today(); $('ctaText').value='شاهد العرض'; $('targetUrl').value='request.html?service=maintenance'; };
+window.editCampaign=function(id){ const c=campaigns.find(x=>x.id===id); if(!c) return; ['title','badgeText','type','priority','startDate','endDate','ctaText','targetUrl','imageUrl','description'].forEach(k=>{ if($(k)) $(k).value=c[k]||''; }); $('active').value=String(c.active!==false); $('editId').value=id; scrollTo({top:0,behavior:'smooth'}); };
+window.toggleCampaign=async function(id){ const c=campaigns.find(x=>x.id===id); if(!c) return; await F().setDoc('seasonal_campaigns',id,{active:!(c.active!==false)},true); toast('تم تغيير الحالة'); await load(); render(); };
+window.deleteCampaign=async function(id){ if(!confirm('حذف الحملة؟')) return; await F().deleteDoc('seasonal_campaigns',id); await F().deleteDoc('homepage_blocks','campaign_'+id).catch(()=>null); toast('تم الحذف'); await load(); render(); };
+window.syncHome=async function(id){ const c=campaigns.find(x=>x.id===id); if(!c) return; await F().setDoc('homepage_blocks','campaign_'+id,{title:c.title, subtitle:c.description, badge:c.badgeText, imageUrl:c.imageUrl, link:c.targetUrl, ctaText:c.ctaText||'شاهد العرض', placement:'campaigns', sortOrder:Number(c.priority||0), active:c.active!==false, linkedCampaignId:id, type:'seasonal_campaign'}, true); toast('تمت المزامنة مع الرئيسية'); };
+window.exportCampaigns=function(){ csvDownload('seasonal_campaigns.csv', [['العنوان','النوع','البداية','النهاية','الحالة','الرابط'], ...campaigns.map(c=>[c.title,c.type,c.startDate,c.endDate,campaignStatus(c),c.targetUrl])]); };
+window.render=function(){ const q=($('search').value||'').toLowerCase(), tf=$('typeFilter').value; const rows=campaigns.filter(c=>(!tf||c.type===tf)&&(!q||JSON.stringify(c).toLowerCase().includes(q))).sort((a,b)=>Number(b.priority||0)-Number(a.priority||0)); $('totalCount').textContent=campaigns.length; $('activeCount').textContent=campaigns.filter(c=>campaignStatus(c)==='active').length; $('scheduledCount').textContent=campaigns.filter(c=>campaignStatus(c)==='scheduled').length; $('endedCount').textContent=campaigns.filter(c=>campaignStatus(c)==='ended').length; $('list').innerHTML=table(['الصورة','العنوان','النوع','الفترة','الحالة','الأولوية','إجراءات'], rows.map(c=>`<tr><td>${c.imageUrl?`<img class="asset-img" src="${esc(c.imageUrl)}">`:'—'}</td><td><b>${esc(c.title)}</b><br><span class="muted">${esc(c.description||'')}</span></td><td>${esc(c.type)}</td><td>${esc(c.startDate||'')} ⇐ ${esc(c.endDate||'')}</td><td>${badge(campaignStatus(c))}</td><td>${Number(c.priority||0)}</td><td><button class="mini blue" onclick="editCampaign('${c.id}')">تعديل</button> <button class="mini" onclick="syncHome('${c.id}')">للرئيسية</button> <button class="mini green" onclick="toggleCampaign('${c.id}')">تفعيل/إخفاء</button> <button class="mini red" onclick="deleteCampaign('${c.id}')">حذف</button></td></tr>`)); };
+init().catch(e=>{console.error(e); setMsg(e.message||String(e),'notice err');});
+
+})();
+</script>
+</body>
+</html>

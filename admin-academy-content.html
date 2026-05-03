@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>محتوى الأكاديمية</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="wesam-error-logger.js"></script>
+  <style>
+:root{--bg:#f6f8fc;--card:#fff;--text:#142033;--muted:#64748b;--line:#e5e7eb;--orange:#f97316;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--dark:#111827;--violet:#7c3aed;--shadow:0 18px 44px rgba(15,23,42,.08);--r:20px}
+*{box-sizing:border-box} body{margin:0;font-family:Tahoma,Arial,sans-serif;background:radial-gradient(circle at top right,#fff3e5 0,#f6f8fc 42%,#eef6ff 100%);color:var(--text)}
+a{color:inherit;text-decoration:none} button,input,select,textarea{font:inherit} button{cursor:pointer}
+.wrap{max-width:1320px;margin:auto;padding:18px}.top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap}h1{margin:0;font-size:25px}.muted{color:var(--muted);line-height:1.7}.card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.full{grid-column:1/-1}label{font-size:13px;color:#475569;font-weight:900;display:block;margin-bottom:6px}input,select,textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px;background:#fff}textarea{min-height:92px;resize:vertical}.actions,.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.btn{border:0;border-radius:13px;padding:10px 14px;background:#e5e7eb;color:#111827;font-weight:800;display:inline-flex;align-items:center;gap:7px;justify-content:center}.btn.primary{background:linear-gradient(135deg,var(--orange),#fb923c);color:white}.btn.blue{background:var(--blue);color:white}.btn.green{background:var(--green);color:white}.btn.red{background:var(--red);color:white}.btn.dark{background:var(--dark);color:white}.btn.violet{background:var(--violet);color:white}.btn.ghost{background:white;border:1px solid var(--line)}.notice{border:1px dashed #fdba74;background:#fff7ed;color:#9a3412;border-radius:16px;padding:12px;margin-bottom:14px;line-height:1.8}.notice.ok{background:#f0fdf4;border-color:#86efac;color:#166534}.notice.err{background:#fef2f2;border-color:#fca5a5;color:#991b1b}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px;background:white;box-shadow:var(--shadow)}table{width:100%;border-collapse:collapse;min-width:980px}th,td{padding:12px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top;font-size:13px}th{background:#f8fafc;color:#475569;position:sticky;top:0}.badge{display:inline-flex;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900;background:#eef2ff;color:#3730a3}.badge.green{background:#dcfce7;color:#166534}.badge.red{background:#fee2e2;color:#991b1b}.badge.orange{background:#ffedd5;color:#9a3412}.badge.blue{background:#dbeafe;color:#1e40af}.badge.gray{background:#f1f5f9;color:#334155}.badge.violet{background:#ede9fe;color:#5b21b6}.mini{padding:7px 9px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:800}.mini.red{background:#fff1f2;color:#991b1b;border-color:#fecdd3}.mini.green{background:#ecfdf5;color:#166534;border-color:#bbf7d0}.mini.blue{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.mini.orange{background:#fff7ed;color:#9a3412;border-color:#fed7aa}.stat b{display:block;font-size:28px;margin-top:6px}.kpi{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}.ltr{direction:ltr;text-align:left}.hidden{display:none!important}.toast{position:fixed;left:18px;bottom:18px;background:#111827;color:#fff;border-radius:14px;padding:12px 16px;box-shadow:var(--shadow);display:none;z-index:50;max-width:min(560px,calc(100vw - 36px));line-height:1.7}.toast.show{display:block}.progress{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}.progress span{display:block;height:100%;background:linear-gradient(135deg,var(--orange),var(--blue));width:0%}.code{white-space:pre-wrap;background:#0f172a;color:#e5e7eb;border-radius:18px;padding:14px;direction:ltr;text-align:left;overflow:auto}
+@media(max-width:900px){.grid,.grid3,.grid4{grid-template-columns:1fr}.wrap{padding:12px}h1{font-size:21px}table{min-width:780px}}
+@media print{.top,.toolbar,.no-print,.btn,.mini{display:none!important}body{background:white}.card,.table-wrap{box-shadow:none;border:0}.wrap{max-width:none;padding:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><h1>محتوى الأكاديمية</h1><div class="muted">إدارة دروس الأكاديمية بصيغة قابلة للتصدير JSON ورفعها إلى لوحة الأكاديمية.</div></div>
+    <div class="actions no-print"><a class="btn ghost" href="admin.html">رجوع للوحة</a><button class="btn blue" onclick="location.reload()">تحديث</button><button class="btn ghost" onclick="window.print()">طباعة</button><a class="btn primary" href="index.html" target="_blank">فتح الموقع</a></div>
+  </div>
+  <div id="msg" class="notice">جار الاتصال مع Firebase...</div>
+  
+<div class="grid4" id="stats"></div>
+<div class="card"><h2>إضافة / تعديل درس أكاديمية</h2><form id="form" class="grid"><input type="hidden" id="docId"><div><label>عنوان الدرس</label><input id="title" required></div><div><label>المعرف slug</label><input id="slug" class="ltr" placeholder="led-power-board"></div><div><label>التصنيف</label><input id="category" placeholder="صيانة شاشات LED"></div><div><label>رقم الدرس</label><input id="lessonNo" type="number" value="1"></div><div><label>الوصول</label><select id="access"><option value="free">مجاني</option><option value="paid">مدفوع</option></select></div><div><label>السعر</label><input id="price" type="number" step="0.01" value="0"></div><div><label>الصورة</label><input id="image" class="ltr" placeholder="رابط صورة WEBP"></div><div><label>الفيديو</label><input id="video" class="ltr" placeholder="رابط فيديو"></div><div class="full"><label>ملخص الدرس</label><textarea id="summary"></textarea></div><div class="full"><label>محتوى الدرس</label><textarea id="content" style="min-height:180px"></textarea></div><div class="full actions"><button class="btn primary">حفظ الدرس</button><button type="button" class="btn blue" onclick="exportJSON()">تصدير JSON للأكاديمية</button><button type="button" class="btn ghost" onclick="resetForm()">تفريغ</button></div></form></div>
+<div class="card"><h2>استيراد JSON للدروس</h2><textarea id="jsonInput" class="ltr" placeholder='[{"title":"..."}]'></textarea><div class="actions" style="margin-top:10px"><button class="btn green" onclick="importJSON()">استيراد الدروس</button></div></div>
+<div class="card"><div class="toolbar"><input id="q" placeholder="بحث" oninput="render()"><select id="accessFilter" onchange="render()"><option value="">كل الدروس</option><option value="free">مجاني</option><option value="paid">مدفوع</option></select><button class="btn blue" onclick="load()">تحديث</button><button class="btn ghost" onclick="exportCSV()">CSV</button></div><div id="list"></div></div>
+
+</div>
+<div id="toast" class="toast"></div>
+<script>
+
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const F = () => window.WesamFirebase;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const JOD = v => (Number(v||0)).toFixed(2) + ' د.أ';
+const phoneOnly = p => String(p||'').replace(/\D/g,'').replace(/^0/,'962');
+function toast(msg, ok=true){ const t=$('toast'); t.textContent=msg; t.style.background=ok?'#111827':'#991b1b'; t.classList.add('show'); clearTimeout(window.__t); window.__t=setTimeout(()=>t.classList.remove('show'),4200); }
+function setMsg(text, cls='notice'){ const m=$('msg'); if(m){m.className=cls; m.textContent=text;} }
+function today(){ return new Date().toISOString().slice(0,10); }
+function dateText(v){ try{ const d = v && v.toDate ? v.toDate() : (v ? new Date(v) : null); return d && !isNaN(d) ? d.toLocaleString('ar-JO') : '—'; }catch(e){ return '—'; } }
+function daysBetween(v){ try{ const d = v && v.toDate ? v.toDate() : new Date(v); if(!d || isNaN(d)) return 0; return Math.floor((new Date()-d)/86400000); }catch(e){return 0;} }
+function badge(s){ const map={active:['فعال','green'],inactive:['معطل','gray'],draft:['مسودة','gray'],published:['منشور','green'],scheduled:['مجدول','blue'],ended:['منتهي','gray'],paid:['مدفوع','green'],partial:['جزئي','orange'],unpaid:['غير مدفوع','red'],open:['مفتوح','orange'],new:['جديد','orange'],review:['مراجعة','blue'],resolved:['تم الحل','green'],closed:['مغلق','gray'],urgent:['عاجل','red'],normal:['عادي','blue'],low:['منخفض','gray'],passed:['ناجح','green'],failed:['فشل','red'],done:['منجز','green'],pending:['بانتظار','orange'],valid:['ساري','green'],expired:['منتهي','red']}; const x=map[String(s||'pending')]||[String(s||'pending'),'gray']; return `<span class="badge ${x[1]}">${x[0]}</span>`; }
+function table(headers, rows, empty='لا توجد بيانات'){ return `<div class="table-wrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.join(''):`<tr><td colspan="${headers.length}" style="text-align:center;color:#64748b;padding:28px">${empty}</td></tr>`}</tbody></table></div>`; }
+async function requireFirebase(){ if(!F() || !F().db) throw new Error('Firebase غير محمل. تأكد من الإنترنت ومن ملف firebase-config.js'); await F().ensureCoreCollections({force:false}).catch(()=>null); setMsg('تم الاتصال مع Firebase: ' + F().projectId, 'notice ok'); }
+async function audit(action, description){ try{ await F().addDoc('audit_logs',{action, description, page:location.pathname, createdAt:new Date().toISOString()}); }catch(e){} }
+function csvDownload(filename, rows){ const csv = rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'); const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
+window.addEventListener('error', e => setMsg('خطأ JavaScript: ' + (e.message||'غير معروف'), 'notice err'));
+
+
+let rows=[];
+async function init(){ await requireFirebase(); $('form').addEventListener('submit', save); await load(); }
+async function load(){ rows=await F().getCollection('academy_lessons',{limit:1000}).catch(()=>[]); render(); }
+function resetForm(){ ['docId','title','slug','category','image','video','summary','content'].forEach(id=>$(id).value=''); $('lessonNo').value='1'; $('access').value='free'; $('price').value='0'; }
+function makeSlug(s){ return String(s||'').trim().toLowerCase().replace(/[\s_]+/g,'-').replace(/[^a-z0-9\-]/g,'').replace(/--+/g,'-') || ('lesson-'+Date.now()); }
+async function save(e){ e.preventDefault(); const data={title:$('title').value.trim(),slug:$('slug').value.trim()||makeSlug($('title').value),category:$('category').value.trim(),lessonNo:Number($('lessonNo').value||0),access:$('access').value,free:$('access').value==='free',price:Number($('price').value||0),image:$('image').value.trim(),video:$('video').value.trim(),summary:$('summary').value.trim(),content:$('content').value.trim(),active:true}; if(!data.title) return toast('اكتب عنوان الدرس',false); if($('docId').value) await F().setDoc('academy_lessons',$('docId').value,data,true); else await F().setDoc('academy_lessons',data.slug,data,true); toast('تم حفظ الدرس'); await audit('save_academy_lesson',data.title); resetForm(); await load(); }
+window.editRow=function(id){ const r=rows.find(x=>x.id===id); if(!r) return; ['docId','title','slug','category','lessonNo','access','price','image','video','summary','content'].forEach(k=>$(k).value=r[k]??''); scrollTo({top:0,behavior:'smooth'}); }
+window.delRow=async function(id){ if(!confirm('حذف الدرس؟')) return; await F().deleteDoc('academy_lessons',id); toast('تم الحذف'); await load(); }
+window.exportJSON=function(){ const data=rows.map(r=>({id:r.slug||r.id,slug:r.slug||r.id,title:r.title,category:r.category,lessonNo:Number(r.lessonNo||0),free:r.access!=='paid',access:r.access||'free',price:Number(r.price||0),image:r.image||'',video:r.video||'',summary:r.summary||'',content:r.content||''})); const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='academy-lessons.json'; a.click(); URL.revokeObjectURL(a.href); }
+window.importJSON=async function(){ let arr; try{ arr=JSON.parse($('jsonInput').value); if(!Array.isArray(arr)) throw new Error('يجب أن يكون JSON مصفوفة'); }catch(e){ return toast(e.message,false); } let n=0; for(const item of arr){ const slug=item.slug||item.id||makeSlug(item.title); await F().setDoc('academy_lessons',slug,{...item,slug,active:item.active!==false},true); n++; } toast('تم استيراد '+n+' درس'); $('jsonInput').value=''; await load(); }
+function render(){ const q=$('q').value.trim().toLowerCase(), af=$('accessFilter').value; const filtered=rows.filter(r=>(!af||r.access===af)&&(!q||JSON.stringify(r).toLowerCase().includes(q))).sort((a,b)=>Number(a.lessonNo||0)-Number(b.lessonNo||0)); $('stats').innerHTML=`<div class="card stat"><span>الدروس</span><b>${rows.length}</b></div><div class="card stat"><span>مجاني</span><b>${rows.filter(r=>r.access!=='paid').length}</b></div><div class="card stat"><span>مدفوع</span><b>${rows.filter(r=>r.access==='paid').length}</b></div><div class="card stat"><span>التصنيفات</span><b>${new Set(rows.map(r=>r.category)).size}</b></div>`; $('list').innerHTML=table(['#','العنوان','التصنيف','الوصول','السعر','الصورة/الفيديو','إجراء'],filtered.map(r=>`<tr><td>${r.lessonNo||''}</td><td><b>${esc(r.title)}</b><br><small class="ltr">${esc(r.slug||r.id)}</small></td><td>${esc(r.category)}</td><td>${badge(r.access==='paid'?'unpaid':'paid')}</td><td>${JOD(r.price)}</td><td>${r.image?'صورة ':''}${r.video?'فيديو':''}</td><td><button class="mini blue" onclick="editRow('${r.id}')">تعديل</button> <button class="mini red" onclick="delRow('${r.id}')">حذف</button></td></tr>`)); }
+window.render=render; window.load=load; window.resetForm=resetForm; window.exportCSV=function(){ csvDownload('academy-lessons.csv',[['رقم','عنوان','تصنيف','وصول','سعر','slug'],...rows.map(r=>[r.lessonNo,r.title,r.category,r.access,r.price,r.slug||r.id])]); };
+init().catch(e=>{console.error(e); setMsg(e.message||String(e),'notice err');});
+
+})();
+</script>
+</body>
+</html>

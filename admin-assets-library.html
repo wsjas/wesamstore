@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>مكتبة ملفات وصور الموقع</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="wesam-error-logger.js"></script>
+  <style>
+:root{--bg:#f6f8fc;--card:#fff;--text:#142033;--muted:#64748b;--line:#e5e7eb;--orange:#f97316;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--dark:#111827;--violet:#7c3aed;--shadow:0 18px 44px rgba(15,23,42,.08);--r:20px}
+*{box-sizing:border-box} body{margin:0;font-family:Tahoma,Arial,sans-serif;background:radial-gradient(circle at top right,#fff3e5 0,#f6f8fc 42%,#eef6ff 100%);color:var(--text)}
+a{color:inherit;text-decoration:none} button,input,select,textarea{font:inherit} button{cursor:pointer}
+.wrap{max-width:1320px;margin:auto;padding:18px}.top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap}h1{margin:0;font-size:25px}.muted{color:var(--muted);line-height:1.7}.card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.full{grid-column:1/-1}label{font-size:13px;color:#475569;font-weight:900;display:block;margin-bottom:6px}input,select,textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px;background:#fff}textarea{min-height:92px;resize:vertical}.actions,.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.btn{border:0;border-radius:13px;padding:10px 14px;background:#e5e7eb;color:#111827;font-weight:800;display:inline-flex;align-items:center;gap:7px;justify-content:center}.btn.primary{background:linear-gradient(135deg,var(--orange),#fb923c);color:white}.btn.blue{background:var(--blue);color:white}.btn.green{background:var(--green);color:white}.btn.red{background:var(--red);color:white}.btn.dark{background:var(--dark);color:white}.btn.ghost{background:white;border:1px solid var(--line)}.notice{border:1px dashed #fdba74;background:#fff7ed;color:#9a3412;border-radius:16px;padding:12px;margin-bottom:14px;line-height:1.8}.notice.ok{background:#f0fdf4;border-color:#86efac;color:#166534}.notice.err{background:#fef2f2;border-color:#fca5a5;color:#991b1b}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px;background:white;box-shadow:var(--shadow)}table{width:100%;border-collapse:collapse;min-width:980px}th,td{padding:12px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top;font-size:13px}th{background:#f8fafc;color:#475569;position:sticky;top:0}.badge{display:inline-flex;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900;background:#eef2ff;color:#3730a3}.badge.green{background:#dcfce7;color:#166534}.badge.red{background:#fee2e2;color:#991b1b}.badge.orange{background:#ffedd5;color:#9a3412}.badge.blue{background:#dbeafe;color:#1e40af}.badge.gray{background:#f1f5f9;color:#334155}.badge.violet{background:#ede9fe;color:#5b21b6}.mini{padding:7px 9px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:800}.mini.red{background:#fff1f2;color:#991b1b;border-color:#fecdd3}.mini.green{background:#ecfdf5;color:#166534;border-color:#bbf7d0}.mini.blue{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.stat b{display:block;font-size:28px;margin-top:6px}.kpi{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}.ltr{direction:ltr;text-align:left}.hidden{display:none!important}.toast{position:fixed;left:18px;bottom:18px;background:#111827;color:#fff;border-radius:14px;padding:12px 16px;box-shadow:var(--shadow);display:none;z-index:50;max-width:min(560px,calc(100vw - 36px));line-height:1.7}.toast.show{display:block}.asset-img{width:70px;height:56px;object-fit:cover;border-radius:12px;border:1px solid var(--line);background:#f8fafc}.progress{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}.progress span{display:block;height:100%;background:linear-gradient(135deg,var(--orange),var(--blue));width:0%}
+@media(max-width:900px){.grid,.grid3,.grid4{grid-template-columns:1fr}.wrap{padding:12px}h1{font-size:21px}table{min-width:780px}}
+@media print{.top,.toolbar,.no-print,.btn,.mini{display:none!important}body{background:white}.card,.table-wrap{box-shadow:none;border:0}.wrap{max-width:none;padding:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><h1>مكتبة ملفات وصور الموقع</h1><div class="muted">إدارة روابط الصور والفيديوهات والأيقونات المستخدمة في الأقسام والدروس والعروض.</div></div>
+    <div class="actions no-print"><a class="btn ghost" href="admin.html">رجوع للوحة</a><button class="btn blue" onclick="location.reload()">تحديث</button><button class="btn ghost" onclick="window.print()">طباعة</button><a class="btn primary" href="index.html" target="_blank">فتح الموقع</a></div>
+  </div>
+  <div id="msg" class="notice">جار الاتصال مع Firebase...</div>
+  
+<div class="grid4"><div class="card stat"><span>كل الملفات</span><b id="assetCount">0</b></div><div class="card stat"><span>صور</span><b id="imageCount">0</b></div><div class="card stat"><span>فيديو</span><b id="videoCount">0</b></div><div class="card stat"><span>نشطة</span><b id="activeCount">0</b></div></div>
+<div class="card"><h2>إضافة ملف أو صورة للموقع</h2><form id="assetForm" class="grid"><input type="hidden" id="editId"><div><label>اسم الملف</label><input id="name" required></div><div><label>النوع</label><select id="type"><option value="image">صورة</option><option value="video">فيديو</option><option value="icon">أيقونة</option><option value="document">مستند</option><option value="other">آخر</option></select></div><div class="full"><label>الرابط</label><input id="url" class="ltr" required placeholder="https://..."></div><div><label>مكان الاستخدام</label><input id="placement" placeholder="hero / products / academy"></div><div><label>الحالة</label><select id="active"><option value="true">نشط</option><option value="false">مخفي</option></select></div><div><label>نص بديل للصورة</label><input id="alt"></div><div><label>وسوم</label><input id="tags" placeholder="صيانة, شاشات, عروض"></div><div class="full"><label>ملاحظات</label><textarea id="note"></textarea></div><div class="full actions"><button class="btn primary">حفظ الملف</button><button type="button" class="btn ghost" onclick="resetForm()">تفريغ</button><button type="button" class="btn blue" onclick="exportAssets()">تصدير CSV</button></div></form></div>
+<div class="card"><div class="toolbar"><input id="search" placeholder="بحث بالاسم أو المكان" oninput="render()"><select id="typeFilter" onchange="render()"><option value="">كل الأنواع</option><option value="image">صور</option><option value="video">فيديو</option><option value="icon">أيقونات</option><option value="document">مستندات</option></select></div><div id="list"></div></div>
+
+</div>
+<div id="toast" class="toast"></div>
+<script>
+(function(){
+'use strict';
+
+const $ = id => document.getElementById(id);
+const F = () => window.WesamFirebase;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const JOD = v => (Number(v||0)).toFixed(2) + ' د.أ';
+const phoneOnly = p => String(p||'').replace(/\D/g,'').replace(/^0/,'962');
+function toast(msg, ok=true){ const t=$('toast'); t.textContent=msg; t.style.background=ok?'#111827':'#991b1b'; t.classList.add('show'); clearTimeout(window.__t); window.__t=setTimeout(()=>t.classList.remove('show'),3800); }
+function setMsg(text, cls='notice'){ const m=$('msg'); if(m){m.className=cls; m.textContent=text;} }
+function today(){ return new Date().toISOString().slice(0,10); }
+function dateText(v){ try{ const d = v && v.toDate ? v.toDate() : (v ? new Date(v) : null); return d && !isNaN(d) ? d.toLocaleString('ar-JO') : '—'; }catch(e){ return '—'; } }
+function badge(s){ const map={active:['فعال','green'],inactive:['معطل','gray'],draft:['مسودة','gray'],published:['منشور','green'],scheduled:['مجدول','blue'],ended:['منتهي','gray'],paid:['مدفوع','green'],partial:['جزئي','orange'],unpaid:['غير مدفوع','red'],ordered:['مطلوب','blue'],received:['مستلم','green'],cancelled:['ملغي','red'],pending:['بانتظار','orange'],passed:['ناجح','green'],failed:['فشل','red'],review:['مراجعة','orange']}; const x=map[String(s||'pending')]||[String(s||'pending'),'gray']; return `<span class="badge ${x[1]}">${x[0]}</span>`; }
+function table(headers, rows, empty='لا توجد بيانات'){ return `<div class="table-wrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.join(''):`<tr><td colspan="${headers.length}" style="text-align:center;color:#64748b;padding:28px">${empty}</td></tr>`}</tbody></table></div>`; }
+async function requireFirebase(){ if(!F() || !F().db) throw new Error('Firebase غير محمل. تأكد من الإنترنت ومن ملف firebase-config.js'); await F().ensureCoreCollections({force:false}).catch(()=>null); setMsg('تم الاتصال مع Firebase: ' + F().projectId, 'notice ok'); }
+async function audit(action, description){ try{ await F().addDoc('audit_logs',{action, description, page:location.pathname, createdAt:new Date().toISOString()}); }catch(e){} }
+function csvDownload(filename, rows){ const csv = rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'); const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
+window.addEventListener('error', e => setMsg('خطأ JavaScript: ' + (e.message||'غير معروف'), 'notice err'));
+
+
+let assets=[];
+async function init(){ await requireFirebase(); await load(); $('assetForm').addEventListener('submit', saveAsset); render(); }
+async function load(){ assets=await F().getCollection('site_assets',{limit:1500}).catch(()=>[]); }
+async function saveAsset(e){ e.preventDefault(); const id=$('editId').value; const data={name:$('name').value.trim(), type:$('type').value, url:$('url').value.trim(), placement:$('placement').value.trim(), active:$('active').value==='true', alt:$('alt').value.trim(), tags:$('tags').value.trim(), note:$('note').value.trim()}; if(!data.name || !data.url) return toast('أدخل الاسم والرابط', false); if(id) await F().setDoc('site_assets',id,data,true); else await F().addDoc('site_assets',data); await audit(id?'update_asset':'create_asset', data.name); toast('تم حفظ الملف'); resetForm(); await load(); render(); }
+window.resetForm=function(){ $('assetForm').reset(); $('editId').value=''; };
+window.editAsset=function(id){ const a=assets.find(x=>x.id===id); if(!a) return; ['name','type','url','placement','alt','tags','note'].forEach(k=>$(k).value=a[k]||''); $('active').value=String(a.active!==false); $('editId').value=id; scrollTo({top:0,behavior:'smooth'}); };
+window.copyUrl=function(id){ const a=assets.find(x=>x.id===id); if(!a) return; navigator.clipboard?.writeText(a.url); toast('تم نسخ الرابط'); };
+window.deleteAsset=async function(id){ if(!confirm('حذف الملف من المكتبة؟ لا يحذف الملف من مصدر الرابط.')) return; await F().deleteDoc('site_assets',id); toast('تم الحذف'); await load(); render(); };
+window.exportAssets=function(){ csvDownload('site_assets.csv', [['الاسم','النوع','الرابط','المكان','الحالة','وسوم'], ...assets.map(a=>[a.name,a.type,a.url,a.placement,a.active!==false?'نشط':'مخفي',a.tags])]); };
+window.render=function(){ const q=($('search').value||'').toLowerCase(), tf=$('typeFilter').value; const rows=assets.filter(a=>(!tf||a.type===tf)&&(!q||JSON.stringify(a).toLowerCase().includes(q))).sort((a,b)=>String(a.placement||'').localeCompare(String(b.placement||''))); $('assetCount').textContent=assets.length; $('imageCount').textContent=assets.filter(a=>a.type==='image').length; $('videoCount').textContent=assets.filter(a=>a.type==='video').length; $('activeCount').textContent=assets.filter(a=>a.active!==false).length; $('list').innerHTML=table(['معاينة','الاسم','النوع','المكان','الرابط','الحالة','إجراءات'], rows.map(a=>`<tr><td>${a.type==='image'&&a.url?`<img class="asset-img" src="${esc(a.url)}">`:'—'}</td><td><b>${esc(a.name)}</b><br><span class="muted">${esc(a.alt||a.note||'')}</span></td><td>${esc(a.type)}</td><td>${esc(a.placement||'—')}</td><td class="ltr" style="max-width:260px;overflow:hidden;text-overflow:ellipsis">${esc(a.url)}</td><td>${badge(a.active!==false?'active':'inactive')}</td><td><button class="mini blue" onclick="editAsset('${a.id}')">تعديل</button> <button class="mini" onclick="copyUrl('${a.id}')">نسخ</button> <button class="mini red" onclick="deleteAsset('${a.id}')">حذف</button></td></tr>`)); };
+init().catch(e=>{console.error(e); setMsg(e.message||String(e),'notice err');});
+
+})();
+</script>
+</body>
+</html>

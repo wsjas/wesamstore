@@ -75,6 +75,28 @@ service cloud.firestore {
     match /notification_rules/{docId} { allow read, write: if isAdmin(); }
     match /status_templates/{docId} { allow read, write: if isAdmin(); }
 
+    match /homepage_blocks/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /hero_slides/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /loyalty_points/{docId} { allow read, write: if isAdmin(); }
+    match /device_handover/{docId} { allow read, write: if isAdmin(); }
+    match /service_checklists/{docId} { allow read, write: if isAdmin(); }
+    match /admin_notes/{docId} { allow read, write: if isAdmin(); }
+    match /site_assets/{docId} { allow read: if true; allow write: if isAdmin(); }
+
+
+    match /seasonal_campaigns/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /service_check_results/{docId} { allow read, write: if isAdmin(); }
+    match /business_goals/{docId} { allow read, write: if isAdmin(); }
+    match /display_settings/{docId} { allow read: if true; allow write: if isAdmin(); }
+
+
+    match /service_prices/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /after_service_followups/{docId} { allow read, write: if isAdmin(); }
+    match /academy_lessons/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /academy_categories/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /qr_links/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /support_tickets/{docId} { allow create: if true; allow read, update, delete: if isAdmin(); }
+
     match /{document=**} { allow read, write: if false; }
   }
 }

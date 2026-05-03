@@ -42,6 +42,28 @@ service cloud.firestore {
     match /notification_rules/{docId} { allow read, write: if true; }
     match /status_templates/{docId} { allow read, create, update, delete: if true; }
 
+    match /homepage_blocks/{docId} { allow read, create, update, delete: if true; }
+    match /hero_slides/{docId} { allow read, create, update, delete: if true; }
+    match /loyalty_points/{docId} { allow read, create, update, delete: if true; }
+    match /device_handover/{docId} { allow read, create, update, delete: if true; }
+    match /service_checklists/{docId} { allow read, create, update, delete: if true; }
+    match /admin_notes/{docId} { allow read, create, update, delete: if true; }
+    match /site_assets/{docId} { allow read, create, update, delete: if true; }
+
+
+    match /seasonal_campaigns/{docId} { allow read, create, update, delete: if true; }
+    match /service_check_results/{docId} { allow read, create, update, delete: if true; }
+    match /business_goals/{docId} { allow read, create, update, delete: if true; }
+    match /display_settings/{docId} { allow read, write: if true; }
+
+
+    match /service_prices/{docId} { allow read, create, update, delete: if true; }
+    match /after_service_followups/{docId} { allow read, create, update, delete: if true; }
+    match /academy_lessons/{docId} { allow read, create, update, delete: if true; }
+    match /academy_categories/{docId} { allow read, create, update, delete: if true; }
+    match /qr_links/{docId} { allow read, create, update, delete: if true; }
+    match /support_tickets/{docId} { allow read, create, update, delete: if true; }
+
     match /{document=**} { allow read, write: if false; }
   }
 }

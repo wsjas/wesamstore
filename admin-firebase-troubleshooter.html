@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>تشخيص Firebase المتقدم</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="wesam-error-logger.js"></script>
+  <style>
+:root{--bg:#f6f8fc;--card:#fff;--text:#142033;--muted:#64748b;--line:#e5e7eb;--orange:#f97316;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--dark:#111827;--violet:#7c3aed;--shadow:0 18px 44px rgba(15,23,42,.08);--r:20px}
+*{box-sizing:border-box} body{margin:0;font-family:Tahoma,Arial,sans-serif;background:radial-gradient(circle at top right,#fff3e5 0,#f6f8fc 42%,#eef6ff 100%);color:var(--text)}
+a{color:inherit;text-decoration:none} button,input,select,textarea{font:inherit} button{cursor:pointer}
+.wrap{max-width:1320px;margin:auto;padding:18px}.top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap}h1{margin:0;font-size:25px}.muted{color:var(--muted);line-height:1.7}.card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.full{grid-column:1/-1}label{font-size:13px;color:#475569;font-weight:900;display:block;margin-bottom:6px}input,select,textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px;background:#fff}textarea{min-height:92px;resize:vertical}.actions,.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.btn{border:0;border-radius:13px;padding:10px 14px;background:#e5e7eb;color:#111827;font-weight:800;display:inline-flex;align-items:center;gap:7px;justify-content:center}.btn.primary{background:linear-gradient(135deg,var(--orange),#fb923c);color:white}.btn.blue{background:var(--blue);color:white}.btn.green{background:var(--green);color:white}.btn.red{background:var(--red);color:white}.btn.dark{background:var(--dark);color:white}.btn.violet{background:var(--violet);color:white}.btn.ghost{background:white;border:1px solid var(--line)}.notice{border:1px dashed #fdba74;background:#fff7ed;color:#9a3412;border-radius:16px;padding:12px;margin-bottom:14px;line-height:1.8}.notice.ok{background:#f0fdf4;border-color:#86efac;color:#166534}.notice.err{background:#fef2f2;border-color:#fca5a5;color:#991b1b}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px;background:white;box-shadow:var(--shadow)}table{width:100%;border-collapse:collapse;min-width:980px}th,td{padding:12px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top;font-size:13px}th{background:#f8fafc;color:#475569;position:sticky;top:0}.badge{display:inline-flex;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900;background:#eef2ff;color:#3730a3}.badge.green{background:#dcfce7;color:#166534}.badge.red{background:#fee2e2;color:#991b1b}.badge.orange{background:#ffedd5;color:#9a3412}.badge.blue{background:#dbeafe;color:#1e40af}.badge.gray{background:#f1f5f9;color:#334155}.badge.violet{background:#ede9fe;color:#5b21b6}.mini{padding:7px 9px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:800}.mini.red{background:#fff1f2;color:#991b1b;border-color:#fecdd3}.mini.green{background:#ecfdf5;color:#166534;border-color:#bbf7d0}.mini.blue{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.mini.orange{background:#fff7ed;color:#9a3412;border-color:#fed7aa}.stat b{display:block;font-size:28px;margin-top:6px}.kpi{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}.ltr{direction:ltr;text-align:left}.hidden{display:none!important}.toast{position:fixed;left:18px;bottom:18px;background:#111827;color:#fff;border-radius:14px;padding:12px 16px;box-shadow:var(--shadow);display:none;z-index:50;max-width:min(560px,calc(100vw - 36px));line-height:1.7}.toast.show{display:block}.progress{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}.progress span{display:block;height:100%;background:linear-gradient(135deg,var(--orange),var(--blue));width:0%}.code{white-space:pre-wrap;background:#0f172a;color:#e5e7eb;border-radius:18px;padding:14px;direction:ltr;text-align:left;overflow:auto}
+@media(max-width:900px){.grid,.grid3,.grid4{grid-template-columns:1fr}.wrap{padding:12px}h1{font-size:21px}table{min-width:780px}}
+@media print{.top,.toolbar,.no-print,.btn,.mini{display:none!important}body{background:white}.card,.table-wrap{box-shadow:none;border:0}.wrap{max-width:none;padding:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><h1>تشخيص Firebase المتقدم</h1><div class="muted">فحص القراءة والكتابة والتحديث والحذف لكل المجموعات المهمة لمعرفة سبب عدم الحفظ أو الاسترجاع.</div></div>
+    <div class="actions no-print"><a class="btn ghost" href="admin.html">رجوع للوحة</a><button class="btn blue" onclick="location.reload()">تحديث</button><button class="btn ghost" onclick="window.print()">طباعة</button><a class="btn primary" href="index.html" target="_blank">فتح الموقع</a></div>
+  </div>
+  <div id="msg" class="notice">جار الاتصال مع Firebase...</div>
+  
+<div class="grid4" id="stats"></div>
+<div class="card"><h2>فحص حفظ واسترجاع Firebase</h2><div class="actions"><button class="btn primary" onclick="runFullTest()">تشغيل فحص كامل</button><button class="btn blue" onclick="createAllTemplates()">إنشاء القوالب الأساسية</button><button class="btn ghost" onclick="exportReport()">تصدير التقرير JSON</button></div><p class="muted">هذا الفحص يكتب وثيقة اختبار صغيرة، يقرأها، يحدثها، ثم يحذفها. إذا فشل جزء سيظهر السبب داخل الجدول.</p></div>
+<div class="card"><h2>نتائج الفحص</h2><div id="result"></div></div>
+<div class="card"><h2>سجل آخر خطأ</h2><pre id="lastError" class="code">لم يتم تشغيل الفحص بعد.</pre></div>
+
+</div>
+<div id="toast" class="toast"></div>
+<script>
+
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const F = () => window.WesamFirebase;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const JOD = v => (Number(v||0)).toFixed(2) + ' د.أ';
+const phoneOnly = p => String(p||'').replace(/\D/g,'').replace(/^0/,'962');
+function toast(msg, ok=true){ const t=$('toast'); t.textContent=msg; t.style.background=ok?'#111827':'#991b1b'; t.classList.add('show'); clearTimeout(window.__t); window.__t=setTimeout(()=>t.classList.remove('show'),4200); }
+function setMsg(text, cls='notice'){ const m=$('msg'); if(m){m.className=cls; m.textContent=text;} }
+function today(){ return new Date().toISOString().slice(0,10); }
+function dateText(v){ try{ const d = v && v.toDate ? v.toDate() : (v ? new Date(v) : null); return d && !isNaN(d) ? d.toLocaleString('ar-JO') : '—'; }catch(e){ return '—'; } }
+function daysBetween(v){ try{ const d = v && v.toDate ? v.toDate() : new Date(v); if(!d || isNaN(d)) return 0; return Math.floor((new Date()-d)/86400000); }catch(e){return 0;} }
+function badge(s){ const map={active:['فعال','green'],inactive:['معطل','gray'],draft:['مسودة','gray'],published:['منشور','green'],scheduled:['مجدول','blue'],ended:['منتهي','gray'],paid:['مدفوع','green'],partial:['جزئي','orange'],unpaid:['غير مدفوع','red'],open:['مفتوح','orange'],new:['جديد','orange'],review:['مراجعة','blue'],resolved:['تم الحل','green'],closed:['مغلق','gray'],urgent:['عاجل','red'],normal:['عادي','blue'],low:['منخفض','gray'],passed:['ناجح','green'],failed:['فشل','red'],done:['منجز','green'],pending:['بانتظار','orange'],valid:['ساري','green'],expired:['منتهي','red']}; const x=map[String(s||'pending')]||[String(s||'pending'),'gray']; return `<span class="badge ${x[1]}">${x[0]}</span>`; }
+function table(headers, rows, empty='لا توجد بيانات'){ return `<div class="table-wrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.join(''):`<tr><td colspan="${headers.length}" style="text-align:center;color:#64748b;padding:28px">${empty}</td></tr>`}</tbody></table></div>`; }
+async function requireFirebase(){ if(!F() || !F().db) throw new Error('Firebase غير محمل. تأكد من الإنترنت ومن ملف firebase-config.js'); await F().ensureCoreCollections({force:false}).catch(()=>null); setMsg('تم الاتصال مع Firebase: ' + F().projectId, 'notice ok'); }
+async function audit(action, description){ try{ await F().addDoc('audit_logs',{action, description, page:location.pathname, createdAt:new Date().toISOString()}); }catch(e){} }
+function csvDownload(filename, rows){ const csv = rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'); const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
+window.addEventListener('error', e => setMsg('خطأ JavaScript: ' + (e.message||'غير معروف'), 'notice err'));
+
+
+const collections=['settings','products','orders','service_requests','accounting_transactions','expenses','payments','customers','notifications','service_prices','after_service_followups','academy_lessons','qr_links','support_tickets','error_logs','diagnostics'];
+let report=[];
+async function init(){ await requireFirebase(); render([]); }
+function render(rows){ $('stats').innerHTML=`<div class="card stat"><span>مجموعات مفحوصة</span><b>${collections.length}</b></div><div class="card stat"><span>نجاح</span><b>${report.filter(r=>r.ok).length}</b></div><div class="card stat"><span>فشل</span><b>${report.filter(r=>!r.ok).length}</b></div><div class="card stat"><span>المشروع</span><b style="font-size:18px">${F()?F().projectId:'—'}</b></div>`; $('result').innerHTML=table(['المجموعة','كتابة','قراءة','تحديث','حذف','الحالة','الرسالة'], rows.map(r=>`<tr><td><b>${r.collection}</b></td><td>${badge(r.write?'passed':'failed')}</td><td>${badge(r.read?'passed':'failed')}</td><td>${badge(r.update?'passed':'failed')}</td><td>${badge(r.delete?'passed':'failed')}</td><td>${r.ok?badge('passed'):badge('failed')}</td><td>${esc(r.message)}</td></tr>`),'لم يتم تشغيل الفحص'); }
+async function testCollection(col){ const id='__health_'+Date.now()+'_'+Math.floor(Math.random()*9999); const row={collection:col,write:false,read:false,update:false,delete:false,ok:false,message:''}; try{ await F().setDoc(col,id,{status:'system',healthTest:true,createdAtText:new Date().toISOString()},true); row.write=true; const doc=await F().getDoc(col,id); row.read=!!doc; await F().setDoc(col,id,{updatedHealth:true},true); row.update=true; await F().deleteDoc(col,id); row.delete=true; row.ok=true; row.message='نجح الفحص'; }catch(e){ row.message=e.message||String(e); $('lastError').textContent='المجموعة: '+col+'\n'+row.message+'\n\n'+(e.stack||''); try{ await F().addDoc('diagnostics',{type:'firebase_health_error',collection:col,message:row.message,page:location.pathname}); }catch(_e){} } return row; }
+window.runFullTest=async function(){ report=[]; setMsg('جار تشغيل الفحص...', 'notice'); for(const c of collections){ const r=await testCollection(c); report.push(r); render(report); } setMsg(report.some(r=>!r.ok)?'انتهى الفحص مع وجود أخطاء. راجع الجدول.':'نجح فحص Firebase بالكامل.','notice '+(report.some(r=>!r.ok)?'err':'ok')); await audit('firebase_troubleshooter','تشغيل فحص كامل'); }
+window.createAllTemplates=async function(){ const res=await F().ensureCoreCollections({force:true}); $('lastError').textContent=JSON.stringify(res,null,2); toast('تم تشغيل إنشاء القوالب'); }
+window.exportReport=function(){ const blob=new Blob([JSON.stringify({project:F()?F().projectId:null,date:new Date().toISOString(),report},null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='firebase-troubleshooter-report.json'; a.click(); URL.revokeObjectURL(a.href); }
+init().catch(e=>{console.error(e); setMsg(e.message||String(e),'notice err');});
+
+})();
+</script>
+</body>
+</html>

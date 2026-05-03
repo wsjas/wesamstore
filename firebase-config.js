@@ -130,7 +130,7 @@
   async function ensureCoreCollections(options = {}) {
     if (!db) throw new Error('Firebase غير مهيأ');
     const force = options.force === true;
-    const key = 'wesam_firebase_auto_setup_done_' + firebaseConfig.projectId + '_v8';
+    const key = 'wesam_firebase_auto_setup_done_' + firebaseConfig.projectId + '_v11';
     if (!force && localStorage.getItem(key) === '1') return { skipped: true, reason: 'already-ran-on-this-browser' };
     const tasks = [
       ensureDocument('settings', 'site', DEFAULT_SITE_SETTINGS),
@@ -168,7 +168,23 @@
       ensureDocument('reviews', '_template', { status: 'system', customerName: 'قالب داخلي', rating: 5, text: '' }),
       ensureDocument('seo', 'site', { title: 'وسام للإلكترونيات', description: 'صيانة وبيع إلكترونيات في عمّان', keywords: 'وسام للإلكترونيات, صيانة شاشات, عمان' }),
       ensureDocument('notification_rules', 'site', { stockLimit: 2, lateDays: 3, followupDays: 0 }),
-      ensureDocument('status_templates', '_template', { status: 'system', collection: 'system', code: 'SYSTEM-TEMPLATE', labelAr: 'قالب داخلي', color: 'gray' })
+      ensureDocument('homepage_blocks', '_template', { status: 'system', active: false, title: 'قالب داخلي', placement: 'system', sortOrder: 0 }),
+      ensureDocument('hero_slides', '_template', { status: 'system', active: false, title: 'قالب داخلي', sortOrder: 0 }),
+      ensureDocument('loyalty_points', '_template', { status: 'system', customerName: 'قالب داخلي', phone: '', points: 0 }),
+      ensureDocument('device_handover', '_template', { status: 'system', receiptId: 'SYSTEM-TEMPLATE', customerName: 'قالب داخلي', phone: '' }),
+      ensureDocument('service_checklists', '_template', { status: 'system', title: 'قالب داخلي', items: [] }),
+      ensureDocument('admin_notes', '_template', { status: 'system', title: 'قالب داخلي', note: '' }),
+      ensureDocument('site_assets', '_template', { status: 'system', name: 'قالب داخلي', url: '' }),
+      ensureDocument('seasonal_campaigns', '_template', { status: 'system', active: false, title: 'قالب داخلي', type: 'system', priority: 0 }),
+      ensureDocument('service_check_results', '_template', { status: 'system', serviceId: 'SYSTEM-TEMPLATE', score: 0 }),
+      ensureDocument('business_goals', '_template', { status: 'system', title: 'قالب داخلي', targetSales: 0, targetRepairs: 0, targetProfit: 0 }),
+      ensureDocument('display_settings', 'site', { status: 'system', announcementEnabled: false, storeEnabled: true, repairsEnabled: true }),
+      ensureDocument('status_templates', '_template', { status: 'system', collection: 'system', code: 'SYSTEM-TEMPLATE', labelAr: 'قالب داخلي', color: 'gray' }),
+      ensureDocument('service_prices', '_template', { status: 'system', title: 'قالب داخلي', category: 'system', priceFrom: 0, priceTo: 0 }),
+      ensureDocument('after_service_followups', '_template', { status: 'system', customerName: 'قالب داخلي', phone: '', followDate: '' }),
+      ensureDocument('academy_lessons', '_template', { status: 'system', title: 'قالب داخلي', slug: 'system-template', access: 'free' }),
+      ensureDocument('qr_links', '_template', { status: 'system', title: 'قالب داخلي', url: '', active: false }),
+      ensureDocument('support_tickets', '_template', { status: 'system', title: 'قالب داخلي', customerName: 'قالب داخلي' })
     ];
     const results = await Promise.allSettled(tasks);
     const failed = results.filter(r => r.status === 'rejected');

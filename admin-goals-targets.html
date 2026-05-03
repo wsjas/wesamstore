@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>الأهداف ومؤشرات الأداء</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="wesam-error-logger.js"></script>
+  <style>
+:root{--bg:#f6f8fc;--card:#fff;--text:#142033;--muted:#64748b;--line:#e5e7eb;--orange:#f97316;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--dark:#111827;--violet:#7c3aed;--shadow:0 18px 44px rgba(15,23,42,.08);--r:20px}
+*{box-sizing:border-box} body{margin:0;font-family:Tahoma,Arial,sans-serif;background:radial-gradient(circle at top right,#fff3e5 0,#f6f8fc 42%,#eef6ff 100%);color:var(--text)}
+a{color:inherit;text-decoration:none} button,input,select,textarea{font:inherit} button{cursor:pointer}
+.wrap{max-width:1320px;margin:auto;padding:18px}.top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap}h1{margin:0;font-size:25px}.muted{color:var(--muted);line-height:1.7}.card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.full{grid-column:1/-1}label{font-size:13px;color:#475569;font-weight:900;display:block;margin-bottom:6px}input,select,textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px;background:#fff}textarea{min-height:92px;resize:vertical}.actions,.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.btn{border:0;border-radius:13px;padding:10px 14px;background:#e5e7eb;color:#111827;font-weight:800;display:inline-flex;align-items:center;gap:7px;justify-content:center}.btn.primary{background:linear-gradient(135deg,var(--orange),#fb923c);color:white}.btn.blue{background:var(--blue);color:white}.btn.green{background:var(--green);color:white}.btn.red{background:var(--red);color:white}.btn.dark{background:var(--dark);color:white}.btn.ghost{background:white;border:1px solid var(--line)}.notice{border:1px dashed #fdba74;background:#fff7ed;color:#9a3412;border-radius:16px;padding:12px;margin-bottom:14px;line-height:1.8}.notice.ok{background:#f0fdf4;border-color:#86efac;color:#166534}.notice.err{background:#fef2f2;border-color:#fca5a5;color:#991b1b}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px;background:white;box-shadow:var(--shadow)}table{width:100%;border-collapse:collapse;min-width:980px}th,td{padding:12px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top;font-size:13px}th{background:#f8fafc;color:#475569;position:sticky;top:0}.badge{display:inline-flex;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900;background:#eef2ff;color:#3730a3}.badge.green{background:#dcfce7;color:#166534}.badge.red{background:#fee2e2;color:#991b1b}.badge.orange{background:#ffedd5;color:#9a3412}.badge.blue{background:#dbeafe;color:#1e40af}.badge.gray{background:#f1f5f9;color:#334155}.badge.violet{background:#ede9fe;color:#5b21b6}.mini{padding:7px 9px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:800}.mini.red{background:#fff1f2;color:#991b1b;border-color:#fecdd3}.mini.green{background:#ecfdf5;color:#166534;border-color:#bbf7d0}.mini.blue{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.stat b{display:block;font-size:28px;margin-top:6px}.kpi{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}.ltr{direction:ltr;text-align:left}.hidden{display:none!important}.toast{position:fixed;left:18px;bottom:18px;background:#111827;color:#fff;border-radius:14px;padding:12px 16px;box-shadow:var(--shadow);display:none;z-index:50;max-width:min(560px,calc(100vw - 36px));line-height:1.7}.toast.show{display:block}.asset-img{width:70px;height:56px;object-fit:cover;border-radius:12px;border:1px solid var(--line);background:#f8fafc}.progress{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}.progress span{display:block;height:100%;background:linear-gradient(135deg,var(--orange),var(--blue));width:0%}
+@media(max-width:900px){.grid,.grid3,.grid4{grid-template-columns:1fr}.wrap{padding:12px}h1{font-size:21px}table{min-width:780px}}
+@media print{.top,.toolbar,.no-print,.btn,.mini{display:none!important}body{background:white}.card,.table-wrap{box-shadow:none;border:0}.wrap{max-width:none;padding:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><h1>الأهداف ومؤشرات الأداء</h1><div class="muted">تحديد أهداف بيع وصيانة وربح ومقارنة الإنجاز الفعلي من بيانات Firebase.</div></div>
+    <div class="actions no-print"><a class="btn ghost" href="admin.html">رجوع للوحة</a><button class="btn blue" onclick="location.reload()">تحديث</button><button class="btn ghost" onclick="window.print()">طباعة</button><a class="btn primary" href="index.html" target="_blank">فتح الموقع</a></div>
+  </div>
+  <div id="msg" class="notice">جار الاتصال مع Firebase...</div>
+  
+<div class="grid4"><div class="card stat"><span>مبيعات فعلية</span><b id="salesActual">0</b></div><div class="card stat"><span>صيانة فعلية</span><b id="repairsActual">0</b></div><div class="card stat"><span>مصروفات</span><b id="expensesActual">0</b></div><div class="card stat"><span>ربح تقديري</span><b id="profitActual">0</b></div></div>
+<div class="card"><h2>إضافة هدف عمل</h2><form id="goalForm" class="grid"><input type="hidden" id="editId"><div><label>اسم الهدف</label><input id="title" required placeholder="هدف الشهر"></div><div><label>الفترة</label><select id="period"><option value="daily">يومي</option><option value="weekly">أسبوعي</option><option value="monthly">شهري</option><option value="yearly">سنوي</option></select></div><div><label>من تاريخ</label><input id="startDate" type="date"></div><div><label>إلى تاريخ</label><input id="endDate" type="date"></div><div><label>هدف البيع</label><input id="targetSales" type="number" step="0.01" value="0"></div><div><label>هدف الصيانة</label><input id="targetRepairs" type="number" step="0.01" value="0"></div><div><label>هدف الربح الصافي</label><input id="targetProfit" type="number" step="0.01" value="0"></div><div><label>الحالة</label><select id="active"><option value="true">فعال</option><option value="false">مغلق</option></select></div><div class="full"><label>ملاحظات</label><textarea id="note"></textarea></div><div class="full actions"><button class="btn primary">حفظ الهدف</button><button type="button" class="btn ghost" onclick="resetForm()">تفريغ</button></div></form></div>
+<div class="card"><h2>الأهداف ونسبة الإنجاز</h2><div id="list"></div></div>
+
+</div>
+<div id="toast" class="toast"></div>
+<script>
+(function(){
+'use strict';
+
+const $ = id => document.getElementById(id);
+const F = () => window.WesamFirebase;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const JOD = v => (Number(v||0)).toFixed(2) + ' د.أ';
+const phoneOnly = p => String(p||'').replace(/\D/g,'').replace(/^0/,'962');
+function toast(msg, ok=true){ const t=$('toast'); t.textContent=msg; t.style.background=ok?'#111827':'#991b1b'; t.classList.add('show'); clearTimeout(window.__t); window.__t=setTimeout(()=>t.classList.remove('show'),3800); }
+function setMsg(text, cls='notice'){ const m=$('msg'); if(m){m.className=cls; m.textContent=text;} }
+function today(){ return new Date().toISOString().slice(0,10); }
+function dateText(v){ try{ const d = v && v.toDate ? v.toDate() : (v ? new Date(v) : null); return d && !isNaN(d) ? d.toLocaleString('ar-JO') : '—'; }catch(e){ return '—'; } }
+function badge(s){ const map={active:['فعال','green'],inactive:['معطل','gray'],draft:['مسودة','gray'],published:['منشور','green'],scheduled:['مجدول','blue'],ended:['منتهي','gray'],paid:['مدفوع','green'],partial:['جزئي','orange'],unpaid:['غير مدفوع','red'],ordered:['مطلوب','blue'],received:['مستلم','green'],cancelled:['ملغي','red'],pending:['بانتظار','orange'],passed:['ناجح','green'],failed:['فشل','red'],review:['مراجعة','orange']}; const x=map[String(s||'pending')]||[String(s||'pending'),'gray']; return `<span class="badge ${x[1]}">${x[0]}</span>`; }
+function table(headers, rows, empty='لا توجد بيانات'){ return `<div class="table-wrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.join(''):`<tr><td colspan="${headers.length}" style="text-align:center;color:#64748b;padding:28px">${empty}</td></tr>`}</tbody></table></div>`; }
+async function requireFirebase(){ if(!F() || !F().db) throw new Error('Firebase غير محمل. تأكد من الإنترنت ومن ملف firebase-config.js'); await F().ensureCoreCollections({force:false}).catch(()=>null); setMsg('تم الاتصال مع Firebase: ' + F().projectId, 'notice ok'); }
+async function audit(action, description){ try{ await F().addDoc('audit_logs',{action, description, page:location.pathname, createdAt:new Date().toISOString()}); }catch(e){} }
+function csvDownload(filename, rows){ const csv = rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'); const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
+window.addEventListener('error', e => setMsg('خطأ JavaScript: ' + (e.message||'غير معروف'), 'notice err'));
+
+
+let goals=[], orders=[], repairs=[], expenses=[];
+function amount(o){return Number(o.total??o.finalTotal??o.amount??0)} function repairAmount(r){return Number(r.total??r.cost??r.repairCost??r.amount??r.paidAmount??0)} function inRange(row,s,e){ const d=String(row.date||row.createdAt?.toDate?.().toISOString?.().slice(0,10)||row.createdAt||'').slice(0,10); return (!s||d>=s)&&(!e||d<=e); }
+async function init(){ await requireFirebase(); $('startDate').value=today().slice(0,8)+'01'; $('endDate').value=today(); $('goalForm').addEventListener('submit', saveGoal); await load(); render(); }
+async function load(){ goals=await F().getCollection('business_goals',{limit:500}).catch(()=>[]); orders=await F().getCollection('orders',{limit:1500}).catch(()=>[]); repairs=await F().getCollection('service_requests',{limit:1500}).catch(()=>[]); expenses=await F().getCollection('expenses',{limit:1500}).catch(()=>[]); }
+function calc(s,e){ const sales=orders.filter(o=>inRange(o,s,e)).reduce((a,b)=>a+amount(b),0); const rep=repairs.filter(r=>inRange(r,s,e)).reduce((a,b)=>a+repairAmount(b),0); const exp=expenses.filter(x=>inRange(x,s,e)).reduce((a,b)=>a+Number(b.amount||0),0); return {sales,repairs:rep,expenses:exp,profit:sales+rep-exp}; }
+async function saveGoal(e){ e.preventDefault(); const id=$('editId').value; const data={title:$('title').value.trim(), period:$('period').value, startDate:$('startDate').value, endDate:$('endDate').value, targetSales:Number($('targetSales').value||0), targetRepairs:Number($('targetRepairs').value||0), targetProfit:Number($('targetProfit').value||0), active:$('active').value==='true', note:$('note').value.trim()}; if(!data.title) return toast('أدخل اسم الهدف',false); if(id) await F().setDoc('business_goals',id,data,true); else await F().addDoc('business_goals',data); toast('تم حفظ الهدف'); resetForm(); await load(); render(); }
+window.resetForm=function(){ $('goalForm').reset(); $('editId').value=''; $('startDate').value=today().slice(0,8)+'01'; $('endDate').value=today(); };
+window.editGoal=function(id){ const g=goals.find(x=>x.id===id); if(!g) return; ['title','period','startDate','endDate','targetSales','targetRepairs','targetProfit','note'].forEach(k=>$(k).value=g[k]||''); $('active').value=String(g.active!==false); $('editId').value=id; scrollTo({top:0,behavior:'smooth'}); };
+window.deleteGoal=async function(id){ if(!confirm('حذف الهدف؟')) return; await F().deleteDoc('business_goals',id); await load(); render(); };
+function pct(a,t){return t?Math.min(100,Math.round(a/t*100)):0}
+window.render=function(){ const base=calc(today().slice(0,8)+'01', today()); $('salesActual').textContent=JOD(base.sales); $('repairsActual').textContent=JOD(base.repairs); $('expensesActual').textContent=JOD(base.expenses); $('profitActual').textContent=JOD(base.profit); $('list').innerHTML=table(['الهدف','الفترة','البيع','الصيانة','الصافي','الحالة','إجراءات'], goals.map(g=>{ const c=calc(g.startDate,g.endDate); const ps=pct(c.sales,Number(g.targetSales||0)), pr=pct(c.repairs,Number(g.targetRepairs||0)), pp=pct(c.profit,Number(g.targetProfit||0)); return `<tr><td><b>${esc(g.title)}</b><br><span class="muted">${esc(g.startDate||'')} ⇐ ${esc(g.endDate||'')}</span></td><td>${esc(g.period)}</td><td>${JOD(c.sales)} / ${JOD(g.targetSales)}<div class="progress"><span style="width:${ps}%"></span></div>${ps}%</td><td>${JOD(c.repairs)} / ${JOD(g.targetRepairs)}<div class="progress"><span style="width:${pr}%"></span></div>${pr}%</td><td>${JOD(c.profit)} / ${JOD(g.targetProfit)}<div class="progress"><span style="width:${pp}%"></span></div>${pp}%</td><td>${badge(g.active!==false?'active':'inactive')}</td><td><button class="mini blue" onclick="editGoal('${g.id}')">تعديل</button> <button class="mini red" onclick="deleteGoal('${g.id}')">حذف</button></td></tr>`; })); };
+init().catch(e=>{console.error(e); setMsg(e.message||String(e),'notice err');});
+
+})();
+</script>
+</body>
+</html>
