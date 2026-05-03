@@ -1,6 +1,10 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+    // قواعد تجربة مؤقتة لتشغيل لوحة التحكم والاختبار.
+    // بعد التأكد أن كل شيء يعمل، يجب استبدالها بقواعد المدير المحمية.
+
     match /settings/{docId} { allow read, write: if true; }
     match /config/{docId} { allow read, write: if true; }
     match /products/{docId} { allow read, write: if true; }
@@ -12,9 +16,12 @@ service cloud.firestore {
     match /notifications/{docId} { allow read, write: if true; }
     match /accounting_transactions/{docId} { allow read, create, update, delete: if true; }
     match /expenses/{docId} { allow read, create, update, delete: if true; }
+    match /payments/{docId} { allow read, create, update, delete: if true; }
     match /customers/{docId} { allow read, create, update, delete: if true; }
     match /technicians/{docId} { allow read, create, update, delete: if true; }
     match /admin_users/{docId} { allow read, write: if true; }
+    match /audit_logs/{docId} { allow read, create, update, delete: if true; }
+
     match /{document=**} { allow read, write: if false; }
   }
 }

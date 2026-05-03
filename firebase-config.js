@@ -33,6 +33,8 @@
   const app = init();
   const db = app && firebase.firestore ? firebase.firestore() : null;
   const auth = app && firebase.auth ? firebase.auth() : null;
+  const storage = app && firebase.storage ? firebase.storage() : null;
+  try { if (auth && firebase.auth.Auth.Persistence) auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch (e) { console.warn('تعذر ضبط استمرارية تسجيل الدخول:', e.message); }
 
   const cleanObject = (obj) => Object.fromEntries(Object.entries(obj || {}).filter(([, v]) => v !== undefined));
   const isSystemRow = (row) => row && (row.__system === true || row.id === '_template' || row.status === 'system');
@@ -124,7 +126,7 @@
   async function ensureCoreCollections(options = {}) {
     if (!db) throw new Error('Firebase غير مهيأ');
     const force = options.force === true;
-    const key = 'wesam_firebase_auto_setup_done_' + firebaseConfig.projectId + '_v4';
+    const key = 'wesam_firebase_auto_setup_done_' + firebaseConfig.projectId + '_v5';
     if (!force && localStorage.getItem(key) === '1') return { skipped: true, reason: 'already-ran-on-this-browser' };
     const tasks = [
       ensureDocument('settings', 'site', DEFAULT_SITE_SETTINGS),
@@ -138,6 +140,8 @@
       ensureDocument('notifications', '_template', { status: 'system', title: 'قالب داخلي', read: true }),
       ensureDocument('accounting_transactions', '_template', { status: 'system', type: 'income', amount: 0, description: 'قالب داخلي' }),
       ensureDocument('expenses', '_template', { status: 'system', amount: 0, category: 'system' }),
+      ensureDocument('payments', '_template', { status: 'system', amount: 0, sourceCollection: 'system', sourceId: 'SYSTEM-TEMPLATE' }),
+      ensureDocument('audit_logs', '_template', { status: 'system', action: 'template', description: 'قالب داخلي' }),
       ensureDocument('customers', '_template', { status: 'system', name: 'قالب داخلي', phone: '' }),
       ensureDocument('technicians', '_template', { status: 'system', name: 'قالب داخلي', phone: '' }),
       ensureDocument('admin_users', '_template', { status: 'system', name: 'قالب داخلي', role: 'admin' })
@@ -197,7 +201,27 @@
     return payload;
   }
 
+
+  function generateReadableId(prefix) {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const n = Math.floor(1000 + Math.random() * 9000);
+    return `${prefix}-${y}${m}${day}-${n}`;
+  }
+
+  async function addAuditLog(action, data = {}) {
+    if (!db) return null;
+    try {
+      return await addDoc('audit_logs', { action, ...data });
+    } catch (e) {
+      console.warn('تعذر حفظ سجل العملية:', e.message);
+      return null;
+    }
+  }
+
   window.WESAM_FIREBASE_CONFIG = firebaseConfig;
-  window.WesamFirebase = { app, db, auth, projectId: firebaseConfig.projectId, getCollection, listenCollection, addDoc, setDoc, deleteDoc, getDoc, toDateText, loadProducts, normalizeProduct, loadSettings, saveSettings, ensureCoreCollections, serverTimestamp: () => firebase.firestore.FieldValue.serverTimestamp() };
+  window.WesamFirebase = { app, db, auth, storage, projectId: firebaseConfig.projectId, getCollection, listenCollection, addDoc, setDoc, deleteDoc, getDoc, toDateText, loadProducts, normalizeProduct, loadSettings, saveSettings, ensureCoreCollections, generateReadableId, addAuditLog, serverTimestamp: () => firebase.firestore.FieldValue.serverTimestamp() };
   autoRunSetup();
 })();

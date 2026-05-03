@@ -1,60 +1,6 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>الإعدادات - وسام للإلكترونيات</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin-styles.css">
-<style>
-.settings-grid{display:grid;grid-template-columns:240px 1fr;gap:20px}.settings-nav{background:#fff;border:1px solid var(--border);border-radius:12px;padding:8px;height:fit-content}.settings-nav button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;color:var(--navy-2);text-align:right}.settings-nav button:hover{background:var(--bg)}.settings-nav button.active{background:var(--orange-light);color:var(--orange-dark)}.toggle{position:relative;width:38px;height:22px;background:var(--border);border-radius:999px;cursor:pointer;transition:.2s;flex-shrink:0}.toggle.on{background:var(--green)}.toggle:after{content:"";position:absolute;top:2px;right:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.2s}.toggle.on:after{right:auto;left:2px}.setting-row{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--border-light)}.setting-row:last-child{border-bottom:none}.setting-row .title{font-weight:700;color:var(--navy);margin-bottom:2px}.setting-row .desc{font-size:12px;color:var(--slate)}.save-msg{margin:0 0 16px;padding:12px 14px;border-radius:12px;font-weight:700}.save-msg.ok{background:#DCFCE7;color:#166534}.save-msg.err{background:#FEE2E2;color:#991B1B}.save-msg.info{background:#EFF6FF;color:#1D4ED8}@media(max-width:880px){.settings-grid{grid-template-columns:1fr}}
-</style>
-</head>
-<body>
-<div id="root"></div>
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics-compat.js"></script>
-<script src="firebase-config.js"></script>
-<script type="text/babel" src="admin-components.jsx"></script>
-<script type="text/babel" src="admin-shell.jsx"></script>
-<script type="text/babel">
-const {useState,useEffect}=React;
-const DEFAULT_SETTINGS={storeName:'وسام للإلكترونيات',siteName:'وسام للإلكترونيات',tagline:'صيانة وبيع ومتجر إلكتروني',phone:'0790781206',whatsapp:'+962790781206',email:'info@wesam.store',website:'https://wesam.store',address:'عمّان - الأردن',currency:'JOD',currencyLabel:'د.أ',timezone:'Asia/Amman',businessHours:'السبت - الخميس: 9 ص - 9 م\nالجمعة: 2 ع - 9 م',storeEnabled:true,repairsEnabled:true,ordersEnabled:true,notifications:{orders:true,repairs:true,stock:true,reviews:false,marketing:true,sms:true,email:false},payments:{cash:true,card:false,transfer:false},shipping:{insideAmman:2,outsideAmman:5,freeAbove:50}};
-function SettingsPage(){
- const [lang,setLang]=useState('ar'),[section,setSection]=useState('store'),[form,setForm]=useState(DEFAULT_SETTINGS),[msg,setMsg]=useState({type:'info',text:'جاري تحميل الإعدادات من Firebase...'}),[saving,setSaving]=useState(false);
- const isAr=lang==='ar',t=T[lang];
- useEffect(()=>{(async()=>{try{await window.WesamFirebase.ensureCoreCollections({force:true});const data=await window.WesamFirebase.loadSettings(); if(data) setForm({...DEFAULT_SETTINGS,...data,notifications:{...DEFAULT_SETTINGS.notifications,...(data.notifications||{})},payments:{...DEFAULT_SETTINGS.payments,...(data.payments||{})},shipping:{...DEFAULT_SETTINGS.shipping,...(data.shipping||{})}}); setMsg(null);}catch(e){console.error(e);setMsg({type:'err',text:'تعذر تحميل الإعدادات من Firebase. تحقق من القواعد والاتصال.'})}})()},[]);
- const setField=(k,v)=>setForm(f=>({...f,[k]:v}));
- const setNested=(group,k,v)=>setForm(f=>({...f,[group]:{...(f[group]||{}),[k]:v}}));
- const save=async()=>{setSaving(true);setMsg(null);try{const payload={...form,siteName:form.storeName,updatedFrom:'admin-settings.html'};await window.WesamFirebase.saveSettings(payload);setMsg({type:'ok',text:'تم حفظ الإعدادات في Firebase بنجاح داخل المشروع: '+window.WesamFirebase.projectId});}catch(e){console.error(e);setMsg({type:'err',text:'فشل حفظ الإعدادات في Firebase. غالبًا المشكلة من Firestore Rules.'});}finally{setSaving(false)}};
- const sections=[['store',<AICON.Settings/>,isAr?'بيانات المتجر':'Store Info'],['notifications',<AICON.Bell/>,isAr?'الإشعارات':'Notifications'],['payment',<AICON.Tag/>,isAr?'الدفع والشحن':'Payment & Shipping'],['users',<AICON.Users/>,isAr?'المستخدمون':'Users & Roles']];
- const Toggle=({on,onClick})=><div className={`toggle ${on?'on':''}`} onClick={onClick}></div>;
- const Input=({label,value,onChange,type='text'})=><div className="form-group"><label>{label}</label><input className="form-control" type={type} value={value??''} onChange={e=>onChange(type==='number'?Number(e.target.value):e.target.value)}/></div>;
- return <AdminShell active="settings" lang={lang} setLang={setLang}>
-  <div className="page-head"><div><h1>{t.settings}</h1><div className="sub">{isAr?'كل تعديل هنا يُحفظ مباشرة في Firestore داخل settings/site و config/site — المشروع: '+(window.WesamFirebase&&window.WesamFirebase.projectId||'')+'':'Saved in Firestore'}</div></div><button className="btn btn-primary" onClick={save} disabled={saving}><AICON.Check/> {saving?'جاري الحفظ...':isAr?'حفظ في Firebase':'Save'}</button></div>
-  {msg&&<div className={`save-msg ${msg.type}`}>{msg.text}</div>}
-  <div className="settings-grid"><div className="settings-nav">{sections.map(s=><button key={s[0]} className={section===s[0]?'active':''} onClick={()=>setSection(s[0])}>{s[1]}<span>{s[2]}</span></button>)}</div><div>
-   {section==='store'&&<div className="card"><div className="card-head"><h3>بيانات المتجر</h3></div><div className="card-body">
-    <div className="form-row"><Input label="اسم المتجر" value={form.storeName} onChange={v=>setField('storeName',v)}/><Input label="الوصف" value={form.tagline} onChange={v=>setField('tagline',v)}/></div>
-    <div className="form-row"><Input label="رقم الهاتف" value={form.phone} onChange={v=>setField('phone',v)}/><Input label="واتساب" value={form.whatsapp} onChange={v=>setField('whatsapp',v)}/></div>
-    <div className="form-row"><Input label="البريد الإلكتروني" value={form.email} onChange={v=>setField('email',v)}/><Input label="الموقع" value={form.website} onChange={v=>setField('website',v)}/></div>
-    <Input label="العنوان" value={form.address} onChange={v=>setField('address',v)}/>
-    <div className="form-row"><Input label="رمز العملة" value={form.currency} onChange={v=>setField('currency',v)}/><Input label="اسم العملة الظاهر" value={form.currencyLabel} onChange={v=>setField('currencyLabel',v)}/></div>
-    <div className="form-group"><label>ساعات العمل</label><textarea className="form-control" value={form.businessHours||''} onChange={e=>setField('businessHours',e.target.value)}></textarea></div>
-    {[['storeEnabled','تشغيل المتجر'],['repairsEnabled','تشغيل طلبات الصيانة'],['ordersEnabled','تشغيل طلبات البيع']].map(([k,l])=><div className="setting-row" key={k}><div><div className="title">{l}</div><div className="desc">يُستخدم في الصفحات الرئيسية لإظهار أو إخفاء القسم</div></div><Toggle on={!!form[k]} onClick={()=>setField(k,!form[k])}/></div>)}
-   </div></div>}
-   {section==='notifications'&&<div className="card"><div className="card-head"><h3>الإشعارات</h3></div><div className="card-body">{[['orders','طلبات المتجر الجديدة'],['repairs','طلبات الصيانة الجديدة'],['stock','تنبيهات المخزون'],['reviews','تقييمات العملاء'],['sms','إشعارات SMS'],['email','إشعارات البريد'],['marketing','حملات تسويقية']].map(([k,l])=><div className="setting-row" key={k}><div><div className="title">{l}</div><div className="desc">يحفظ داخل settings/site.notifications.{k}</div></div><Toggle on={!!form.notifications?.[k]} onClick={()=>setNested('notifications',k,!form.notifications?.[k])}/></div>)}</div></div>}
-   {section==='payment'&&<div className="card"><div className="card-head"><h3>الدفع والشحن</h3></div><div className="card-body">{[['cash','الدفع كاش'],['card','بطاقة ائتمان'],['transfer','تحويل بنكي']].map(([k,l])=><div className="setting-row" key={k}><div><div className="title">{l}</div></div><Toggle on={!!form.payments?.[k]} onClick={()=>setNested('payments',k,!form.payments?.[k])}/></div>)}<div className="form-row"><Input type="number" label="الشحن داخل عمّان" value={form.shipping?.insideAmman} onChange={v=>setNested('shipping','insideAmman',v)}/><Input type="number" label="الشحن خارج عمّان" value={form.shipping?.outsideAmman} onChange={v=>setNested('shipping','outsideAmman',v)}/></div><Input type="number" label="حد الشحن المجاني" value={form.shipping?.freeAbove} onChange={v=>setNested('shipping','freeAbove',v)}/></div></div>}
-   {section==='users'&&<AdminUsers/>}
-  </div></div></AdminShell>;
-}
-function AdminUsers(){const [users,setUsers]=useState([]),[name,setName]=useState(''),[role,setRole]=useState('admin'),[msg,setMsg]=useState('');const load=()=>window.WesamFirebase.getCollection('admin_users',{limit:100}).then(setUsers).catch(console.error);useEffect(load,[]);const add=async()=>{if(!name.trim())return;await window.WesamFirebase.addDoc('admin_users',{name,role,status:'active'});setName('');setMsg('تم حفظ المستخدم في Firebase');load()};return <div className="card"><div className="card-head"><h3>المستخدمون والصلاحيات</h3></div><div className="card-body"><div className="form-row"><input className="form-control" placeholder="اسم المستخدم" value={name} onChange={e=>setName(e.target.value)}/><select className="form-control" value={role} onChange={e=>setRole(e.target.value)}><option value="admin">مدير</option><option value="shop">مشرف متجر</option><option value="tech">فني</option></select><button className="btn btn-primary" onClick={add}><AICON.Plus/> إضافة</button></div>{msg&&<div className="save-msg ok">{msg}</div>}<div className="table-wrap"><table className="tbl"><thead><tr><th>الاسم</th><th>الدور</th><th>الحالة</th></tr></thead><tbody>{users.map(u=><tr key={u.id}><td>{u.name}</td><td><span className="pill new">{u.role}</span></td><td>{u.status||'active'}</td></tr>)}</tbody></table></div></div></div>}
-ReactDOM.createRoot(document.getElementById('root')).render(<SettingsPage/>);
-</script>
-</body>
-</html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>تحويل إلى لوحة التحكم</title>
+<meta http-equiv="refresh" content="0; url=admin.html#settings">
+<style>body{font-family:Tahoma,Arial,sans-serif;background:#f6f8fc;display:grid;place-items:center;min-height:100vh;margin:0;color:#142033}.box{background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:22px;box-shadow:0 16px 38px rgba(15,23,42,.08);text-align:center}a{color:#f97316;font-weight:800}</style></head>
+<body><div class="box"><h2>تم دمج هذه الصفحة داخل لوحة التحكم الجديدة</h2><p>سيتم تحويلك تلقائيًا...</p><a href="admin.html#settings">فتح القسم الآن</a></div><script>location.replace('admin.html#settings');</script></body></html>

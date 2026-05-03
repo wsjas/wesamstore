@@ -1,257 +1,286 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة التحكم - وسام للإلكترونيات</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin-styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>لوحة تحكم وسام للإلكترونيات - الإصدار المحسن</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-analytics-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <style>
+    :root{--bg:#f6f8fc;--card:#fff;--text:#142033;--muted:#64748b;--line:#e5e7eb;--orange:#f97316;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--dark:#111827;--violet:#7c3aed;--shadow:0 18px 44px rgba(15,23,42,.08);--r:20px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:radial-gradient(circle at top right,#fff3e5 0,#f6f8fc 38%,#eef6ff 100%);color:var(--text)}
+    a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:none!important}.muted{color:var(--muted)}.nowrap{white-space:nowrap}.ltr{direction:ltr;text-align:left}.danger-text{color:var(--red);font-weight:800}.ok-text{color:var(--green);font-weight:800}
+    .app{display:grid;grid-template-columns:292px minmax(0,1fr);min-height:100vh}.side{background:rgba(15,23,42,.98);color:#fff;padding:18px;position:sticky;top:0;height:100vh;overflow:auto}.brand{display:flex;gap:12px;align-items:center;padding:12px;border-radius:20px;background:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,.05));margin-bottom:14px;border:1px solid rgba(255,255,255,.12)}.brand-logo{width:52px;height:52px;border-radius:18px;background:linear-gradient(135deg,var(--orange),#1d4ed8);display:grid;place-items:center;font-weight:900;font-size:24px}.brand h1{font-size:17px;margin:0 0 4px}.brand p{font-size:12px;color:#cbd5e1;margin:0}.nav{display:grid;gap:7px}.nav button{border:0;background:transparent;color:#dbe4f0;border-radius:15px;padding:12px 13px;text-align:right;display:flex;gap:10px;align-items:center;transition:.15s}.nav button:hover,.nav button.active{background:#fff;color:#111827;transform:translateX(-2px)}.nav small{margin-inline-start:auto;background:rgba(255,255,255,.13);padding:2px 8px;border-radius:999px;font-size:11px}.nav button.active small{background:#eef2ff;color:#3730a3}.side-actions{display:grid;gap:8px;margin-top:12px}.main{padding:20px;min-width:0}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}.top h2{margin:0;font-size:25px}.top small{color:var(--muted)}.actions,.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.btn{border:0;border-radius:13px;padding:10px 14px;background:#e5e7eb;color:#111827;font-weight:800;display:inline-flex;align-items:center;gap:7px;justify-content:center}.btn.primary{background:linear-gradient(135deg,var(--orange),#fb923c);color:#fff}.btn.blue{background:var(--blue);color:#fff}.btn.green{background:var(--green);color:#fff}.btn.red{background:var(--red);color:#fff}.btn.dark{background:var(--dark);color:#fff}.btn.violet{background:var(--violet);color:#fff}.btn.ghost{background:#fff;border:1px solid var(--line)}.btn:disabled{opacity:.55;cursor:not-allowed}.mini{padding:7px 9px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:800}.mini.red{background:#fff1f2;color:#991b1b;border-color:#fecdd3}.mini.green{background:#ecfdf5;color:#166534;border-color:#bbf7d0}.mini.blue{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.grid{display:grid;gap:14px}.cards{grid-template-columns:repeat(4,minmax(0,1fr))}.two{grid-template-columns:repeat(2,minmax(0,1fr))}.three{grid-template-columns:repeat(3,minmax(0,1fr))}.card{background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}.stat span{color:var(--muted);font-size:13px}.stat b{display:block;font-size:29px;margin-top:6px}.stat em{font-style:normal;font-size:12px;color:var(--muted)}.section{display:none}.section.active{display:block}.notice{border:1px dashed #fdba74;background:#fff7ed;color:#9a3412;border-radius:16px;padding:12px;margin-bottom:14px;line-height:1.7}.notice.ok{border-color:#86efac;background:#f0fdf4;color:#166534}.notice.err{border-color:#fca5a5;background:#fef2f2;color:#991b1b}.toolbar{margin-bottom:12px}.search{min-width:260px;flex:1;border:1px solid var(--line);border-radius:14px;padding:11px 13px;background:#fff}.filter{border:1px solid var(--line);border-radius:14px;padding:10px 11px;background:#fff}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:var(--shadow)}table{width:100%;border-collapse:collapse;min-width:940px}th,td{padding:12px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}th{background:#f8fafc;font-size:13px;color:#475569;position:sticky;top:0}td{font-size:13px}.badge{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900;background:#eef2ff;color:#3730a3}.badge.green{background:#dcfce7;color:#166534}.badge.red{background:#fee2e2;color:#991b1b}.badge.orange{background:#ffedd5;color:#9a3412}.badge.blue{background:#dbeafe;color:#1e40af}.badge.gray{background:#f1f5f9;color:#334155}.badge.violet{background:#ede9fe;color:#5b21b6}.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{display:grid;gap:6px}.field label{font-size:13px;color:#475569;font-weight:900}.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:14px;padding:11px;background:#fff;width:100%;min-width:0}.field textarea{min-height:96px;resize:vertical}.full{grid-column:1/-1}.modal{position:fixed;inset:0;background:rgba(15,23,42,.58);display:none;align-items:center;justify-content:center;padding:18px;z-index:80}.modal.show{display:flex}.modal-box{width:min(920px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:26px;box-shadow:0 28px 80px rgba(0,0,0,.28);padding:18px}.modal-head{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:14px}.modal-head h3{margin:0}.toast{position:fixed;left:18px;bottom:18px;z-index:100;background:#111827;color:#fff;padding:12px 16px;border-radius:14px;display:none;box-shadow:var(--shadow);max-width:min(520px,calc(100vw - 36px));line-height:1.6}.toast.show{display:block}.login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#111827,#0f4c81);z-index:200;display:none;align-items:center;justify-content:center;padding:18px}.login-card{width:min(460px,100%);background:#fff;border-radius:28px;padding:22px;box-shadow:0 30px 90px rgba(0,0,0,.35)}.login-card h2{margin:0 0 6px}.login-card p{color:var(--muted);line-height:1.7}.status-dot{width:10px;height:10px;border-radius:999px;background:#f59e0b;display:inline-block}.status-dot.ok{background:#22c55e}.status-dot.err{background:#ef4444}.kpi-line{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--line);padding:8px 0}.print-area{display:none}.empty{padding:22px;text-align:center;color:var(--muted)}.thumb{width:48px;height:48px;border-radius:12px;object-fit:cover;background:#f1f5f9;border:1px solid var(--line)}
+    @media(max-width:1080px){.app{grid-template-columns:1fr}.side{height:auto;position:relative}.nav{grid-template-columns:repeat(2,minmax(0,1fr))}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.three,.two{grid-template-columns:1fr}.top{flex-direction:column}.main{padding:14px}.form{grid-template-columns:1fr}}
+    @media(max-width:600px){.cards{grid-template-columns:1fr}.nav{grid-template-columns:1fr}.brand-logo{width:46px;height:46px}.search{min-width:100%}.modal{padding:8px}.modal-box{border-radius:18px;padding:14px}.side{padding:12px}.top h2{font-size:21px}}
+    @media print{body{background:#fff}.side,.top,.toolbar,.notice,.btn,.mini,.modal-head button,.login-screen{display:none!important}.app{display:block}.main{padding:0}.section{display:none!important}.print-area{display:block!important}.card,.table-wrap{box-shadow:none;border:0}.modal{position:static;display:block;background:#fff;padding:0}.modal-box{box-shadow:none;max-height:none;width:100%;padding:0}.modal:not(.show){display:none!important}}
+  </style>
 </head>
 <body>
-<div id="root"></div><noscript><div style="padding:30px;font-family:Tahoma"><h2>لوحة التحكم تحتاج JavaScript</h2><p><a href="admin-accounting.html">فتح المحاسبة مباشرة</a></p></div></noscript>
-
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
-
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics-compat.js"></script>
-<script src="firebase-config.js"></script>
-<script type="text/babel" src="admin-components.jsx"></script>
-
-<script type="text/babel">
-const { useState, useEffect } = React;
-
-function AdminShell({ active, lang, setLang, children }) {
-  const t = T[lang];
-  useEffect(() => {
-    document.documentElement.lang = lang;
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-    document.body.classList.toggle('ltr', lang !== 'ar');
-  }, [lang]);
-
-  const links = [
-    { section: 'main', items: [
-      { key: 'dashboard', href: 'admin.html', icon: <AICON.Dashboard /> },
-      { key: 'repairs', href: 'admin-repairs.html', icon: <AICON.Wrench />, badge: 12 },
-      { key: 'orders', href: 'admin-orders.html', icon: <AICON.Cart />, badge: 8 },
-    ]},
-    { section: 'management', items: [
-      { key: 'products', href: 'admin-products.html', icon: <AICON.Box /> },
-      { key: 'customers', href: 'admin-customers.html', icon: <AICON.Users /> },
-      { key: 'offers', href: 'admin-offers.html', icon: <AICON.Tag /> },
-      { key: 'techs', href: 'admin-techs.html', icon: <AICON.HardHat /> },
-    ]},
-    { section: 'system', items: [
-      { key: 'reports', href: 'admin-reports.html', icon: <AICON.Chart /> },
-      { key: 'settings', href: 'admin-settings.html', icon: <AICON.Settings /> },
-    ]},
-  ];
-
-  return (
-    <div className="admin-layout">
-      <aside className="sidebar">
-        <div className="sidebar-brand">
-          <div className="mark">و</div>
-          <div>
-            <div className="name">{lang === 'ar' ? 'وسام للإلكترونيات' : 'Wesam Electronics'}</div>
-            <div className="sub">{lang === 'ar' ? 'لوحة الإدارة' : 'Admin Panel'}</div>
-          </div>
-        </div>
-        {links.map(group => (
-          <div key={group.section}>
-            <div className="sidebar-section">
-              <div className="label">{group.section === 'main' ? t.nav_main : group.section === 'management' ? t.nav_management : t.nav_system}</div>
-            </div>
-            {group.items.map(item => (
-              <a key={item.key} href={item.href} className={`nav-link ${active === item.key ? 'active' : ''}`}>
-                {item.icon}
-                <span>{t[item.key]}</span>
-                {item.badge && <span className="badge">{item.badge}</span>}
-              </a>
-            ))}
-          </div>
-        ))}
-        <div className="sidebar-foot">
-          <div className="user-card">
-            <div className="user-avatar">أ</div>
-            <div style={{flex: 1, minWidth: 0}}>
-              <div className="name">{lang === 'ar' ? 'أحمد وسام' : 'Ahmed Wesam'}</div>
-              <div className="role">{t.admin_role}</div>
-            </div>
-            <a href="index.html" className="action-btn" title={t.logout}><AICON.Logout /></a>
-          </div>
-        </div>
-      </aside>
-
-      <main className="main">
-        <div className="topbar">
-          <div className="search-input">
-            <AICON.Search />
-            <input type="text" placeholder={t.search} />
-          </div>
-          <div className="topbar-actions">
-            <button className="lang-toggle" onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}>
-              {lang === 'ar' ? 'EN' : 'العربية'}
-            </button>
-            <button className="icon-btn"><AICON.Mail /><span className="dot"></span></button>
-            <button className="icon-btn"><AICON.Bell /><span className="dot"></span></button>
-          </div>
-        </div>
-        <div className="content">{children}</div>
-      </main>
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <h2>دخول لوحة التحكم</h2>
+      <p>هذه حماية مبدئية عبر Firebase Auth. تستطيع استعمال الدخول المؤقت أثناء التجربة، ثم تفعيل قواعد المدير لاحقًا.</p>
+      <form id="loginForm" class="form">
+        <div class="field full"><label>البريد الإلكتروني</label><input id="loginEmail" type="email" autocomplete="username" placeholder="admin@example.com"></div>
+        <div class="field full"><label>كلمة المرور</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+        <div class="full actions"><button class="btn primary" type="submit">تسجيل الدخول</button><button class="btn ghost" type="button" id="localUnlockBtn">دخول مؤقت للتجربة</button></div>
+      </form>
+      <div id="loginMsg" class="notice hidden"></div>
     </div>
-  );
-}
+  </div>
 
-function Dashboard() {
-  const [lang, setLang] = useState('ar');
-  const t = T[lang];
-  const isAr = lang === 'ar';
+  <div class="app">
+    <aside class="side">
+      <div class="brand"><div class="brand-logo">و</div><div><h1>وسام للإلكترونيات</h1><p><span id="connDot" class="status-dot"></span> <span id="projectInfo">جار الفحص...</span></p></div></div>
+      <div class="nav" id="nav"></div>
+      <div class="side-actions">
+        <button class="btn ghost" id="btnExportBackup">نسخة احتياطية JSON</button>
+        <button class="btn ghost" id="btnSignOut">خروج</button>
+      </div>
+    </aside>
+    <main class="main">
+      <div class="top">
+        <div><h2 id="pageTitle">الرئيسية</h2><small id="pageSub">لوحة موحدة محسنة مرتبطة مع Firebase</small></div>
+        <div class="actions"><button class="btn ghost" id="btnInit">تهيئة Firebase</button><button class="btn blue" id="btnRefresh">تحديث</button><a class="btn primary" href="index.html" target="_blank">فتح الموقع</a></div>
+      </div>
+      <div id="notice" class="notice">النسخة الثانية تضيف: تسجيل دخول مبدئي، إشعارات، مصروفات، ذمم ودفعات، تصدير CSV، نسخ احتياطي، وتقارير أفضل.</div>
+      <section id="dashboard" class="section active"></section>
+      <section id="products" class="section"></section>
+      <section id="orders" class="section"></section>
+      <section id="repairs" class="section"></section>
+      <section id="customers" class="section"></section>
+      <section id="accounting" class="section"></section>
+      <section id="expenses" class="section"></section>
+      <section id="payments" class="section"></section>
+      <section id="coupons" class="section"></section>
+      <section id="technicians" class="section"></section>
+      <section id="notifications" class="section"></section>
+      <section id="settings" class="section"></section>
+      <section id="diagnostics" class="section"></section>
+      <div id="printArea" class="print-area"></div>
+    </main>
+  </div>
 
-  const kpis = [
-    { color: 'orange', icon: <AICON.Wrench />, num: '47', label: isAr ? 'طلبات صيانة نشطة' : 'Active Repairs', trend: '+12%', dir: 'up', compare: isAr ? 'مقارنة بالأسبوع الماضي' : 'vs last week' },
-    { color: 'blue', icon: <AICON.Cart />, num: '128', label: isAr ? 'طلبات المتجر' : 'Shop Orders', trend: '+8%', dir: 'up', compare: isAr ? 'هذا الشهر' : 'this month' },
-    { color: 'green', icon: <AICON.Chart />, num: '4,820 د.أ', label: isAr ? 'الإيرادات (الشهر)' : 'Revenue (Month)', trend: '+24%', dir: 'up', compare: isAr ? 'مقارنة بالشهر الماضي' : 'vs last month' },
-    { color: 'purple', icon: <AICON.Users />, num: '892', label: isAr ? 'إجمالي العملاء' : 'Total Customers', trend: '+5%', dir: 'up', compare: isAr ? '+38 عميل جديد' : '+38 new' },
+  <div class="modal" id="modal"><div class="modal-box"><div class="modal-head"><h3 id="modalTitle">نافذة</h3><button class="btn red" type="button" onclick="closeModal()">إغلاق</button></div><div id="modalBody"></div></div></div>
+  <div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+  const allowedSections = ['dashboard','products','orders','repairs','customers','accounting','expenses','payments','coupons','technicians','notifications','settings','diagnostics'];
+  const initialSection = allowedSections.includes(location.hash.replace('#','')) ? location.hash.replace('#','') : 'dashboard';
+  const state = { current:initialSection, ready:false, products:[], orders:[], repairs:[], customers:[], manualCustomers:[], tx:[], expenses:[], payments:[], coupons:[], technicians:[], notifications:[], messages:[], subscribers:[], settings:{}, filters:{}, user:null, localUnlock:false };
+  const sections = [
+    ['dashboard','الرئيسية','📊',''],['products','المنتجات','📦','products'],['orders','طلبات البيع','🛒','orders'],['repairs','طلبات الصيانة','🛠️','repairs'],['customers','العملاء','👥','customers'],['accounting','المحاسبة','💰',''],['expenses','المصروفات','🧾','expenses'],['payments','الدفعات والذمم','💳','payments'],['coupons','العروض والكوبونات','🏷️','coupons'],['technicians','الفنيون','👨‍🔧','technicians'],['notifications','الإشعارات','🔔','notifications'],['settings','الإعدادات','⚙️',''],['diagnostics','الفحص','🧪','']
   ];
+  const $ = id => document.getElementById(id);
+  const WF = () => window.WesamFirebase;
+  const JOD = v => (Number(v||0)).toFixed(2) + ' د.أ';
+  const val = v => (v === undefined || v === null || v === '') ? '—' : String(v);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const onlyPhone = p => String(p||'').replace(/\D/g,'').replace(/^0/,'962');
+  const nowId = prefix => prefix + '-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + Math.floor(1000 + Math.random()*9000);
+  function dateText(v){ try{ const d = v && v.toDate ? v.toDate() : (v ? new Date(v) : null); return d && !isNaN(d) ? d.toLocaleString('ar-JO') : '—'; }catch(e){ return '—'; } }
+  function dateOnly(v){ try{ const d = v && v.toDate ? v.toDate() : (v ? new Date(v) : new Date()); return d && !isNaN(d) ? d.toISOString().slice(0,10) : ''; }catch(e){ return ''; } }
+  function toast(msg, ok=true){ const t=$('toast'); t.textContent=msg; t.style.background=ok?'#111827':'#991b1b'; t.classList.add('show'); clearTimeout(window.__toastTimer); window.__toastTimer=setTimeout(()=>t.classList.remove('show'),4200); }
+  function showError(e){ console.error(e); toast(e && e.message ? e.message : String(e), false); }
+  window.closeModal = function(){ $('modal').classList.remove('show'); $('modalBody').innerHTML=''; };
+  function openModal(title, html){ $('modalTitle').textContent=title; $('modalBody').innerHTML=html; $('modal').classList.add('show'); }
+  function table(headers, rows, empty='لا توجد بيانات'){ return `<div class="table-wrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.join(''):`<tr><td colspan="${headers.length}" class="empty">${empty}</td></tr>`}</tbody></table></div>`; }
+  function statusBadge(status){ const s=String(status||'new'); const map={new:['جديد','orange'],confirmed:['مؤكد','blue'],processing:['قيد التنفيذ','violet'],preparing:['تحضير','blue'],delivering:['توصيل','blue'],completed:['مكتمل','green'],delivered:['تم التسليم','green'],cancelled:['ملغي','red'],pending:['بانتظار','orange'],paid:['مدفوع','green'],partial:['جزئي','orange'],unpaid:['غير مدفوع','red'],active:['فعال','green'],inactive:['معطل','gray']}; const x=map[s]||[s,'gray']; return `<span class="badge ${x[1]}">${x[0]}</span>`; }
+  function getAmount(o){ return Number(o.total ?? o.finalTotal ?? o.amount ?? o.sellTotal ?? o.grandTotal ?? 0); }
+  function getRepairAmount(r){ return Number(r.total ?? r.cost ?? r.repairCost ?? r.amount ?? r.paidAmount ?? r.finalTotal ?? 0); }
+  function getPaid(row){ return Number(row.paidAmount ?? row.paid ?? row.deposit ?? 0); }
+  function getRemaining(row,total){ return Math.max(0, Number(total||0) - getPaid(row)); }
+  function setConn(ok,msg){ $('connDot').className='status-dot '+(ok?'ok':'err'); $('projectInfo').textContent=msg; }
 
-  const recentRepairs = [];
+  function bindNav(){
+    $('nav').innerHTML = sections.map(s => `<button type="button" data-sec="${s[0]}" class="${s[0]===state.current?'active':''}"><span>${s[2]}</span><b>${s[1]}</b>${s[3]?`<small id="navCount-${s[0]}">0</small>`:''}</button>`).join('');
+    $('nav').addEventListener('click', e => { const b=e.target.closest('button[data-sec]'); if(b) showSection(b.dataset.sec); });
+  }
+  function updateNavCounts(){ const counts={products:state.products.length,orders:state.orders.length,repairs:state.repairs.length,customers:state.customers.length,expenses:state.expenses.length,payments:state.payments.length,coupons:state.coupons.length,technicians:state.technicians.length,notifications:state.notifications.filter(n=>!n.read).length}; for(const k in counts){ const el=$('navCount-'+k); if(el) el.textContent=counts[k]; } }
+  function showSection(id){ if(!allowedSections.includes(id)) id='dashboard'; state.current=id; if(location.hash.replace('#','')!==id) history.replaceState(null,'','#'+id); document.querySelectorAll('.section').forEach(x=>x.classList.remove('active')); const sec=$(id); if(sec) sec.classList.add('active'); document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.sec===id)); const s=sections.find(x=>x[0]===id); $('pageTitle').textContent=s?s[1]:id; render(); }
 
-  const recentOrders = [];
+  async function safe(label, fn, fb){ try{ return await fn(); } catch(e){ console.warn(label,e); return fb; } }
+  async function loadAll(){
+    if(!WF() || !WF().db) throw new Error('Firebase غير محمل. تأكد من الإنترنت ومن firebase-config.js');
+    setConn(true, 'Firebase: ' + WF().projectId);
+    state.settings = await safe('settings', () => WF().loadSettings(), {});
+    state.products = await safe('products', () => WF().getCollection('products',{limit:1200}), []);
+    state.orders = await safe('orders', () => WF().getCollection('orders',{limit:1200}), []);
+    state.repairs = await safe('service_requests', () => WF().getCollection('service_requests',{limit:1200}), []);
+    state.tx = await safe('accounting_transactions', () => WF().getCollection('accounting_transactions',{limit:1200}), []);
+    state.expenses = await safe('expenses', () => WF().getCollection('expenses',{limit:1200}), []);
+    state.payments = await safe('payments', () => WF().getCollection('payments',{limit:1200}), []);
+    state.coupons = await safe('coupons', () => WF().getCollection('coupons',{limit:600}), []);
+    state.technicians = await safe('technicians', () => WF().getCollection('technicians',{limit:600}), []);
+    state.notifications = await safe('notifications', () => WF().getCollection('notifications',{limit:800}), []);
+    state.messages = await safe('contact_messages', () => WF().getCollection('contact_messages',{limit:600}), []);
+    state.subscribers = await safe('subscribers', () => WF().getCollection('subscribers',{limit:600}), []);
+    state.manualCustomers = await safe('customers', () => WF().getCollection('customers',{limit:900}), []);
+    state.customers = buildCustomers();
+    state.ready = true;
+    updateNavCounts();
+    render();
+  }
+  function buildCustomers(){
+    const map = new Map();
+    function add(row, source, amount){ const phone = row.phone || row.customerPhone || row.mobile || row.whatsapp || ''; const key = phone ? String(phone).replace(/\D/g,'') : (row.customerName || row.name || row.id || Math.random()); const cur = map.get(key) || {id:key,name:row.customerName||row.name||'عميل بدون اسم',phone, sources:new Set(), count:0,total:0,last:'', rows:[]}; cur.name = row.customerName || row.name || cur.name; cur.phone = phone || cur.phone; cur.sources.add(source); cur.count += 1; cur.total += Number(amount||0); cur.last = dateText(row.createdAt||row.updatedAt) || cur.last; cur.rows.push({source,row}); map.set(key,cur); }
+    state.orders.forEach(o=>add(o,'بيع',getAmount(o)));
+    state.repairs.forEach(r=>add(r,'صيانة',getRepairAmount(r)));
+    state.manualCustomers.forEach(c=>add(c,'يدوي',Number(c.total||0)));
+    state.subscribers.forEach(c=>add(c,'مشترك',0));
+    return [...map.values()].map(c=>({...c,sources:[...c.sources].join('، ')}));
+  }
 
-  const months = isAr ? ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو'] : ['Jan','Feb','Mar','Apr','May','Jun','Jul'];
-  const chartData = [62, 45, 78, 53, 89, 71, 95];
+  function render(){
+    if(!state.ready && state.current!=='diagnostics') return;
+    updateNavCounts();
+    const fn = {dashboard:renderDashboard,products:renderProducts,orders:renderOrders,repairs:renderRepairs,customers:renderCustomers,accounting:renderAccounting,expenses:renderExpenses,payments:renderPayments,coupons:renderCoupons,technicians:renderTechnicians,notifications:renderNotifications,settings:renderSettings,diagnostics:renderDiagnostics}[state.current];
+    if(fn) fn();
+  }
 
-  return (
-    <AdminShell active="dashboard" lang={lang} setLang={setLang}>
-      <div className="page-head">
-        <div>
-          <h1>{t.welcome} 👋</h1>
-          <div className="sub">{t.welcome_sub}</div>
-        </div>
-        <div className="page-head-actions">
-          <button className="btn btn-outline"><AICON.Download /> {t.export}</button>
-          <a href="admin-repairs.html" className="btn btn-primary"><AICON.Plus /> {isAr ? 'طلب صيانة جديد' : 'New Repair'}</a>
-        </div>
+  function renderDashboard(){
+    const sales=state.orders.reduce((s,o)=>s+getAmount(o),0), repairs=state.repairs.reduce((s,r)=>s+getRepairAmount(r),0), exp=totalExpenses(), paid=totalPaid(), remaining=totalRemaining();
+    const newOrders=state.orders.filter(o=>(o.status||'new')==='new').length, newRepairs=state.repairs.filter(r=>(r.status||'new')==='new').length;
+    $('dashboard').innerHTML = `
+      <div class="grid cards">
+        <div class="card stat"><span>طلبات بيع جديدة</span><b>${newOrders}</b><em>من ${state.orders.length} طلب</em></div>
+        <div class="card stat"><span>طلبات صيانة جديدة</span><b>${newRepairs}</b><em>من ${state.repairs.length} طلب</em></div>
+        <div class="card stat"><span>الإيرادات التقديرية</span><b>${JOD(sales+repairs)}</b><em>بيع + صيانة</em></div>
+        <div class="card stat"><span>الصافي التقريبي</span><b>${JOD(sales+repairs+manualIncome()-exp)}</b><em>بعد المصروفات</em></div>
       </div>
-
-      <div className="kpi-grid">
-        {kpis.map((k, i) => (
-          <div key={i} className={`kpi ${k.color}`}>
-            <div className="kpi-head">
-              <div className="ico">{k.icon}</div>
-              <span className={`trend ${k.dir}`}><AICON.ArrowUp /> {k.trend}</span>
-            </div>
-            <div className="num">{k.num}</div>
-            <div className="label">{k.label}</div>
-            <div className="compare">{k.compare}</div>
-          </div>
-        ))}
+      <div class="grid three" style="margin-top:14px">
+        <div class="card"><h3>مختصر مالي</h3><div class="kpi-line"><span>المبيعات</span><b>${JOD(sales)}</b></div><div class="kpi-line"><span>الصيانة</span><b>${JOD(repairs)}</b></div><div class="kpi-line"><span>دفعات مسجلة</span><b>${JOD(paid)}</b></div><div class="kpi-line"><span>ذمم متبقية</span><b class="danger-text">${JOD(remaining)}</b></div><div class="kpi-line"><span>المصروفات</span><b>${JOD(exp)}</b></div></div>
+        <div class="card"><h3>آخر طلبات البيع</h3>${miniList(state.orders.slice(0,6),'order')}</div>
+        <div class="card"><h3>آخر طلبات الصيانة</h3>${miniList(state.repairs.slice(0,6),'repair')}</div>
       </div>
+      <div class="grid two" style="margin-top:14px"><div class="card"><h3>تنبيهات مهمة</h3>${alertsHtml()}</div><div class="card"><h3>اختصارات</h3><div class="actions"><button class="btn primary" onclick="WAdmin.productForm()">إضافة منتج</button><button class="btn blue" onclick="WAdmin.repairForm()">إضافة صيانة</button><button class="btn green" onclick="WAdmin.txForm('income')">إيراد</button><button class="btn red" onclick="WAdmin.expenseForm()">مصروف</button></div></div></div>`;
+  }
+  function miniList(rows,type){ if(!rows.length) return '<div class="empty">لا يوجد</div>'; return rows.map(r=>`<div class="kpi-line"><span>${esc(r.orderId||r.requestId||r.customerName||r.name||r.id)}</span><b>${type==='order'?JOD(getAmount(r)):statusBadge(r.status)}</b></div>`).join(''); }
+  function alertsHtml(){ const low=state.products.filter(p=>Number(p.stock??p.quantity??0)<=0); const unpaid=[...state.orders,...state.repairs].filter(r=>getRemaining(r,getAmount(r)||getRepairAmount(r))>0); const unread=state.notifications.filter(n=>!n.read); const items=[`منتجات غير متوفرة: ${low.length}`,`ذمم متبقية: ${unpaid.length}`,`إشعارات غير مقروءة: ${unread.length}`,`رسائل تواصل: ${state.messages.length}`]; return items.map(x=>`<div class="kpi-line"><span>${x}</span><button class="mini" onclick="WAdmin.createNotification('${esc(x)}')">حفظ كتذكير</button></div>`).join(''); }
 
-      <div className="grid-2" style={{marginBottom: 20}}>
-        <div className="card chart-card">
-          <div className="card-head" style={{padding: 0, border: 'none', marginBottom: 8}}>
-            <div>
-              <h3>{isAr ? 'الإيرادات والطلبات' : 'Revenue & Orders'}</h3>
-              <div className="sub">{isAr ? 'آخر ٧ أشهر' : 'Last 7 months'}</div>
-            </div>
-            <div className="tab-pills">
-              <button className="tab-pill active">{isAr ? 'شهرياً' : 'Monthly'}</button>
-              <button className="tab-pill">{isAr ? 'أسبوعياً' : 'Weekly'}</button>
-            </div>
-          </div>
-          <div className="bars">
-            {chartData.map((v, i) => (
-              <div key={i} className="bar-col">
-                <div className="bar-stack">
-                  <div className="bar-fill" style={{height: `${v}%`}}></div>
-                </div>
-                <div className="bar-label">{months[i]}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="card">
-          <div className="card-head">
-            <h3>{isAr ? 'أحدث الطلبات' : 'Recent Orders'}</h3>
-            <a href="admin-orders.html" style={{fontSize: 13, color: 'var(--orange-dark)', fontWeight: 600}}>{isAr ? 'عرض الكل' : 'View all'}</a>
-          </div>
-          <div style={{padding: '4px 20px 16px'}}>
-            {recentOrders.map((o, i) => (
-              <div key={i} className="list-item">
-                <div className="av" style={{background: 'var(--blue-bg)', color: 'var(--blue)'}}><AICON.Box /></div>
-                <div className="body">
-                  <div className="title">{o.product}</div>
-                  <div className="desc">{isAr ? 'الكمية' : 'Qty'}: {o.qty}</div>
-                </div>
-                <div className="meta">
-                  <div style={{fontWeight: 700, color: 'var(--navy)'}}>{o.amount}</div>
-                  <span className={`pill ${o.status}`} style={{marginTop: 4}}>{o.status === 'shipped' ? (isAr ? 'مُرسل' : 'Shipped') : o.status === 'pending' ? (isAr ? 'بانتظار' : 'Pending') : (isAr ? 'مكتمل' : 'Done')}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+  function renderProducts(){
+    const q=(state.filters.products||'').toLowerCase(); const rows=state.products.filter(p=>!q || JSON.stringify(p).toLowerCase().includes(q));
+    $('products').innerHTML = `<div class="toolbar"><input class="search" placeholder="بحث عن منتج" value="${esc(state.filters.products||'')}" oninput="WAdmin.setFilter('products',this.value)"><button class="btn primary" onclick="WAdmin.productForm()">إضافة منتج</button><button class="btn blue" onclick="WAdmin.exportCSV('products')">تصدير CSV</button></div>` + table(['الصورة','الاسم','التصنيف','البيع','الشراء','المخزون','الحالة','إجراءات'], rows.map(p=>`<tr><td>${p.image||p.imageUrl?`<img class="thumb" src="${esc(p.image||p.imageUrl)}" alt="">`:'—'}</td><td><b>${esc(p.name||p.title)}</b><br><span class="muted">${esc(p.id)}</span></td><td>${esc(p.category||p.cat||'')}</td><td>${JOD(p.sell??p.price)}</td><td>${JOD(p.buyPrice??p.buy??0)}</td><td>${Number(p.stock??p.quantity??0)}</td><td>${p.active!==false?statusBadge('active'):statusBadge('inactive')}</td><td><button class="mini blue" onclick="WAdmin.productForm('${p.id}')">تعديل</button> <button class="mini red" onclick="WAdmin.deleteRow('products','${p.id}')">حذف</button></td></tr>`));
+  }
 
-      <div className="card">
-        <div className="card-head">
-          <div>
-            <h3>{isAr ? 'أحدث طلبات الصيانة' : 'Latest Repair Tickets'}</h3>
-            <div className="sub">{isAr ? 'آخر ٥ طلبات' : 'Latest 5 tickets'}</div>
-          </div>
-          <a href="admin-repairs.html" className="btn btn-outline btn-sm">{isAr ? 'عرض الكل' : 'View all'}</a>
-        </div>
-        <div className="table-wrap">
-          <table className="tbl">
-            <thead>
-              <tr>
-                <th>{isAr ? 'رقم الطلب' : 'Ticket'}</th>
-                <th>{isAr ? 'العميل' : 'Customer'}</th>
-                <th>{isAr ? 'الخدمة' : 'Service'}</th>
-                <th>{isAr ? 'الحالة' : 'Status'}</th>
-                <th>{isAr ? 'التاريخ' : 'Date'}</th>
-                <th>{isAr ? 'المبلغ' : 'Amount'}</th>
-                <th>{isAr ? 'إجراءات' : 'Actions'}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentRepairs.map(r => (
-                <tr key={r.id}>
-                  <td style={{fontWeight: 700, color: 'var(--orange-dark)'}}>{r.id}</td>
-                  <td>
-                    <div className="av-row">
-                      <div className="av">{r.initial}</div>
-                      <div className="name">{r.customer}</div>
-                    </div>
-                  </td>
-                  <td>{r.service}</td>
-                  <td><span className={`pill ${r.status}`}>{r.statusLbl}</span></td>
-                  <td style={{color: 'var(--slate)'}}>{r.date}</td>
-                  <td style={{fontWeight: 700}}>{r.amount}</td>
-                  <td>
-                    <div className="row-actions">
-                      <button className="action-btn"><AICON.Eye /></button>
-                      <button className="action-btn"><AICON.Edit /></button>
-                      <button className="action-btn"><AICON.Print /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </AdminShell>
-  );
-}
+  function renderOrders(){
+    const q=(state.filters.orders||'').toLowerCase(); const rows=state.orders.filter(o=>!q||JSON.stringify(o).toLowerCase().includes(q));
+    $('orders').innerHTML = `<div class="toolbar"><input class="search" placeholder="بحث في طلبات البيع" value="${esc(state.filters.orders||'')}" oninput="WAdmin.setFilter('orders',this.value)"><button class="btn primary" onclick="WAdmin.orderForm()">إضافة طلب يدوي</button><button class="btn blue" onclick="WAdmin.exportCSV('orders')">تصدير CSV</button></div>` + table(['رقم الطلب','العميل','الهاتف','الإجمالي','المدفوع','المتبقي','الحالة','إجراءات'], rows.map(o=>rowForOrder(o,'orders')));
+  }
+  function rowForOrder(o,col){ const total=getAmount(o); const rem=getRemaining(o,total); return `<tr><td><b>${esc(o.orderId||o.id)}</b><br><span class="muted">${dateText(o.createdAt)}</span></td><td>${esc(o.customerName||o.name||'')}</td><td>${esc(o.phone||o.customerPhone||'')}</td><td>${JOD(total)}</td><td>${JOD(getPaid(o))}</td><td>${rem?`<b class="danger-text">${JOD(rem)}</b>`:JOD(0)}</td><td>${statusSelect(col,o.id,o.status||'new')}</td><td><button class="mini" onclick="WAdmin.viewDoc('${col}','${o.id}')">عرض</button> <button class="mini green" onclick="WAdmin.paymentForm('${col}','${o.id}')">دفعة</button> <button class="mini" onclick="WAdmin.printDoc('${col}','${o.id}')">طباعة</button> <button class="mini red" onclick="WAdmin.deleteRow('${col}','${o.id}')">حذف</button></td></tr>`; }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<Dashboard />);
+  function renderRepairs(){
+    const q=(state.filters.repairs||'').toLowerCase(); const rows=state.repairs.filter(r=>!q||JSON.stringify(r).toLowerCase().includes(q));
+    $('repairs').innerHTML = `<div class="toolbar"><input class="search" placeholder="بحث في طلبات الصيانة" value="${esc(state.filters.repairs||'')}" oninput="WAdmin.setFilter('repairs',this.value)"><button class="btn primary" onclick="WAdmin.repairForm()">إضافة طلب صيانة</button><button class="btn blue" onclick="WAdmin.exportCSV('repairs')">تصدير CSV</button></div>` + table(['رقم الصيانة','العميل','الهاتف','الجهاز','التكلفة','المدفوع','الحالة','الفني','إجراءات'], rows.map(r=>{ const total=getRepairAmount(r); return `<tr><td><b>${esc(r.requestId||r.id)}</b><br><span class="muted">${dateText(r.createdAt)}</span></td><td>${esc(r.customerName||r.name||'')}</td><td>${esc(r.phone||r.customerPhone||'')}</td><td>${esc(r.deviceType||r.device||'')}</td><td>${JOD(total)}</td><td>${JOD(getPaid(r))}</td><td>${statusSelect('service_requests',r.id,r.status||'new')}</td><td>${esc(r.technicianName||r.technician||'—')}</td><td><button class="mini" onclick="WAdmin.viewDoc('service_requests','${r.id}')">عرض</button> <button class="mini blue" onclick="WAdmin.repairForm('${r.id}')">تعديل</button> <button class="mini green" onclick="WAdmin.paymentForm('service_requests','${r.id}')">دفعة</button> <button class="mini" onclick="WAdmin.printDoc('service_requests','${r.id}')">طباعة</button> <button class="mini red" onclick="WAdmin.deleteRow('service_requests','${r.id}')">حذف</button></td></tr>`; }));
+  }
+  function statusSelect(col,id,val){ const opts=['new','confirmed','processing','preparing','delivering','completed','delivered','cancelled']; return `<select class="filter" onchange="WAdmin.updateStatus('${col}','${id}',this.value)">${opts.map(o=>`<option value="${o}" ${o===val?'selected':''}>${o}</option>`).join('')}</select>`; }
+
+  function renderCustomers(){
+    const q=(state.filters.customers||'').toLowerCase(); const rows=state.customers.filter(c=>!q||JSON.stringify(c).toLowerCase().includes(q));
+    $('customers').innerHTML = `<div class="toolbar"><input class="search" placeholder="بحث عن عميل" value="${esc(state.filters.customers||'')}" oninput="WAdmin.setFilter('customers',this.value)"><button class="btn primary" onclick="WAdmin.customerForm()">إضافة عميل</button><button class="btn blue" onclick="WAdmin.exportCSV('customers')">تصدير CSV</button></div>` + table(['الاسم','الهاتف','المصدر','عدد العمليات','إجمالي تقريبي','آخر تعامل','إجراءات'], rows.map(c=>`<tr><td><b>${esc(c.name)}</b></td><td><a class="ok-text" target="_blank" href="https://wa.me/${onlyPhone(c.phone)}">${esc(c.phone)}</a></td><td>${esc(c.sources)}</td><td>${c.count}</td><td>${JOD(c.total)}</td><td>${esc(c.last)}</td><td><button class="mini" onclick="WAdmin.viewCustomer('${esc(c.id)}')">السجل</button> <a class="mini green" href="https://wa.me/${onlyPhone(c.phone)}" target="_blank">واتساب</a></td></tr>`));
+  }
+
+  function manualIncome(){ return state.tx.filter(t=>t.type!=='expense').reduce((s,t)=>s+Number(t.amount||0),0); }
+  function totalExpenses(){ return state.expenses.reduce((s,e)=>s+Number(e.amount||0),0) + state.tx.filter(t=>t.type==='expense').reduce((s,t)=>s+Number(t.amount||0),0); }
+  function totalPaid(){ return state.payments.reduce((s,p)=>s+Number(p.amount||0),0) + [...state.orders,...state.repairs].reduce((s,r)=>s+getPaid(r),0); }
+  function totalRemaining(){ return [...state.orders.map(o=>[o,getAmount(o)]), ...state.repairs.map(r=>[r,getRepairAmount(r)])].reduce((s,[r,total])=>s+getRemaining(r,total),0); }
+  function renderAccounting(){
+    const sales=state.orders.reduce((s,o)=>s+getAmount(o),0), repairs=state.repairs.reduce((s,r)=>s+getRepairAmount(r),0), inc=manualIncome(), exp=totalExpenses(), net=sales+repairs+inc-exp;
+    const rows=[...state.orders.map(o=>({date:o.createdAt,type:'بيع',desc:o.orderId||o.id,amount:getAmount(o),src:'orders',id:o.id})),...state.repairs.map(r=>({date:r.createdAt,type:'صيانة',desc:r.requestId||r.id,amount:getRepairAmount(r),src:'service_requests',id:r.id})),...state.tx.map(t=>({date:t.createdAt||t.date,type:t.type==='expense'?'مصروف':'إيراد يدوي',desc:t.description||t.category||'',amount:Number(t.amount||0)*(t.type==='expense'?-1:1),src:'accounting_transactions',id:t.id})),...state.expenses.map(e=>({date:e.createdAt||e.date,type:'مصروف',desc:e.description||e.category||'',amount:-Number(e.amount||0),src:'expenses',id:e.id}))];
+    $('accounting').innerHTML = `<div class="grid cards"><div class="card stat"><span>بيع</span><b>${JOD(sales)}</b></div><div class="card stat"><span>صيانة</span><b>${JOD(repairs)}</b></div><div class="card stat"><span>مصروفات</span><b>${JOD(exp)}</b></div><div class="card stat"><span>الصافي</span><b>${JOD(net)}</b></div></div><div class="toolbar" style="margin-top:14px"><button class="btn green" onclick="WAdmin.txForm('income')">إضافة إيراد</button><button class="btn red" onclick="WAdmin.expenseForm()">إضافة مصروف</button><button class="btn blue" onclick="WAdmin.exportCSV('accounting')">تصدير CSV</button><button class="btn ghost" onclick="WAdmin.printReport()">طباعة تقرير</button></div>` + table(['التاريخ','النوع','الوصف','المبلغ','المصدر','إجراءات'], rows.map(r=>`<tr><td>${dateText(r.date)}</td><td>${esc(r.type)}</td><td>${esc(r.desc)}</td><td>${r.amount<0?`<b class="danger-text">${JOD(r.amount)}</b>`:`<b class="ok-text">${JOD(r.amount)}</b>`}</td><td>${esc(r.src)}</td><td><button class="mini" onclick="WAdmin.viewDoc('${r.src}','${r.id}')">عرض</button></td></tr>`));
+  }
+
+  function renderExpenses(){
+    $('expenses').innerHTML = `<div class="toolbar"><button class="btn red" onclick="WAdmin.expenseForm()">إضافة مصروف</button><button class="btn blue" onclick="WAdmin.exportCSV('expenses')">تصدير CSV</button></div>` + table(['التاريخ','التصنيف','الوصف','المبلغ','طريقة الدفع','إجراءات'], state.expenses.map(e=>`<tr><td>${dateText(e.createdAt||e.date)}</td><td>${esc(e.category||'مصروف')}</td><td>${esc(e.description||'')}</td><td><b class="danger-text">${JOD(e.amount)}</b></td><td>${esc(e.paymentMethod||'')}</td><td><button class="mini blue" onclick="WAdmin.expenseForm('${e.id}')">تعديل</button> <button class="mini red" onclick="WAdmin.deleteRow('expenses','${e.id}')">حذف</button></td></tr>`));
+  }
+  function renderPayments(){
+    const debtRows=[...state.orders.map(o=>({kind:'بيع',col:'orders',id:o.id,ref:o.orderId||o.id,name:o.customerName||o.name,phone:o.phone||o.customerPhone,total:getAmount(o),paid:getPaid(o)})),...state.repairs.map(r=>({kind:'صيانة',col:'service_requests',id:r.id,ref:r.requestId||r.id,name:r.customerName||r.name,phone:r.phone||r.customerPhone,total:getRepairAmount(r),paid:getPaid(r)}))].filter(x=>Math.max(0,x.total-x.paid)>0);
+    $('payments').innerHTML = `<div class="grid cards"><div class="card stat"><span>إجمالي المدفوع</span><b>${JOD(totalPaid())}</b></div><div class="card stat"><span>إجمالي الذمم</span><b>${JOD(totalRemaining())}</b></div><div class="card stat"><span>دفعات منفصلة</span><b>${state.payments.length}</b></div><div class="card stat"><span>طلبات عليها ذمم</span><b>${debtRows.length}</b></div></div><h3>الذمم المتبقية</h3>` + table(['النوع','الرقم','العميل','الهاتف','الإجمالي','المدفوع','المتبقي','إجراءات'], debtRows.map(d=>`<tr><td>${esc(d.kind)}</td><td>${esc(d.ref)}</td><td>${esc(d.name)}</td><td>${esc(d.phone)}</td><td>${JOD(d.total)}</td><td>${JOD(d.paid)}</td><td><b class="danger-text">${JOD(d.total-d.paid)}</b></td><td><button class="mini green" onclick="WAdmin.paymentForm('${d.col}','${d.id}')">تسجيل دفعة</button></td></tr>`)) + `<h3>سجل الدفعات</h3>` + table(['التاريخ','المصدر','المرجع','المبلغ','ملاحظة','إجراءات'], state.payments.map(p=>`<tr><td>${dateText(p.createdAt||p.date)}</td><td>${esc(p.sourceCollection||p.source||'')}</td><td>${esc(p.sourceId||p.reference||'')}</td><td>${JOD(p.amount)}</td><td>${esc(p.note||'')}</td><td><button class="mini red" onclick="WAdmin.deleteRow('payments','${p.id}')">حذف</button></td></tr>`));
+  }
+  function renderCoupons(){
+    $('coupons').innerHTML = `<div class="toolbar"><button class="btn primary" onclick="WAdmin.couponForm()">إضافة كوبون</button><button class="btn blue" onclick="WAdmin.exportCSV('coupons')">تصدير CSV</button></div>` + table(['الكود','النوع','القيمة','الحالة','النهاية','إجراءات'], state.coupons.map(c=>`<tr><td><b>${esc(c.code)}</b></td><td>${esc(c.discountType||c.type||'fixed')}</td><td>${esc(c.value||c.amount||0)}</td><td>${c.active!==false?statusBadge('active'):statusBadge('inactive')}</td><td>${esc(c.expiresAt||c.endDate||'')}</td><td><button class="mini blue" onclick="WAdmin.couponForm('${c.id}')">تعديل</button> <button class="mini red" onclick="WAdmin.deleteRow('coupons','${c.id}')">حذف</button></td></tr>`));
+  }
+  function renderTechnicians(){
+    $('technicians').innerHTML = `<div class="toolbar"><button class="btn primary" onclick="WAdmin.techForm()">إضافة فني</button></div>` + table(['الاسم','الهاتف','التخصص','الحالة','ملاحظات','إجراءات'], state.technicians.map(t=>`<tr><td><b>${esc(t.name)}</b></td><td>${esc(t.phone)}</td><td>${esc(t.specialty||'')}</td><td>${t.active!==false?statusBadge('active'):statusBadge('inactive')}</td><td>${esc(t.notes||'')}</td><td><button class="mini blue" onclick="WAdmin.techForm('${t.id}')">تعديل</button> <button class="mini red" onclick="WAdmin.deleteRow('technicians','${t.id}')">حذف</button></td></tr>`));
+  }
+  function renderNotifications(){
+    $('notifications').innerHTML = `<div class="toolbar"><button class="btn primary" onclick="WAdmin.notificationForm()">إضافة إشعار</button><button class="btn ghost" onclick="WAdmin.markAllRead()">تعليم الكل كمقروء</button></div>` + table(['الحالة','العنوان','النص','التاريخ','إجراءات'], state.notifications.map(n=>`<tr><td>${n.read?statusBadge('completed'):statusBadge('new')}</td><td><b>${esc(n.title)}</b></td><td>${esc(n.body||n.message||'')}</td><td>${dateText(n.createdAt)}</td><td><button class="mini green" onclick="WAdmin.setDoc('notifications','${n.id}',{read:true})">مقروء</button> <button class="mini red" onclick="WAdmin.deleteRow('notifications','${n.id}')">حذف</button></td></tr>`));
+  }
+  function renderSettings(){ const s=state.settings||{}; $('settings').innerHTML = `<div class="card"><form class="form" onsubmit="WAdmin.saveSettings(event)"><div class="field"><label>اسم المتجر</label><input name="storeName" value="${esc(s.storeName||s.siteName||'وسام للإلكترونيات')}"></div><div class="field"><label>الهاتف</label><input name="phone" value="${esc(s.phone||'')}"></div><div class="field"><label>واتساب</label><input name="whatsapp" value="${esc(s.whatsapp||'')}"></div><div class="field"><label>البريد</label><input name="email" value="${esc(s.email||'')}"></div><div class="field full"><label>العنوان</label><input name="address" value="${esc(s.address||'')}"></div><div class="field full"><label>الشعار / رابط الصورة</label><input name="logo" value="${esc(s.logo||'')}"></div><div class="field"><label>المتجر مفعل</label><select name="storeEnabled"><option value="true" ${s.storeEnabled!==false?'selected':''}>نعم</option><option value="false" ${s.storeEnabled===false?'selected':''}>لا</option></select></div><div class="field"><label>الصيانة مفعلة</label><select name="repairsEnabled"><option value="true" ${s.repairsEnabled!==false?'selected':''}>نعم</option><option value="false" ${s.repairsEnabled===false?'selected':''}>لا</option></select></div><div class="field"><label>رسوم التوصيل الافتراضية</label><input name="deliveryFee" type="number" step="0.01" value="${esc(s.deliveryFee||0)}"></div><div class="field"><label>العملة</label><input name="currencyLabel" value="${esc(s.currencyLabel||'د.أ')}"></div><div class="full"><button class="btn primary">حفظ الإعدادات في Firebase</button></div></form></div>`; }
+  function renderDiagnostics(){ $('diagnostics').innerHTML = `<div class="grid two"><div class="card"><h3>فحص الاتصال</h3><p>المشروع: <b>${WF()?WF().projectId:'غير محمل'}</b></p><p>الحالة: ${state.ready?'<b class="ok-text">تمت القراءة</b>':'<b class="danger-text">لم يتم التحميل</b>'}</p><div class="actions"><button class="btn primary" onclick="WAdmin.runInit()">إنشاء المجموعات الأساسية</button><button class="btn blue" onclick="WAdmin.refresh()">اختبار القراءة</button></div><pre id="diagOut" class="ltr" style="white-space:pre-wrap;background:#f8fafc;padding:14px;border-radius:16px;margin-top:12px"></pre></div><div class="card"><h3>أعداد البيانات</h3><div class="kpi-line"><span>Products</span><b>${state.products.length}</b></div><div class="kpi-line"><span>Orders</span><b>${state.orders.length}</b></div><div class="kpi-line"><span>Service Requests</span><b>${state.repairs.length}</b></div><div class="kpi-line"><span>Expenses</span><b>${state.expenses.length}</b></div><div class="kpi-line"><span>Payments</span><b>${state.payments.length}</b></div></div></div>`; }
+
+  function formData(form){ const data=Object.fromEntries(new FormData(form).entries()); Object.keys(data).forEach(k=>{ if(data[k]==='true') data[k]=true; else if(data[k]==='false') data[k]=false; else if(['price','sell','sellPrice','buyPrice','stock','quantity','total','amount','paidAmount','deliveryFee','value','cost','repairCost'].includes(k)) data[k]=Number(data[k]||0); }); return data; }
+  async function addNotification(title, body, level='info'){ try{ await WF().addDoc('notifications',{title,body,level,read:false}); }catch(e){ console.warn('notification failed',e); } }
+
+  window.WAdmin = {
+    setFilter(k,v){ state.filters[k]=v; render(); },
+    async refresh(){ try{ await loadAll(); toast('تم التحديث من Firebase'); }catch(e){ setConn(false,'خطأ Firebase'); showError(e); } },
+    async runInit(){ try{ const r=await WF().ensureCoreCollections({force:true}); $('diagOut') && ($('diagOut').textContent=JSON.stringify(r,null,2)); toast('تمت التهيئة'); await loadAll(); }catch(e){ $('diagOut') && ($('diagOut').textContent=e.message); showError(e); } },
+    async setDoc(col,id,data){ try{ await WF().setDoc(col,id,data,true); toast('تم الحفظ'); await loadAll(); }catch(e){ showError(e); } },
+    async deleteRow(col,id){ if(!confirm('تأكيد الحذف من Firebase؟')) return; try{ await WF().deleteDoc(col,id); toast('تم الحذف'); await addNotification('حذف من '+col,'تم حذف الوثيقة '+id,'warning'); await loadAll(); }catch(e){ showError(e); } },
+    async updateStatus(col,id,status){ try{ await WF().setDoc(col,id,{status},true); toast('تم تحديث الحالة'); await addNotification('تحديث حالة', col+' / '+id+' => '+status, 'info'); await loadAll(); }catch(e){ showError(e); } },
+    async viewDoc(col,id){ try{ const d=await WF().getDoc(col,id); openModal('تفاصيل',`<pre class="ltr" style="white-space:pre-wrap;background:#f8fafc;padding:14px;border-radius:16px">${esc(JSON.stringify(d,null,2))}</pre>`); }catch(e){ showError(e); } },
+    async printDoc(col,id){ try{ const d=await WF().getDoc(col,id); $('printArea').innerHTML=`<h2>وسام للإلكترونيات</h2><h3>${esc(d.orderId||d.requestId||d.id)}</h3><p>العميل: ${esc(d.customerName||d.name||'')}</p><p>الهاتف: ${esc(d.phone||d.customerPhone||'')}</p><p>الحالة: ${esc(d.status||'')}</p><hr><pre>${esc(JSON.stringify(d,null,2))}</pre>`; window.print(); }catch(e){ showError(e); } },
+    productForm(id){ const p=id?state.products.find(x=>x.id===id)||{}:{}; openModal(id?'تعديل منتج':'إضافة منتج',`<form class="form" onsubmit="WAdmin.saveProduct(event,'${id||''}')"><div class="field"><label>الاسم</label><input name="name" required value="${esc(p.name||p.title||'')}"></div><div class="field"><label>التصنيف</label><input name="category" value="${esc(p.category||p.cat||'')}"></div><div class="field"><label>سعر البيع</label><input name="sell" type="number" step="0.01" value="${esc(p.sell??p.price??0)}"></div><div class="field"><label>سعر الشراء</label><input name="buyPrice" type="number" step="0.01" value="${esc(p.buyPrice??p.buy??0)}"></div><div class="field"><label>المخزون</label><input name="stock" type="number" value="${esc(p.stock??p.quantity??0)}"></div><div class="field"><label>رابط الصورة</label><input name="image" value="${esc(p.image||p.imageUrl||'')}"></div><div class="field full"><label>الوصف</label><textarea name="description">${esc(p.description||'')}</textarea></div><div class="field"><label>ظاهر</label><select name="active"><option value="true" ${p.active!==false?'selected':''}>نعم</option><option value="false" ${p.active===false?'selected':''}>لا</option></select></div><div class="field"><label>مميز</label><select name="featured"><option value="false" ${p.featured!==true?'selected':''}>لا</option><option value="true" ${p.featured===true?'selected':''}>نعم</option></select></div><div class="full"><button class="btn primary">حفظ</button></div></form>`); },
+    async saveProduct(e,id){ e.preventDefault(); try{ const data=formData(e.target); data.price=data.sell; if(id) await WF().setDoc('products',id,data,true); else await WF().addDoc('products',data); closeModal(); toast('تم حفظ المنتج'); await loadAll(); }catch(err){ showError(err); } },
+    orderForm(){ openModal('إضافة طلب بيع يدوي',`<form class="form" onsubmit="WAdmin.saveOrder(event)"><div class="field"><label>اسم العميل</label><input name="customerName" required></div><div class="field"><label>الهاتف</label><input name="phone" required></div><div class="field"><label>الإجمالي</label><input name="total" type="number" step="0.01" required></div><div class="field"><label>المدفوع</label><input name="paidAmount" type="number" step="0.01" value="0"></div><div class="field full"><label>ملاحظة</label><textarea name="notes"></textarea></div><div class="full"><button class="btn primary">حفظ الطلب</button></div></form>`); },
+    async saveOrder(e){ e.preventDefault(); try{ const d=formData(e.target); d.orderId=nowId('OR'); d.status='new'; await WF().addDoc('orders',d); closeModal(); toast('تم حفظ الطلب'); await loadAll(); }catch(err){ showError(err); } },
+    repairForm(id){ const r=id?state.repairs.find(x=>x.id===id)||{}:{}; const techOptions=['<option value="">بدون فني</option>'].concat(state.technicians.map(t=>`<option value="${esc(t.name)}" ${(r.technicianName||r.technician)===t.name?'selected':''}>${esc(t.name)}</option>`)).join(''); openModal(id?'تعديل طلب صيانة':'إضافة طلب صيانة',`<form class="form" onsubmit="WAdmin.saveRepair(event,'${id||''}')"><div class="field"><label>اسم العميل</label><input name="customerName" required value="${esc(r.customerName||r.name||'')}"></div><div class="field"><label>الهاتف</label><input name="phone" required value="${esc(r.phone||r.customerPhone||'')}"></div><div class="field"><label>نوع الجهاز</label><input name="deviceType" value="${esc(r.deviceType||r.device||'شاشة LED')}"></div><div class="field"><label>الفني</label><select name="technicianName">${techOptions}</select></div><div class="field"><label>التكلفة</label><input name="total" type="number" step="0.01" value="${esc(getRepairAmount(r))}"></div><div class="field"><label>المدفوع</label><input name="paidAmount" type="number" step="0.01" value="${esc(getPaid(r))}"></div><div class="field full"><label>وصف العطل</label><textarea name="faultDesc">${esc(r.faultDesc||r.description||'')}</textarea></div><div class="field full"><label>ملاحظات داخلية</label><textarea name="internalNotes">${esc(r.internalNotes||r.notes||'')}</textarea></div><div class="full"><button class="btn primary">حفظ</button></div></form>`); },
+    async saveRepair(e,id){ e.preventDefault(); try{ const d=formData(e.target); if(!id){ d.requestId=nowId('SR'); d.status='new'; await WF().addDoc('service_requests',d); } else await WF().setDoc('service_requests',id,d,true); closeModal(); toast('تم حفظ طلب الصيانة'); await loadAll(); }catch(err){ showError(err); } },
+    customerForm(){ openModal('إضافة عميل',`<form class="form" onsubmit="WAdmin.saveCustomer(event)"><div class="field"><label>الاسم</label><input name="name" required></div><div class="field"><label>الهاتف</label><input name="phone" required></div><div class="field full"><label>ملاحظات</label><textarea name="notes"></textarea></div><div class="full"><button class="btn primary">حفظ</button></div></form>`); },
+    async saveCustomer(e){ e.preventDefault(); try{ await WF().addDoc('customers',formData(e.target)); closeModal(); toast('تم حفظ العميل'); await loadAll(); }catch(err){ showError(err); } },
+    viewCustomer(id){ const c=state.customers.find(x=>String(x.id)===String(id)); openModal('سجل العميل',`<pre class="ltr" style="white-space:pre-wrap;background:#f8fafc;padding:14px;border-radius:16px">${esc(JSON.stringify(c,null,2))}</pre>`); },
+    txForm(type){ openModal(type==='expense'?'إضافة مصروف عام':'إضافة إيراد يدوي',`<form class="form" onsubmit="WAdmin.saveTx(event,'${type}')"><div class="field"><label>الوصف</label><input name="description" required></div><div class="field"><label>المبلغ</label><input name="amount" type="number" step="0.01" required></div><div class="field full"><label>ملاحظة</label><textarea name="notes"></textarea></div><div class="full"><button class="btn primary">حفظ</button></div></form>`); },
+    async saveTx(e,type){ e.preventDefault(); try{ const d=formData(e.target); d.type=type; await WF().addDoc('accounting_transactions',d); closeModal(); toast('تم حفظ الحركة'); await loadAll(); }catch(err){ showError(err); } },
+    expenseForm(id){ const x=id?state.expenses.find(e=>e.id===id)||{}:{}; openModal(id?'تعديل مصروف':'إضافة مصروف',`<form class="form" onsubmit="WAdmin.saveExpense(event,'${id||''}')"><div class="field"><label>التصنيف</label><select name="category"><option>قطع غيار</option><option>مواصلات</option><option>كهرباء</option><option>إيجار</option><option>أدوات صيانة</option><option>مصروف آخر</option></select></div><div class="field"><label>المبلغ</label><input name="amount" type="number" step="0.01" required value="${esc(x.amount||0)}"></div><div class="field"><label>طريقة الدفع</label><input name="paymentMethod" value="${esc(x.paymentMethod||'نقدي')}"></div><div class="field"><label>التاريخ</label><input name="date" type="date" value="${esc(dateOnly(x.date||x.createdAt))}"></div><div class="field full"><label>الوصف</label><textarea name="description">${esc(x.description||'')}</textarea></div><div class="full"><button class="btn primary">حفظ</button></div></form>`); },
+    async saveExpense(e,id){ e.preventDefault(); try{ const d=formData(e.target); if(id) await WF().setDoc('expenses',id,d,true); else await WF().addDoc('expenses',d); closeModal(); toast('تم حفظ المصروف'); await loadAll(); }catch(err){ showError(err); } },
+    paymentForm(col,id){ const row=[...state.orders,...state.repairs].find(x=>x.id===id)||{}; openModal('تسجيل دفعة',`<form class="form" onsubmit="WAdmin.savePayment(event,'${col}','${id}')"><div class="field"><label>المرجع</label><input value="${esc(row.orderId||row.requestId||id)}" disabled></div><div class="field"><label>اسم العميل</label><input value="${esc(row.customerName||row.name||'')}" disabled></div><div class="field"><label>المبلغ</label><input name="amount" type="number" step="0.01" required></div><div class="field"><label>طريقة الدفع</label><input name="paymentMethod" value="نقدي"></div><div class="field full"><label>ملاحظة</label><textarea name="note"></textarea></div><div class="full"><button class="btn primary">حفظ الدفعة</button></div></form>`); },
+    async savePayment(e,col,id){ e.preventDefault(); try{ const d=formData(e.target); d.sourceCollection=col; d.sourceId=id; await WF().addDoc('payments',d); const row = col==='orders'?state.orders.find(x=>x.id===id):state.repairs.find(x=>x.id===id); const newPaid = getPaid(row)+Number(d.amount||0); await WF().setDoc(col,id,{paidAmount:newPaid,paymentStatus:getRemaining({...row,paidAmount:newPaid}, col==='orders'?getAmount(row):getRepairAmount(row))>0?'partial':'paid'},true); closeModal(); toast('تم تسجيل الدفعة'); await loadAll(); }catch(err){ showError(err); } },
+    couponForm(id){ const c=id?state.coupons.find(x=>x.id===id)||{}:{}; openModal(id?'تعديل كوبون':'إضافة كوبون',`<form class="form" onsubmit="WAdmin.saveCoupon(event,'${id||''}')"><div class="field"><label>الكود</label><input name="code" required value="${esc(c.code||'')}"></div><div class="field"><label>النوع</label><select name="discountType"><option value="fixed">مبلغ ثابت</option><option value="percent">نسبة</option></select></div><div class="field"><label>القيمة</label><input name="value" type="number" step="0.01" value="${esc(c.value||0)}"></div><div class="field"><label>تاريخ الانتهاء</label><input name="expiresAt" type="date" value="${esc(c.expiresAt||'')}"></div><div class="field"><label>فعال</label><select name="active"><option value="true" ${c.active!==false?'selected':''}>نعم</option><option value="false" ${c.active===false?'selected':''}>لا</option></select></div><div class="full"><button class="btn primary">حفظ</button></div></form>`); },
+    async saveCoupon(e,id){ e.preventDefault(); try{ const d=formData(e.target); if(id) await WF().setDoc('coupons',id,d,true); else await WF().addDoc('coupons',d); closeModal(); toast('تم حفظ الكوبون'); await loadAll(); }catch(err){ showError(err); } },
+    techForm(id){ const t=id?state.technicians.find(x=>x.id===id)||{}:{}; openModal(id?'تعديل فني':'إضافة فني',`<form class="form" onsubmit="WAdmin.saveTech(event,'${id||''}')"><div class="field"><label>الاسم</label><input name="name" required value="${esc(t.name||'')}"></div><div class="field"><label>الهاتف</label><input name="phone" value="${esc(t.phone||'')}"></div><div class="field"><label>التخصص</label><input name="specialty" value="${esc(t.specialty||'')}"></div><div class="field"><label>فعال</label><select name="active"><option value="true" ${t.active!==false?'selected':''}>نعم</option><option value="false" ${t.active===false?'selected':''}>لا</option></select></div><div class="field full"><label>ملاحظات</label><textarea name="notes">${esc(t.notes||'')}</textarea></div><div class="full"><button class="btn primary">حفظ</button></div></form>`); },
+    async saveTech(e,id){ e.preventDefault(); try{ const d=formData(e.target); if(id) await WF().setDoc('technicians',id,d,true); else await WF().addDoc('technicians',d); closeModal(); toast('تم حفظ الفني'); await loadAll(); }catch(err){ showError(err); } },
+    notificationForm(){ openModal('إضافة إشعار',`<form class="form" onsubmit="WAdmin.saveNotification(event)"><div class="field"><label>العنوان</label><input name="title" required></div><div class="field"><label>الأهمية</label><select name="level"><option>info</option><option>warning</option><option>danger</option></select></div><div class="field full"><label>النص</label><textarea name="body"></textarea></div><div class="full"><button class="btn primary">حفظ</button></div></form>`); },
+    async saveNotification(e){ e.preventDefault(); try{ const d=formData(e.target); d.read=false; await WF().addDoc('notifications',d); closeModal(); toast('تم حفظ الإشعار'); await loadAll(); }catch(err){ showError(err); } },
+    async createNotification(title){ await addNotification(title,'تم إنشاؤه من لوحة التنبيهات','warning'); toast('تم حفظ التذكير'); await loadAll(); },
+    async markAllRead(){ try{ await Promise.all(state.notifications.filter(n=>!n.read).map(n=>WF().setDoc('notifications',n.id,{read:true},true))); toast('تم تعليم الإشعارات كمقروءة'); await loadAll(); }catch(e){ showError(e); } },
+    async saveSettings(e){ e.preventDefault(); try{ const d=formData(e.target); d.deliveryFee=Number(d.deliveryFee||0); await WF().saveSettings(d); toast('تم حفظ الإعدادات'); await loadAll(); }catch(err){ showError(err); } },
+    exportCSV(kind){ const data = kind==='accounting' ? collectAccountingRows() : (kind==='repairs'?state.repairs:kind==='customers'?state.customers:state[kind]||[]); downloadText(kind+'.csv', toCSV(data)); },
+    exportBackup(){ const backup={exportedAt:new Date().toISOString(), project:WF()?WF().projectId:'', settings:state.settings, products:state.products, orders:state.orders, service_requests:state.repairs, customers:state.customers, accounting_transactions:state.tx, expenses:state.expenses, payments:state.payments, coupons:state.coupons, technicians:state.technicians, notifications:state.notifications}; downloadText('wesam-backup-'+new Date().toISOString().slice(0,10)+'.json', JSON.stringify(backup,null,2)); },
+    printReport(){ const sales=state.orders.reduce((s,o)=>s+getAmount(o),0), repairs=state.repairs.reduce((s,r)=>s+getRepairAmount(r),0), exp=totalExpenses(); $('printArea').innerHTML=`<h1>تقرير وسام للإلكترونيات</h1><p>${new Date().toLocaleString('ar-JO')}</p><hr><p>مبيعات: ${JOD(sales)}</p><p>صيانة: ${JOD(repairs)}</p><p>مصروفات: ${JOD(exp)}</p><p>الصافي: ${JOD(sales+repairs+manualIncome()-exp)}</p><p>الذمم: ${JOD(totalRemaining())}</p>`; window.print(); }
+  };
+  function collectAccountingRows(){ return [...state.orders.map(o=>({type:'order',ref:o.orderId||o.id,amount:getAmount(o),date:dateText(o.createdAt)})),...state.repairs.map(r=>({type:'repair',ref:r.requestId||r.id,amount:getRepairAmount(r),date:dateText(r.createdAt)})),...state.expenses.map(e=>({type:'expense',ref:e.category,amount:-Number(e.amount||0),date:dateText(e.createdAt||e.date)}))]; }
+  function toCSV(rows){ if(!rows.length) return ''; const flat=rows.map(r=>{ const o={}; Object.keys(r).forEach(k=>{ const v=r[k]; if(v && typeof v==='object') o[k]=JSON.stringify(v); else o[k]=v; }); return o; }); const keys=[...new Set(flat.flatMap(o=>Object.keys(o)))]; return '\ufeff'+[keys.join(','),...flat.map(o=>keys.map(k=>'"'+String(o[k]??'').replace(/"/g,'""')+'"').join(','))].join('\n'); }
+  function downloadText(name,text){ const blob=new Blob([text],{type:'text/plain;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); URL.revokeObjectURL(a.href); }
+
+  function setupAuth(){
+    const screen=$('loginScreen');
+    const local = localStorage.getItem('wesam_admin_local_unlock')==='1'; state.localUnlock=local;
+    function hide(){ screen.style.display='none'; }
+    function show(){ screen.style.display='flex'; }
+    if(!WF() || !WF().auth){ if(local) hide(); else show(); return; }
+    WF().auth.onAuthStateChanged(user=>{ state.user=user; if(user || state.localUnlock){ hide(); WAdmin.refresh(); } else show(); });
+    $('loginForm').onsubmit = async e => { e.preventDefault(); try{ await WF().auth.signInWithEmailAndPassword($('loginEmail').value.trim(), $('loginPassword').value); $('loginMsg').classList.add('hidden'); }catch(err){ $('loginMsg').className='notice err'; $('loginMsg').textContent=err.message || 'تعذر تسجيل الدخول'; } };
+    $('localUnlockBtn').onclick = () => { localStorage.setItem('wesam_admin_local_unlock','1'); state.localUnlock=true; hide(); WAdmin.refresh(); toast('تم الدخول المؤقت للتجربة'); };
+    $('btnSignOut').onclick = async () => { localStorage.removeItem('wesam_admin_local_unlock'); state.localUnlock=false; try{ if(WF() && WF().auth) await WF().auth.signOut(); }catch(e){} location.reload(); };
+  }
+
+  $('btnRefresh').onclick = () => WAdmin.refresh();
+  $('btnInit').onclick = () => WAdmin.runInit();
+  $('btnExportBackup').onclick = () => WAdmin.exportBackup();
+  $('modal').addEventListener('click', e => { if(e.target.id==='modal') closeModal(); });
+  bindNav();
+  showSection(state.current);
+  window.addEventListener('hashchange', () => showSection(location.hash.replace('#','') || 'dashboard'));
+  setTimeout(() => { try{ setupAuth(); if(localStorage.getItem('wesam_admin_local_unlock')==='1') WAdmin.refresh(); }catch(e){ setConn(false,'خطأ تهيئة'); showError(e); showSection('diagnostics'); } }, 550);
+})();
 </script>
 </body>
 </html>
