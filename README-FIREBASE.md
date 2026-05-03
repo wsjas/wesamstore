@@ -1,55 +1,31 @@
-# ربط Firebase التلقائي لموقع وسام للإلكترونيات
+# ربط موقع وسام للإلكترونيات مع Firebase
 
-هذه النسخة مربوطة بمشروع Firebase:
+هذه النسخة مربوطة مع مشروع Firebase التالي:
 
-- projectId: `wesamapp-790c1`
-- Firestore: Cloud Firestore
+- projectId: `wesamstore-98c1f`
+- authDomain: `wesamstore-98c1f.firebaseapp.com`
+- databaseURL: `https://wesamstore-98c1f-default-rtdb.firebaseio.com`
 
-## ماذا يحدث تلقائيًا؟
+## مهم قبل التجربة
 
-عند فتح أي صفحة تحتوي على `firebase-config.js` يقوم الموقع بمحاولة إنشاء الوثائق الأساسية تلقائيًا إذا لم تكن موجودة:
+1. افتح Firebase Console.
+2. ادخل إلى Firestore Database > Rules.
+3. انسخ محتوى ملف `firestore.rules` الموجود في هذه النسخة.
+4. اضغط Publish.
+5. ارفع الملفات إلى Firebase Hosting أو افتحها من سيرفر محلي.
 
-- `settings/site`
-- `config/site`
-- `products/_template`
-- `orders/_template`
-- `service_requests/_template`
-- `contact_messages/_template`
-- `subscribers/_template`
-- `coupons/_template`
-- `notifications/_template`
+## المجموعات المستخدمة
 
-هذه الوثائق التي تنتهي بـ `_template` داخلية فقط ولا تظهر في الموقع أو في جداول اللوحة، لأنها تحتوي على الحقل:
+- `settings/site` و `config/site`: إعدادات الموقع.
+- `products`: المنتجات.
+- `orders`: طلبات المتجر.
+- `service_requests`: طلبات الصيانة.
+- `contact_messages`: رسائل التواصل.
+- `accounting_transactions`: حركات المحاسبة اليدوية.
+- `customers`: العملاء اليدويون، مع قراءة العملاء تلقائيًا من الطلبات والصيانة.
+- `technicians`: الفنيون.
+- `coupons`: العروض والكوبونات.
 
-```js
-__system: true
-```
+## ملاحظة
 
-## مهم جدًا
-
-لا يمكن لأي موقع إنشاء بيانات في Firestore إذا كانت القواعد تمنع الكتابة. لذلك يجب نشر محتوى ملف:
-
-`firestore.rules`
-
-من Firebase Console > Firestore Database > Rules > Publish.
-
-بعد نشر القواعد، افتح الموقع أو لوحة التحكم مرة واحدة، وستظهر المجموعات تلقائيًا داخل Firestore.
-
-## المنتجات
-
-الموقع لا يضيف منتجات تجريبية. يجب إضافة المنتجات من لوحة المنتجات أو من Firestore. عند أول منتج حقيقي سيظهر في المتجر.
-
-## الطلبات والصيانة
-
-- عند إرسال طلب من صفحة السلة يتم إنشاء وثيقة داخل `orders`.
-- عند إرسال طلب صيانة يتم إنشاء وثيقة داخل `service_requests`.
-- عند إرسال رسالة تواصل يتم إنشاء وثيقة داخل `contact_messages`.
-
-
-## تحديث مهم للحفظ في Firebase
-تم إصلاح الحفظ في:
-- `admin-settings.html`: يحفظ في `settings/site` و `config/site`.
-- `admin-accounting.html`: يحفظ الحركات اليدوية في `accounting_transactions` ويقرأ الإيرادات تلقائيًا من `orders` و `service_requests`.
-- تم توسيع `firestore.rules` للسماح مؤقتًا بالقراءة والكتابة لأقسام لوحة التحكم أثناء التجربة.
-
-بعد رفع الملفات، انسخ محتوى `firestore.rules` إلى Firebase Console > Firestore Database > Rules ثم اضغط Publish.
+المنتجات التي تستخدم الحقل `sell` سيتم قراءتها كسعر بيع تلقائيًا، وكذلك الحقول `price` و `salePrice`.

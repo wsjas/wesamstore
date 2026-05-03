@@ -1,24 +1,33 @@
 // Wesam Electronics Firebase connection - shared for all pages
 (function () {
   const firebaseConfig = {
-    apiKey: "AIzaSyCqEeXe2NOjzLeyns7IaPczxhCDUDg88Kc",
-    authDomain: "wesamapp-790c1.firebaseapp.com",
-    databaseURL: "https://wesamapp-790c1-default-rtdb.firebaseio.com",
-    projectId: "wesamapp-790c1",
-    storageBucket: "wesamapp-790c1.firebasestorage.app",
-    messagingSenderId: "624654723290",
-    appId: "1:624654723290:web:55fb3a4ca01781fed95de3",
-    measurementId: "G-BGT9BR9QKS"
+    apiKey: "AIzaSyA8QALokJR8DXbOKfGNgkmOzJTAzhJ4ArQ",
+    authDomain: "wesamstore-98c1f.firebaseapp.com",
+    databaseURL: "https://wesamstore-98c1f-default-rtdb.firebaseio.com",
+    projectId: "wesamstore-98c1f",
+    storageBucket: "wesamstore-98c1f.firebasestorage.app",
+    messagingSenderId: "89774380048",
+    appId: "1:89774380048:web:601c7eef2cddff6deaa695",
+    measurementId: "G-LZNN8106JC"
   };
 
   function init() {
     if (!window.firebase) {
-      console.error('Firebase SDK لم يتم تحميله');
+      console.error('Firebase SDK لم يتم تحميله. تأكد من اتصال الإنترنت ومن ترتيب ملفات السكربت.');
       return null;
     }
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    try { if (firebase.analytics) firebase.analytics(); } catch (e) { console.warn('Analytics غير مفعّل:', e.message); }
-    return firebase.app();
+    try {
+      const existing = firebase.apps && firebase.apps.length ? firebase.app() : null;
+      if (existing && existing.options && existing.options.projectId !== firebaseConfig.projectId) {
+        console.warn('تم العثور على مشروع Firebase مختلف داخل الصفحة. سيتم استخدام التطبيق الحالي:', existing.options.projectId);
+      }
+      if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+      try { if (firebase.analytics) firebase.analytics(); } catch (e) { console.warn('Analytics غير مفعّل:', e.message); }
+      return firebase.app();
+    } catch (e) {
+      console.error('تعذر تهيئة Firebase:', e);
+      return null;
+    }
   }
 
   const app = init();
@@ -26,6 +35,7 @@
   const auth = app && firebase.auth ? firebase.auth() : null;
 
   const cleanObject = (obj) => Object.fromEntries(Object.entries(obj || {}).filter(([, v]) => v !== undefined));
+  const isSystemRow = (row) => row && (row.__system === true || row.id === '_template' || row.status === 'system');
 
   async function getCollection(name, options = {}) {
     if (!db) throw new Error('Firebase غير مهيأ');
@@ -34,33 +44,41 @@
     if (options.orderBy) ref = ref.orderBy(options.orderBy[0], options.orderBy[1] || 'asc');
     if (options.limit) ref = ref.limit(options.limit);
     const snap = await ref.get();
-    return snap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .filter(row => row.__system !== true);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(row => !isSystemRow(row));
+  }
+
+  function listenCollection(name, cb, options = {}) {
+    if (!db) throw new Error('Firebase غير مهيأ');
+    let ref = db.collection(name);
+    if (options.where) options.where.forEach(w => { ref = ref.where(w[0], w[1], w[2]); });
+    if (options.orderBy) ref = ref.orderBy(options.orderBy[0], options.orderBy[1] || 'asc');
+    if (options.limit) ref = ref.limit(options.limit);
+    return ref.onSnapshot(snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(row => !isSystemRow(row))));
   }
 
   async function addDoc(name, data) {
     if (!db) throw new Error('Firebase غير مهيأ');
-    const payload = cleanObject({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp(), source: 'wesam.store' });
+    const payload = cleanObject({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp(), source: data && data.source ? data.source : 'wesam.store' });
     const ref = await db.collection(name).add(payload);
     return ref.id;
   }
 
   async function setDoc(name, id, data, merge = true) {
     if (!db) throw new Error('Firebase غير مهيأ');
-    await db.collection(name).doc(id).set(cleanObject({ ...data, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }), { merge });
-    return id;
+    await db.collection(name).doc(String(id)).set(cleanObject({ ...data, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }), { merge });
+    return String(id);
   }
 
   async function deleteDoc(name, id) {
     if (!db) throw new Error('Firebase غير مهيأ');
-    await db.collection(name).doc(id).delete();
+    await db.collection(name).doc(String(id)).delete();
   }
 
   async function getDoc(name, id) {
     if (!db) throw new Error('Firebase غير مهيأ');
-    const snap = await db.collection(name).doc(id).get();
-    return snap.exists ? { id: snap.id, ...snap.data() } : null;
+    const snap = await db.collection(name).doc(String(id)).get();
+    const row = snap.exists ? { id: snap.id, ...snap.data() } : null;
+    return isSystemRow(row) ? null : row;
   }
 
   function toDateText(value) {
@@ -89,12 +107,7 @@
   };
 
   function withSystemFields(data) {
-    return cleanObject({
-      ...data,
-      __system: true,
-      createdBy: 'wesam-auto-setup',
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    return cleanObject({ ...data, __system: true, createdBy: 'wesam-auto-setup', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
   }
 
   async function ensureDocument(collectionName, docId, data) {
@@ -102,10 +115,7 @@
     const ref = db.collection(collectionName).doc(docId);
     const snap = await ref.get();
     if (!snap.exists) {
-      await ref.set(withSystemFields({
-        ...data,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }), { merge: false });
+      await ref.set(withSystemFields({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() }), { merge: false });
       return { path: collectionName + '/' + docId, created: true };
     }
     return { path: collectionName + '/' + docId, created: false };
@@ -114,13 +124,12 @@
   async function ensureCoreCollections(options = {}) {
     if (!db) throw new Error('Firebase غير مهيأ');
     const force = options.force === true;
-    const key = 'wesam_firebase_auto_setup_done_v2';
+    const key = 'wesam_firebase_auto_setup_done_' + firebaseConfig.projectId + '_v4';
     if (!force && localStorage.getItem(key) === '1') return { skipped: true, reason: 'already-ran-on-this-browser' };
-
     const tasks = [
       ensureDocument('settings', 'site', DEFAULT_SITE_SETTINGS),
       ensureDocument('config', 'site', DEFAULT_SITE_SETTINGS),
-      ensureDocument('products', '_template', { active: false, visible: false, name: 'قالب داخلي - لا يظهر في المتجر', category: 'system', price: 0, stock: 0 }),
+      ensureDocument('products', '_template', { active: false, visible: false, name: 'قالب داخلي - لا يظهر في المتجر', category: 'system', price: 0, sell: 0, stock: 0 }),
       ensureDocument('orders', '_template', { status: 'system', orderId: 'SYSTEM-TEMPLATE', customerName: 'قالب داخلي', total: 0 }),
       ensureDocument('service_requests', '_template', { status: 'system', requestId: 'SYSTEM-TEMPLATE', customerName: 'قالب داخلي', deviceType: 'system' }),
       ensureDocument('contact_messages', '_template', { status: 'system', name: 'قالب داخلي', phone: '', message: '' }),
@@ -133,16 +142,10 @@
       ensureDocument('technicians', '_template', { status: 'system', name: 'قالب داخلي', phone: '' }),
       ensureDocument('admin_users', '_template', { status: 'system', name: 'قالب داخلي', role: 'admin' })
     ];
-
     const results = await Promise.allSettled(tasks);
     const failed = results.filter(r => r.status === 'rejected');
     if (!failed.length) localStorage.setItem(key, '1');
-    return {
-      skipped: false,
-      created: results.filter(r => r.status === 'fulfilled' && r.value.created).map(r => r.value.path),
-      existing: results.filter(r => r.status === 'fulfilled' && !r.value.created).map(r => r.value.path),
-      failed: failed.map(r => r.reason && r.reason.message ? r.reason.message : String(r.reason))
-    };
+    return { skipped: false, created: results.filter(r => r.status === 'fulfilled' && r.value.created).map(r => r.value.path), existing: results.filter(r => r.status === 'fulfilled' && !r.value.created).map(r => r.value.path), failed: failed.map(r => r.reason && r.reason.message ? r.reason.message : String(r.reason)) };
   }
 
   function autoRunSetup() {
@@ -155,30 +158,46 @@
   }
 
   function normalizeProduct(doc) {
-    const price = Number(doc.price ?? doc.salePrice ?? doc.currentPrice ?? 0);
-    const old = Number(doc.old ?? doc.oldPrice ?? doc.compareAtPrice ?? 0) || null;
+    const price = Number(doc.price ?? doc.sell ?? doc.salePrice ?? doc.currentPrice ?? doc.newPrice ?? 0);
+    const old = Number(doc.old ?? doc.oldPrice ?? doc.compareAtPrice ?? doc.buy ?? 0) || null;
     const name = doc.name || doc.title || doc.nameAr || 'منتج بدون اسم';
     return {
       id: doc.id,
       cat: doc.cat || doc.category || doc.categoryId || 'other',
+      category: doc.cat || doc.category || doc.categoryId || 'other',
       kind: doc.kind || doc.type || doc.icon || 'remote',
       name,
+      description: doc.description || doc.desc || '',
       price,
+      sell: price,
       old,
       rating: Number(doc.rating || 5),
       badge: doc.badge || doc.label || '',
       stock: Number(doc.stock ?? doc.qty ?? doc.quantity ?? 0),
       imageUrl: doc.imageUrl || doc.image || doc.photo || '',
+      image: doc.image || doc.imageUrl || doc.photo || '',
+      deliveryFee: Number(doc.deliveryFee || 0),
       active: doc.active !== false && doc.visible !== false
     };
   }
 
   async function loadProducts() {
-    const rows = await getCollection('products', { limit: 200 });
+    const rows = await getCollection('products', { limit: 500 });
     return rows.map(normalizeProduct).filter(p => p.active);
   }
 
+  async function loadSettings() {
+    return (await getDoc('settings','site')) || (await getDoc('config','site')) || DEFAULT_SITE_SETTINGS;
+  }
+
+  async function saveSettings(data) {
+    const payload = { ...DEFAULT_SITE_SETTINGS, ...data, siteName: data.storeName || data.siteName || DEFAULT_SITE_SETTINGS.storeName, updatedFrom: 'wesam-admin' };
+    await setDoc('settings','site',payload,true);
+    await setDoc('config','site',payload,true);
+    return payload;
+  }
+
   window.WESAM_FIREBASE_CONFIG = firebaseConfig;
-  window.WesamFirebase = { app, db, auth, getCollection, addDoc, setDoc, deleteDoc, getDoc, toDateText, loadProducts, normalizeProduct, ensureCoreCollections, serverTimestamp: () => firebase.firestore.FieldValue.serverTimestamp() };
+  window.WesamFirebase = { app, db, auth, projectId: firebaseConfig.projectId, getCollection, listenCollection, addDoc, setDoc, deleteDoc, getDoc, toDateText, loadProducts, normalizeProduct, loadSettings, saveSettings, ensureCoreCollections, serverTimestamp: () => firebase.firestore.FieldValue.serverTimestamp() };
   autoRunSetup();
 })();
