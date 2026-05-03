@@ -32,23 +32,88 @@ function RepairsPage() {
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [repairs, setRepairs] = useState(INITIAL_REPAIRS);
-  useEffect(() => {
-    window.WesamFirebase.getCollection('service_requests', { limit: 200 }).then(rows => {
-      setRepairs(rows.map(r => ({
-        id: r.requestId || r.id,
-        customer: r.customerName || r.name || 'عميل',
-        initial: (r.customerName || r.name || 'ع').trim().charAt(0),
-        phone: r.phone || '',
-        service: r.serviceLabel || r.type || r.serviceType || 'صيانة',
-        device: [r.brand, r.model].filter(Boolean).join(' ') || '-',
-        issue: Array.isArray(r.issues) ? r.issues.join('، ') : (r.faultDesc || r.issue || ''),
-        status: r.status || 'new',
-        tech: r.tech || '-',
-        date: r.createdAt?.toDate ? r.createdAt.toDate().toISOString().slice(0,10) : (r.preferredDate || ''),
-        amount: Number(r.total || r.price || 0)
-      })));
-    }).catch(console.error);
-  }, []);
+  const [msg, setMsg] = useState('');
+
+  const mapRepair = (r) => ({
+    ...r,
+    docId: r.id,
+    id: r.requestId || r.id,
+    customer: r.customerName || r.name || 'عميل',
+    initial: (r.customerName || r.name || 'ع').trim().charAt(0),
+    phone: r.phone || '',
+    service: r.serviceLabel || r.type || r.serviceType || r.deviceType || 'صيانة',
+    device: [r.deviceType, r.brand, r.model, r.deviceSize].filter(Boolean).join(' ') || '-',
+    issue: Array.isArray(r.issues) ? r.issues.join('، ') : (r.faultDesc || r.issue || r.problem || ''),
+    status: r.status || 'new',
+    tech: r.tech || r.technician || '-',
+    date: r.createdAt?.toDate ? r.createdAt.toDate().toISOString().slice(0,10) : (r.preferredDate || r.date || ''),
+    amount: Number(r.total || r.price || r.amount || 0)
+  });
+
+  const loadRepairs = async () => {
+    try {
+      const rows = await window.WesamFirebase.getCollection('service_requests', { limit: 300 });
+      setRepairs(rows.map(mapRepair));
+      setMsg('تم تحديث طلبات الصيانة من Firebase');
+      setTimeout(() => setMsg(''), 2500);
+    } catch (err) {
+      console.error(err);
+      alert('تعذر تحميل طلبات الصيانة من Firebase: ' + err.message);
+    }
+  };
+
+  useEffect(() => { loadRepairs(); }, []);
+
+  const viewRepair = (r) => {
+    alert(`تفاصيل طلب الصيانة\n\nرقم الطلب: ${r.id}\nالعميل: ${r.customer}\nالهاتف: ${r.phone}\nالخدمة: ${r.service}\nالجهاز: ${r.device}\nالمشكلة: ${r.issue}\nالفني: ${r.tech}\nالحالة: ${STATUS_LBL[r.status] || r.status}\nالتاريخ: ${r.date}\nالمبلغ: ${r.amount || 0} د.أ`);
+  };
+
+  const editRepair = async (r) => {
+    const status = prompt('اكتب الحالة: new أو progress أو done أو cancelled', r.status);
+    if (status === null) return;
+    const tech = prompt('اسم الفني', r.tech === '-' ? '' : r.tech);
+    if (tech === null) return;
+    const amountText = prompt('المبلغ بالدينار', String(r.amount || 0));
+    if (amountText === null) return;
+    const issue = prompt('وصف المشكلة', r.issue || '');
+    if (issue === null) return;
+    try {
+      const payload = {
+        status: status || r.status,
+        tech: tech || '-',
+        technician: tech || '-',
+        amount: Number(amountText || 0),
+        total: Number(amountText || 0),
+        faultDesc: issue,
+        issue: issue
+      };
+      await window.WesamFirebase.setDoc('service_requests', r.docId, payload, true);
+      await loadRepairs();
+      alert('تم حفظ تعديل طلب الصيانة في Firebase');
+    } catch (err) {
+      console.error(err);
+      alert('تعذر حفظ التعديل: ' + err.message);
+    }
+  };
+
+  const deleteRepair = async (r) => {
+    if (!confirm(`هل تريد حذف طلب الصيانة ${r.id} نهائيًا من Firebase؟`)) return;
+    try {
+      await window.WesamFirebase.deleteDoc('service_requests', r.docId);
+      setRepairs(prev => prev.filter(x => x.docId !== r.docId));
+      alert('تم حذف طلب الصيانة من Firebase');
+    } catch (err) {
+      console.error(err);
+      alert('تعذر حذف الطلب: ' + err.message);
+    }
+  };
+
+  const printRepair = (r) => {
+    const w = window.open('', '_blank', 'width=800,height=900');
+    if (!w) return window.print();
+    w.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>طلب صيانة ${r.id}</title><style>body{font-family:Arial,Tahoma,sans-serif;padding:30px;line-height:1.9}h1{color:#f97316}.box{border:1px solid #ddd;border-radius:12px;padding:18px}table{width:100%;border-collapse:collapse}td{border-bottom:1px solid #eee;padding:10px}</style></head><body><h1>وسام للإلكترونيات - طلب صيانة</h1><div class="box"><table><tr><td>رقم الطلب</td><td>${r.id}</td></tr><tr><td>العميل</td><td>${r.customer}</td></tr><tr><td>الهاتف</td><td>${r.phone}</td></tr><tr><td>الخدمة</td><td>${r.service}</td></tr><tr><td>الجهاز</td><td>${r.device}</td></tr><tr><td>المشكلة</td><td>${r.issue}</td></tr><tr><td>الفني</td><td>${r.tech}</td></tr><tr><td>الحالة</td><td>${STATUS_LBL[r.status] || r.status}</td></tr><tr><td>التاريخ</td><td>${r.date}</td></tr><tr><td>المبلغ</td><td>${r.amount || 0} د.أ</td></tr></table></div><script>window.onload=()=>window.print()<\/script></body></html>`);
+    w.document.close();
+  };
   const isAr = lang === 'ar';
   const t = T[lang];
 
@@ -69,9 +134,12 @@ function RepairsPage() {
         </div>
         <div className="page-head-actions">
           <button className="btn btn-outline" onClick={() => window.print()}><AICON.Download /> {t.export}</button>
+          <button className="btn btn-outline" onClick={loadRepairs}>تحديث من Firebase</button>
           <a className="btn btn-primary" href="request.html"><AICON.Plus /> {isAr ? 'طلب صيانة جديد' : 'New Repair'}</a>
         </div>
       </div>
+
+      {msg && <div className="save-msg ok" style={{marginBottom: 14}}>{msg}</div>}
 
       {/* KPI MINI */}
       <div className="kpi-grid" style={{gridTemplateColumns: 'repeat(4, 1fr)'}}>
@@ -133,10 +201,10 @@ function RepairsPage() {
                   <td style={{fontWeight: 700}}>{r.amount > 0 ? `${r.amount} د.أ` : '-'}</td>
                   <td>
                     <div className="row-actions">
-                      <button className="action-btn"><AICON.Eye /></button>
-                      <button className="action-btn"><AICON.Edit /></button>
-                      <button className="action-btn"><AICON.Print /></button>
-                      <button className="action-btn danger"><AICON.Trash /></button>
+                      <button className="action-btn" title="عرض" onClick={() => viewRepair(r)}><AICON.Eye /></button>
+                      <button className="action-btn" title="تعديل" onClick={() => editRepair(r)}><AICON.Edit /></button>
+                      <button className="action-btn" title="طباعة" onClick={() => printRepair(r)}><AICON.Print /></button>
+                      <button className="action-btn danger" title="حذف" onClick={() => deleteRepair(r)}><AICON.Trash /></button>
                     </div>
                   </td>
                 </tr>
