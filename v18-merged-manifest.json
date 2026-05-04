@@ -1,0 +1,43 @@
+{
+  "version": "V18",
+  "firebaseProject": "wesamstore-98c1f",
+  "mergedVersions": [
+    "V13",
+    "V14",
+    "V15",
+    "V16",
+    "V17"
+  ],
+  "requiredFiles": [
+    "admin-subscriptions.html",
+    "admin-print-templates.html",
+    "admin-tech-performance.html",
+    "admin-custom-fields.html",
+    "admin-service-quotes.html",
+    "admin-cashbox.html",
+    "admin-payroll-commissions.html",
+    "admin-spare-parts.html",
+    "public-booking.html",
+    "admin-audit-review.html",
+    "admin-communication-settings.html",
+    "admin-customer-risk.html",
+    "admin-branches.html",
+    "admin-attendance.html",
+    "device-barcode-registry.html",
+    "customer-portal.html",
+    "admin-role-permissions.html",
+    "admin-database-maintenance.html",
+    "admin-service-quality-reviews.html",
+    "admin-delivery-pricing.html",
+    "admin-call-log.html",
+    "admin-warranty-expiry.html",
+    "admin-loaner-devices.html",
+    "admin-print-copy-settings.html",
+    "admin-maintenance-returns.html",
+    "admin-used-parts.html",
+    "admin-field-visits.html",
+    "admin-customer-approvals.html",
+    "admin-link-health.html",
+    "admin-repair-profit.html"
+  ]
+}

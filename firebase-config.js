@@ -130,7 +130,7 @@
   async function ensureCoreCollections(options = {}) {
     if (!db) throw new Error('Firebase غير مهيأ');
     const force = options.force === true;
-    const key = 'wesam_firebase_auto_setup_done_' + firebaseConfig.projectId + '_v11';
+    const key = 'wesam_firebase_auto_setup_done_' + firebaseConfig.projectId + '_v17';
     if (!force && localStorage.getItem(key) === '1') return { skipped: true, reason: 'already-ran-on-this-browser' };
     const tasks = [
       ensureDocument('settings', 'site', DEFAULT_SITE_SETTINGS),
@@ -184,7 +184,44 @@
       ensureDocument('after_service_followups', '_template', { status: 'system', customerName: 'قالب داخلي', phone: '', followDate: '' }),
       ensureDocument('academy_lessons', '_template', { status: 'system', title: 'قالب داخلي', slug: 'system-template', access: 'free' }),
       ensureDocument('qr_links', '_template', { status: 'system', title: 'قالب داخلي', url: '', active: false }),
-      ensureDocument('support_tickets', '_template', { status: 'system', title: 'قالب داخلي', customerName: 'قالب داخلي' })
+      ensureDocument('support_tickets', '_template', { status: 'system', title: 'قالب داخلي', customerName: 'قالب داخلي' }),
+      ensureDocument('service_contracts', '_template', { status: 'system', contractNo: 'SYSTEM-TEMPLATE', customerName: 'قالب داخلي', amount: 0 }),
+      ensureDocument('product_discounts', '_template', { status: 'system', title: 'قالب داخلي', productId: 'SYSTEM-TEMPLATE', discountType: 'fixed', discountValue: 0 }),
+      ensureDocument('tax_reports', '_template', { status: 'system', title: 'قالب داخلي', income: 0, expense: 0, net: 0 }),
+      ensureDocument('deliveries', '_template', { status: 'system', deliveryNo: 'SYSTEM-TEMPLATE', customerName: 'قالب داخلي', fee: 0 }),
+      ensureDocument('backup_snapshots', '_template', { status: 'system', fileName: 'SYSTEM-TEMPLATE', records: 0 }),
+      ensureDocument('backup_settings', 'site', { reminderEnabled: true, intervalDays: 7 }),
+      ensureDocument('automation_rules', '_template', { status: 'system', title: 'قالب داخلي', active: false, action: 'create_notification' }),
+      ensureDocument('customer_subscriptions', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('print_templates', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('tech_performance_notes', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('custom_fields', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('service_quotes', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('cash_sessions', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('payroll_commissions', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('spare_parts', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('public_bookings', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('audit_review', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('communication_settings', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('customer_risk', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('branches_locations', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('staff_attendance', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('device_registry', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('customer_portal_logs', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('role_permissions', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('database_maintenance_reports', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('service_quality_reviews', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('delivery_zones', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('call_logs', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('warranty_followups', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('loaner_devices', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('document_settings', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('maintenance_returns', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('used_parts', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('field_visits', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('customer_approvals', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('admin_link_health', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
+      ensureDocument('repair_profit_reports', '_template', { status: 'system', title: 'قالب داخلي', notes: 'قالب داخلي - V17' }),
     ];
     const results = await Promise.allSettled(tasks);
     const failed = results.filter(r => r.status === 'rejected');

@@ -96,6 +96,44 @@ service cloud.firestore {
     match /academy_categories/{docId} { allow read: if true; allow write: if isAdmin(); }
     match /qr_links/{docId} { allow read: if true; allow write: if isAdmin(); }
     match /support_tickets/{docId} { allow create: if true; allow read, update, delete: if isAdmin(); }
+    match /service_contracts/{docId} { allow read, write: if isAdmin(); }
+    match /product_discounts/{docId} { allow read, write: if isAdmin(); }
+    match /tax_reports/{docId} { allow read, write: if isAdmin(); }
+    match /deliveries/{docId} { allow read, write: if isAdmin(); }
+    match /backup_snapshots/{docId} { allow read, write: if isAdmin(); }
+    match /backup_settings/{docId} { allow read, write: if isAdmin(); }
+    match /automation_rules/{docId} { allow read, write: if isAdmin(); }
+
+    match /customer_subscriptions/{docId} { allow read, create, update, delete: if true; }
+    match /print_templates/{docId} { allow read, create, update, delete: if true; }
+    match /tech_performance_notes/{docId} { allow read, create, update, delete: if true; }
+    match /custom_fields/{docId} { allow read, create, update, delete: if true; }
+    match /service_quotes/{docId} { allow read, create, update, delete: if true; }
+    match /cash_sessions/{docId} { allow read, create, update, delete: if true; }
+    match /payroll_commissions/{docId} { allow read, create, update, delete: if true; }
+    match /spare_parts/{docId} { allow read, create, update, delete: if true; }
+    match /public_bookings/{docId} { allow read, create, update, delete: if true; }
+    match /audit_review/{docId} { allow read, create, update, delete: if true; }
+    match /communication_settings/{docId} { allow read, create, update, delete: if true; }
+    match /customer_risk/{docId} { allow read, create, update, delete: if true; }
+    match /branches_locations/{docId} { allow read, create, update, delete: if true; }
+    match /staff_attendance/{docId} { allow read, create, update, delete: if true; }
+    match /device_registry/{docId} { allow read, create, update, delete: if true; }
+    match /customer_portal_logs/{docId} { allow read, create, update, delete: if true; }
+    match /role_permissions/{docId} { allow read, create, update, delete: if true; }
+    match /database_maintenance_reports/{docId} { allow read, create, update, delete: if true; }
+    match /service_quality_reviews/{docId} { allow read, create, update, delete: if true; }
+    match /delivery_zones/{docId} { allow read, create, update, delete: if true; }
+    match /call_logs/{docId} { allow read, create, update, delete: if true; }
+    match /warranty_followups/{docId} { allow read, create, update, delete: if true; }
+    match /loaner_devices/{docId} { allow read, create, update, delete: if true; }
+    match /document_settings/{docId} { allow read, create, update, delete: if true; }
+    match /maintenance_returns/{docId} { allow read, create, update, delete: if true; }
+    match /used_parts/{docId} { allow read, create, update, delete: if true; }
+    match /field_visits/{docId} { allow read, create, update, delete: if true; }
+    match /customer_approvals/{docId} { allow read, create, update, delete: if true; }
+    match /admin_link_health/{docId} { allow read, create, update, delete: if true; }
+    match /repair_profit_reports/{docId} { allow read, create, update, delete: if true; }
 
     match /{document=**} { allow read, write: if false; }
   }
