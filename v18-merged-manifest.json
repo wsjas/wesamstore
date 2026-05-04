@@ -39,5 +39,22 @@
     "admin-customer-approvals.html",
     "admin-link-health.html",
     "admin-repair-profit.html"
-  ]
+  ],
+  "latestVersion": "V19",
+  "updatedAt": "2026-05-04",
+  "v19": {
+    "description": "تحسينات جديدة على الصفحة الرئيسية ولوحة التحكم مع مركز أوامر سريع وصفحة تشغيل مستقلة.",
+    "filesAdded": [
+      "wesam-v19-home-enhancements.css",
+      "wesam-v19-home-enhancements.js",
+      "admin-v19-enhancements.css",
+      "admin-v19-enhancements.js",
+      "admin-v19-center.html",
+      "README-IMPROVEMENTS-V19.txt"
+    ],
+    "filesModified": [
+      "index.html",
+      "admin.html"
+    ]
+  }
 }
