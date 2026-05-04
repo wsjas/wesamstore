@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>لوحة تحكم وسام للإلكترونيات - الإصدار المحسن V11</title>
+  <title>لوحة تحكم وسام للإلكترونيات - الإصدار المحسن V18</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
@@ -43,6 +43,13 @@
       <div class="side-actions">
         <button class="btn ghost" id="btnExportBackup">نسخة احتياطية JSON</button>
 
+        
+        <a class="btn ghost" href="admin-service-contracts.html">عقود الخدمة</a>
+        <a class="btn ghost" href="admin-product-discounts.html">خصومات المنتجات</a>
+        <a class="btn ghost" href="admin-tax-finance.html">تقارير مالية/ضريبية</a>
+        <a class="btn ghost" href="admin-delivery-center.html">التوصيل والتسليم</a>
+        <a class="btn ghost" href="admin-backup-scheduler.html">النسخ الاحتياطي</a>
+        <a class="btn ghost" href="admin-workflow-automation.html">تشغيل تلقائي</a>
         <a class="btn ghost" href="admin-service-pricing.html">أسعار الخدمات</a>
         <a class="btn ghost" href="admin-after-service.html">متابعة بعد الإصلاح</a>
         <a class="btn ghost" href="admin-academy-content.html">محتوى الأكاديمية</a>
@@ -85,6 +92,36 @@
         <a class="btn ghost" href="customer-statement.html">كشف عميل</a>
         <a class="btn ghost" href="warranty-center.html">الضمانات</a>
         <a class="btn ghost" href="admin-security.html">الأمان</a>
+        <a class="btn ghost" href="admin-subscriptions.html">اشتراكات العملاء والعقود الدورية</a>
+        <a class="btn ghost" href="admin-print-templates.html">مركز قوالب الطباعة</a>
+        <a class="btn ghost" href="admin-tech-performance.html">تقرير أداء الفنيين</a>
+        <a class="btn ghost" href="admin-custom-fields.html">الحقول المخصصة</a>
+        <a class="btn ghost" href="admin-service-quotes.html">عروض أسعار الصيانة</a>
+        <a class="btn ghost" href="admin-cashbox.html">صندوق اليوم والتسوية النقدية</a>
+        <a class="btn ghost" href="admin-payroll-commissions.html">الرواتب والعمولات</a>
+        <a class="btn ghost" href="admin-spare-parts.html">إدارة قطع الغيار</a>
+        <a class="btn ghost" href="public-booking.html">حجز موعد صيانة من العميل</a>
+        <a class="btn ghost" href="admin-audit-review.html">سجل مراجعة وتدقيق العمليات</a>
+        <a class="btn ghost" href="admin-communication-settings.html">إعدادات رسائل واتساب/SMS</a>
+        <a class="btn ghost" href="admin-customer-risk.html">تحليل العملاء والذمم الخطرة</a>
+        <a class="btn ghost" href="admin-branches.html">مركز الفروع والمواقع</a>
+        <a class="btn ghost" href="admin-attendance.html">الدوام والحضور</a>
+        <a class="btn ghost" href="device-barcode-registry.html">سجل أجهزة العملاء بالباركود</a>
+        <a class="btn ghost" href="customer-portal.html">بوابة العميل</a>
+        <a class="btn ghost" href="admin-role-permissions.html">صلاحيات الأدوار</a>
+        <a class="btn ghost" href="admin-database-maintenance.html">صيانة قاعدة البيانات</a>
+        <a class="btn ghost" href="admin-service-quality-reviews.html">مركز جودة الخدمة</a>
+        <a class="btn ghost" href="admin-delivery-pricing.html">أسعار التوصيل حسب المنطقة</a>
+        <a class="btn ghost" href="admin-call-log.html">سجل مكالمات العملاء</a>
+        <a class="btn ghost" href="admin-warranty-expiry.html">متابعة الضمانات المنتهية</a>
+        <a class="btn ghost" href="admin-loaner-devices.html">إدارة أجهزة الإعارة</a>
+        <a class="btn ghost" href="admin-print-copy-settings.html">إعدادات النسخ والطباعة</a>
+        <a class="btn ghost" href="admin-maintenance-returns.html">مرتجعات الصيانة وإعادة الفحص</a>
+        <a class="btn ghost" href="admin-used-parts.html">قطع الغيار المستخدمة في الصيانة</a>
+        <a class="btn ghost" href="admin-field-visits.html">سجل الزيارات الميدانية</a>
+        <a class="btn ghost" href="admin-customer-approvals.html">موافقات العملاء قبل الإصلاح</a>
+        <a class="btn ghost" href="admin-link-health.html">فحص روابط وأزرار لوحة التحكم</a>
+        <a class="btn ghost" href="admin-repair-profit.html">ربحية طلبات الصيانة</a>
         <button class="btn ghost" id="btnSignOut">خروج</button>
       </div>
     </aside>
@@ -93,7 +130,7 @@
         <div><h2 id="pageTitle">الرئيسية</h2><small id="pageSub">لوحة موحدة محسنة مرتبطة مع Firebase</small></div>
         <div class="actions"><button class="btn ghost" id="btnInit">تهيئة Firebase</button><button class="btn blue" id="btnRefresh">تحديث</button><a class="btn ghost" href="invoice-print.html">الفواتير</a><a class="btn ghost" href="admin-import-export.html">نسخة/استيراد</a><a class="btn primary" href="index.html" target="_blank">فتح الموقع</a></div>
       </div>
-      <div id="notice" class="notice">النسخة الحادية عشرة تضيف: أسعار الخدمات، متابعة ما بعد الإصلاح، محتوى الأكاديمية، روابط QR، تذاكر العملاء، وتشخيص Firebase المتقدم.</div>
+      <div id="notice" class="notice">V18 مدمجة: تحتوي تحديثات V13 وV14 وV15 وV16 داخل نسخة واحدة، إضافة إلى أدوات V17، حتى لا تحتاج للنسخ غير المتوفرة.</div>
       <section id="dashboard" class="section active"></section>
       <section id="products" class="section"></section>
       <section id="orders" class="section"></section>

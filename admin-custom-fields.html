@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>الحقول المخصصة - وسام للإلكترونيات</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="wesam-error-logger.js"></script>
+  <script src="admin-safe-loader.js"></script>
+  <style>
+    :root{--bg:#f6f8fc;--card:#fff;--text:#142033;--muted:#64748b;--line:#e5e7eb;--orange:#f97316;--blue:#2563eb;--green:#16a34a;--red:#dc2626;--shadow:0 18px 44px rgba(15,23,42,.08);--r:20px}
+    *{box-sizing:border-box} body{margin:0;font-family:Tahoma,Arial,sans-serif;background:radial-gradient(circle at top right,#fff3e5 0,#f6f8fc 42%,#eef6ff 100%);color:var(--text)}
+    a{text-decoration:none;color:inherit} button,input,select,textarea{font:inherit} .wrap{max-width:1250px;margin:auto;padding:18px}
+    .top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px} .top h1{margin:0;font-size:26px} .top p{margin:6px 0 0;color:var(--muted);line-height:1.7}
+    .btn{border:0;border-radius:13px;padding:10px 14px;background:#e5e7eb;font-weight:800;cursor:pointer;display:inline-flex;gap:7px;align-items:center;justify-content:center} .btn.primary{background:linear-gradient(135deg,var(--orange),#fb923c);color:#fff} .btn.blue{background:var(--blue);color:#fff} .btn.green{background:var(--green);color:#fff} .btn.red{background:var(--red);color:#fff} .btn.ghost{background:#fff;border:1px solid var(--line)}
+    .card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px} .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px} .field{display:grid;gap:6px} label{font-size:13px;color:#475569;font-weight:900} input,select,textarea{border:1px solid var(--line);border-radius:14px;padding:11px;background:#fff;width:100%;min-width:0} textarea{min-height:88px;resize:vertical} .full{grid-column:1/-1}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px} .search{min-width:260px;flex:1} .notice{border:1px dashed #fdba74;background:#fff7ed;color:#9a3412;border-radius:16px;padding:12px;line-height:1.8;margin-bottom:14px} .notice.ok{border-color:#86efac;background:#f0fdf4;color:#166534} .notice.err{border-color:#fca5a5;background:#fef2f2;color:#991b1b}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:var(--shadow)} table{width:100%;border-collapse:collapse;min-width:920px} th,td{padding:11px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle;font-size:13px} th{background:#f8fafc;color:#475569;position:sticky;top:0} .badge{display:inline-flex;border-radius:999px;padding:5px 10px;background:#eef2ff;color:#3730a3;font-weight:900;font-size:12px} .muted{color:var(--muted)} .ltr{direction:ltr;text-align:left}
+    @media(max-width:800px){.grid{grid-template-columns:1fr}.top{flex-direction:column}.wrap{padding:12px}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><h1>الحقول المخصصة</h1><p>أداة تشغيلية مضافة في V17، تحفظ وتسترجع مباشرة من Firebase ضمن مجموعة <b class="ltr">custom_fields</b>.</p></div>
+    <div class="toolbar"><a class="btn ghost" href="admin.html">لوحة التحكم</a><button class="btn blue" id="refreshBtn">تحديث</button><button class="btn green" id="exportBtn">تصدير CSV</button></div>
+  </div>
+  <div id="notice" class="notice">جاري الاتصال مع Firebase...</div>
+  <div class="card">
+    <h3 style="margin-top:0">إضافة / تعديل سجل</h3>
+    <form id="form" class="grid">
+      <input type="hidden" name="id" />
+      <div class="field"><label>القسم</label><input name="targetCollection" placeholder="القسم" /></div>
+      <div class="field"><label>مفتاح الحقل</label><input name="fieldKey" placeholder="مفتاح الحقل" /></div>
+      <div class="field"><label>اسم الحقل</label><input name="fieldLabel" placeholder="اسم الحقل" /></div>
+      <div class="field"><label>نوع الحقل</label><input name="fieldType" placeholder="نوع الحقل" /></div>
+      <div class="field"><label>إجباري</label><input name="required" placeholder="إجباري" /></div>
+      <div class="field"><label>الحالة</label><input name="active" placeholder="الحالة" /></div>
+      <div class="field full"><label>خيارات</label><textarea name="options" placeholder="خيارات"></textarea></div>
+      <div class="field full"><label>ملاحظات</label><textarea name="notes" placeholder="ملاحظات"></textarea></div>
+      <div class="full toolbar"><button class="btn primary" type="submit">حفظ في Firebase</button><button class="btn ghost" type="reset">تفريغ</button></div>
+    </form>
+  </div>
+  <div class="card">
+    <div class="toolbar"><input id="search" class="search" placeholder="بحث سريع..." /><span class="badge" id="count">0 سجل</span></div>
+    <div id="table"></div>
+  </div>
+</div>
+<script>
+(function(){
+  const COLLECTION = "custom_fields";
+  const FIELDS = [{"key": "targetCollection", "label": "القسم"}, {"key": "fieldKey", "label": "مفتاح الحقل"}, {"key": "fieldLabel", "label": "اسم الحقل"}, {"key": "fieldType", "label": "نوع الحقل"}, {"key": "required", "label": "إجباري"}, {"key": "active", "label": "الحالة"}, {"key": "options", "label": "خيارات"}, {"key": "notes", "label": "ملاحظات"}];
+  const $ = id => document.getElementById(id);
+  let rows = [];
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const dateText = v => { try{ const d=v&&v.toDate?v.toDate():(v?new Date(v):null); return d&&!isNaN(d)?d.toLocaleString('ar-JO'):'—'; }catch(e){return '—';} };
+  function setNotice(msg,type=''){ $('notice').className='notice '+type; $('notice').innerHTML=msg; }
+  function wf(){ return window.WesamFirebase; }
+  async function init(){
+    try{
+      if(!wf() || !wf().db) throw new Error('Firebase غير محمّل. تأكد من الإنترنت ومن firebase-config.js');
+      setNotice('متصل مع Firebase: <b class="ltr">'+esc(wf().projectId)+'</b>','ok');
+      await load();
+    }catch(e){ console.error(e); setNotice('خطأ: '+esc(e.message),'err'); }
+  }
+  async function load(){
+    rows = await wf().getCollection(COLLECTION, {limit: 1500});
+    render();
+  }
+  function filtered(){ const q=$('search').value.trim().toLowerCase(); if(!q) return rows; return rows.filter(r => JSON.stringify(r).toLowerCase().includes(q)); }
+  function render(){
+    const data = filtered(); $('count').textContent = data.length + ' سجل';
+    const headers = FIELDS.map(f=>'<th>'+esc(f.label)+'</th>').join('') + '<th>آخر تعديل</th><th>إجراءات</th>';
+    const body = data.map(r => '<tr>' + FIELDS.map(f=>'<td>'+esc(r[f.key] ?? '')+'</td>').join('') + '<td>'+dateText(r.updatedAt||r.createdAt)+'</td><td><button class="btn ghost" data-edit="'+esc(r.id)+'">تعديل</button> <button class="btn red" data-del="'+esc(r.id)+'">حذف</button></td></tr>').join('') || '<tr><td colspan="'+(FIELDS.length+2)+'" style="text-align:center;color:#64748b;padding:22px">لا توجد بيانات بعد</td></tr>';
+    $('table').innerHTML = '<div class="table-wrap"><table><thead><tr>'+headers+'</tr></thead><tbody>'+body+'</tbody></table></div>';
+  }
+  $('search').addEventListener('input', render);
+  $('refreshBtn').addEventListener('click', load);
+  $('form').addEventListener('submit', async e => {
+    e.preventDefault();
+    try{
+      const fd = new FormData(e.currentTarget); const data={}; FIELDS.forEach(f=>data[f.key]=fd.get(f.key)||'');
+      data.updatedFrom='wesam-v17';
+      const id = fd.get('id');
+      if(id) await wf().setDoc(COLLECTION,id,data,true); else await wf().addDoc(COLLECTION,data);
+      e.currentTarget.reset(); e.currentTarget.id.value=''; await load(); setNotice('تم الحفظ بنجاح في Firebase.','ok');
+    }catch(err){ console.error(err); setNotice('تعذر الحفظ: '+esc(err.message),'err'); }
+  });
+  $('table').addEventListener('click', async e => {
+    const edit=e.target.closest('[data-edit]'); const del=e.target.closest('[data-del]');
+    if(edit){ const r=rows.find(x=>x.id===edit.dataset.edit); if(!r) return; $('form').id.value=r.id; FIELDS.forEach(f=>{ const el=document.querySelector('[name="'+f.key+'"]'); if(el) el.value=r[f.key]||''; }); scrollTo({top:0,behavior:'smooth'}); }
+    if(del){ if(!confirm('حذف هذا السجل من Firebase؟')) return; try{ await wf().deleteDoc(COLLECTION,del.dataset.del); await load(); setNotice('تم الحذف.','ok'); }catch(err){ setNotice('تعذر الحذف: '+esc(err.message),'err'); } }
+  });
+  $('exportBtn').addEventListener('click', () => {
+    const data=filtered(); const headers=FIELDS.map(f=>f.label); const keys=FIELDS.map(f=>f.key);
+    const csv=[headers.join(',')].concat(data.map(r=>keys.map(k=>'"'+String(r[k]??'').replace(/"/g,'""')+'"').join(','))).join('\n');
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'})); a.download=COLLECTION+'.csv'; a.click(); URL.revokeObjectURL(a.href);
+  });
+  init();
+})();
+</script>
+</body>
+</html>
