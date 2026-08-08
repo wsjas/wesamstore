@@ -1,0 +1,126 @@
+name: Apply Correct Offer Image Bundle
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-correct-offer-bundle.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout public image repository
+        uses: actions/checkout@v4
+
+      - name: Rebuild ZIP from staged bundle parts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import base64
+          parts = sorted(Path('.correct-offers').glob('part-*'))
+          if not parts:
+              raise SystemExit('No .correct-offers/part-* files found')
+          s = ''.join(p.read_text(encoding='utf-8').strip() for p in parts)
+          if ',' in s and s.startswith('data:'):
+              s = s.split(',', 1)[1]
+          s = ''.join(s.split())
+          Path('/tmp/correct-offers.zip').write_bytes(base64.b64decode(s, validate=True))
+          print('bundle parts:', len(parts))
+          print('zip bytes:', Path('/tmp/correct-offers.zip').stat().st_size)
+          PY
+
+      - name: Extract and validate exactly 21 correct offer images
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/correct-offers
+          mkdir -p /tmp/correct-offers
+          unzip -q /tmp/correct-offers.zip -d /tmp/correct-offers
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, shutil, json
+
+          expected = [
+            'ac-remote.webp',
+            'airfryer.webp',
+            'backlight-32.webp',
+            'backlight-prices.webp',
+            'fan-motor.webp',
+            'gguard-2.webp',
+            'gguard-3.webp',
+            'hdmi.webp',
+            'microwave.webp',
+            'receiver-any.webp',
+            'remote-magic.webp',
+            'remote-master.webp',
+            'samsung-3.webp',
+            'samsung-5.webp',
+            'spider-multi.webp',
+            'spider-special.webp',
+            'steamer.webp',
+            'vacuum.webp',
+            'wall-mount-fixed.webp',
+            'wall-mount-movable.webp',
+            'wall-mounts-general.webp',
+          ]
+          root = Path('/tmp/correct-offers')
+          by_name = {}
+          for p in root.rglob('*.webp'):
+              by_name.setdefault(p.name, []).append(p)
+          missing = [n for n in expected if n not in by_name]
+          duplicates = [n for n in expected if len(by_name.get(n, [])) != 1]
+          if missing or duplicates:
+              raise SystemExit(f'Bundle validation failed. missing={missing}, duplicate_names={duplicates}')
+
+          hashes = {}
+          for name in expected:
+              p = by_name[name][0]
+              data = p.read_bytes()
+              if len(data) < 100 or data[:4] != b'RIFF' or data[8:12] != b'WEBP':
+                  raise SystemExit(f'Invalid WebP: {name} ({len(data)} bytes)')
+              h = hashlib.sha256(data).hexdigest()
+              if h in hashes:
+                  raise SystemExit(f'Duplicate image bytes: {name} == {hashes[h]}')
+              hashes[h] = name
+
+          out = Path('images/offers')
+          out.mkdir(parents=True, exist_ok=True)
+          for name in expected:
+              shutil.copy2(by_name[name][0], out / name)
+
+          rows=[]
+          for name in expected:
+              p=out/name
+              rows.append({
+                'file': name,
+                'bytes': p.stat().st_size,
+                'sha256': hashlib.sha256(p.read_bytes()).hexdigest(),
+                'directUrl': f'https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/{name}',
+                'cdnUrl': f'https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/{name}'
+              })
+          (out/'index.json').write_text(json.dumps({'count':21,'images':rows}, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+          print('Validated 21 unique WebP images from the user bundle.')
+          for r in rows:
+              print(r['file'], r['bytes'], r['sha256'][:16])
+          PY
+
+      - name: Commit corrected public images
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add images/offers
+          if git diff --cached --quiet; then
+            echo "Images already match the correct bundle."
+          else
+            git commit -m "Replace all 21 offer images with correct user bundle"
+            git push
+          fi
