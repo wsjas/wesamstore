@@ -1,0 +1,109 @@
+{
+  "images": [
+    {
+      "file": "ac-remote.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/ac-remote.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/ac-remote.webp"
+    },
+    {
+      "file": "airfryer.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/airfryer.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/airfryer.webp"
+    },
+    {
+      "file": "backlight-32.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/backlight-32.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/backlight-32.webp"
+    },
+    {
+      "file": "backlight-prices.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/backlight-prices.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/backlight-prices.webp"
+    },
+    {
+      "file": "fan-motor.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/fan-motor.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/fan-motor.webp"
+    },
+    {
+      "file": "gguard-2.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/gguard-2.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/gguard-2.webp"
+    },
+    {
+      "file": "gguard-3.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/gguard-3.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/gguard-3.webp"
+    },
+    {
+      "file": "hdmi.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/hdmi.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/hdmi.webp"
+    },
+    {
+      "file": "microwave.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/microwave.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/microwave.webp"
+    },
+    {
+      "file": "receiver-any.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/receiver-any.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/receiver-any.webp"
+    },
+    {
+      "file": "remote-magic.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/remote-magic.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/remote-magic.webp"
+    },
+    {
+      "file": "remote-master.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/remote-master.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/remote-master.webp"
+    },
+    {
+      "file": "samsung-3.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/samsung-3.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/samsung-3.webp"
+    },
+    {
+      "file": "samsung-5.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/samsung-5.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/samsung-5.webp"
+    },
+    {
+      "file": "spider-multi.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/spider-multi.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/spider-multi.webp"
+    },
+    {
+      "file": "spider-special.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/spider-special.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/spider-special.webp"
+    },
+    {
+      "file": "steamer.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/steamer.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/steamer.webp"
+    },
+    {
+      "file": "vacuum.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/vacuum.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/vacuum.webp"
+    },
+    {
+      "file": "wall-mount-fixed.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/wall-mount-fixed.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/wall-mount-fixed.webp"
+    },
+    {
+      "file": "wall-mount-movable.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/wall-mount-movable.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/wall-mount-movable.webp"
+    },
+    {
+      "file": "wall-mounts-general.webp",
+      "directUrl": "https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/wall-mounts-general.webp",
+      "cdnUrl": "https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/wall-mounts-general.webp"
+    }
+  ]
+}
