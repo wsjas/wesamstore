@@ -1,0 +1,83 @@
+name: Sync Wesam Offer Images
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sync-offer-images.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout public image repository
+        uses: actions/checkout@v4
+
+      - name: Download current offer images
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p images/offers
+          files=(
+            backlight-prices.webp
+            backlight-32.webp
+            microwave.webp
+            vacuum.webp
+            steamer.webp
+            airfryer.webp
+            fan-motor.webp
+            wall-mounts-general.webp
+            wall-mount-fixed.webp
+            wall-mount-movable.webp
+            hdmi.webp
+            ac-remote.webp
+            receiver-any.webp
+            remote-magic.webp
+            remote-master.webp
+            spider-special.webp
+            spider-multi.webp
+            samsung-3.webp
+            samsung-5.webp
+            gguard-2.webp
+            gguard-3.webp
+          )
+          for f in "${files[@]}"; do
+            echo "Downloading $f"
+            curl --fail --location --retry 4 --retry-delay 2 \
+              "https://wesam.store/assets/offers/$f?external_sync=${GITHUB_RUN_ID}" \
+              --output "images/offers/$f"
+            test -s "images/offers/$f"
+          done
+
+      - name: Write image index
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          rows=[]
+          for p in sorted(Path('images/offers').glob('*.webp')):
+              rows.append({
+                  'file': p.name,
+                  'directUrl': f'https://raw.githubusercontent.com/wsjas/wesamstore/main/images/offers/{p.name}',
+                  'cdnUrl': f'https://cdn.jsdelivr.net/gh/wsjas/wesamstore@main/images/offers/{p.name}'
+              })
+          Path('images/offers/index.json').write_text(json.dumps({'images':rows},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+
+      - name: Commit refreshed external copies
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add images/offers
+          if git diff --cached --quiet; then
+            echo "No image changes"
+          else
+            git commit -m "Sync Wesam offer images from wesam.store"
+            git push
+          fi
